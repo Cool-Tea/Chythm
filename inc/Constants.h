@@ -4,6 +4,12 @@
 #include <SDL.h>
 
 /* Common */
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
+
+#define LETTER_WIDTH 50
+#define LETTER_HEIGHT 100
+
 enum SceneType {
     MENU,
     SELECT,
@@ -20,7 +26,7 @@ enum NoteType {
     LONG
 };
 typedef enum NoteType NoteType;
-extern const SDL_Color NoteColors[];
+extern const SDL_Color note_colors[];
 
 /* Event */
 #define EVENT_LIST_INIT_CAPACITY 1 << 3
@@ -38,7 +44,7 @@ typedef enum EventType EventType;
 #define GOOD_HIT_INTERVAL 200 //ms
 #define MISS_HIT_INTERVAL 400 //ms
 
-extern const SDL_Color HitPointColors[];
+extern const SDL_Color hit_point_colors[];
 
 /* Game Scene */
 enum ObjectType {
@@ -48,6 +54,10 @@ enum ObjectType {
 typedef enum ObjectType ObjectType;
 
 /* Button */
-extern const SDL_Color ButtonColors[];
+extern const SDL_Color button_colors[];
+
+/* Menu Scene */
+#define MENU_SCENE_BACKGROUND "../assets/images/background.jpg"
+#define MENU_SCENE_BUTTON_SIZE 2
 
 #endif
