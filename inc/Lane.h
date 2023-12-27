@@ -7,6 +7,8 @@
 
 struct HitPoint {
     int cur_x, cur_y;
+    Uint8 isDown;
+    SDL_Keycode key;
 };
 typedef struct HitPoint HitPoint;
 
@@ -22,7 +24,7 @@ struct Lane {
 };
 typedef struct Lane Lane;
 void InitLane(Lane* lane);
-void DestroyLane(Lane* lane);
+void FreeLane(Lane* lane);
 void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event);
 void LaneDraw(Lane* lane, SDL_Renderer* renderer);
 

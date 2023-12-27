@@ -13,7 +13,7 @@
         "notes": [
             {
                 "type": 0,
-                "time": 0,
+                "time": 2000,
                 "lane": 0,
                 "move": {
                     "start": {
@@ -28,8 +28,8 @@
             },
             {
                 "type": 1,
-                "start_time": 4,
-                "end_time": 6,
+                "start_time": 4000,
+                "end_time": 6000,
                 "lane": 1,
                 "move": {
                     "start": {
@@ -54,7 +54,7 @@
         ],
         "events": [
             {
-                "object": "game_scene",
+                "object": 0,
                 "type": "text",
                 "time": 2,
                 "data": {
@@ -62,7 +62,7 @@
                 }
             },
             {
-                "object": "lane",
+                "object": 1,
                 "lane": 0,
                 "type": "move",
                 "time": 3,

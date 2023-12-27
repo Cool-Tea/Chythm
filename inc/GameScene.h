@@ -3,6 +3,7 @@
 
 #include <SDL_image.h>
 #include <SDL_mixer.h>
+#include "cJSON.h"
 #include "Constants.h"
 #include "Lane.h"
 
@@ -24,12 +25,13 @@ struct GameScene {
     Lane* lanes;
 };
 typedef struct GameScene GameScene;
+/* chart_path sample: ../saves/test/ */
 GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path);
 void DestroyGameScene(GameScene* game_scene);
 void GameSceneStart(GameScene* game_scene);
 void GameScenePause(GameScene* game_scene);
 void GameSceneResume(GameScene* game_scene);
 void GameSceneUpdate(GameScene* game_scene, SDL_Event* event);
-void GameSceneDraw(GameScene* GameScene, SDL_Renderer* renderer);
+void GameSceneDraw(GameScene* game_scene, SDL_Renderer* renderer);
 
 #endif
