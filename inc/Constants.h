@@ -4,11 +4,20 @@
 #include <SDL.h>
 
 /* Common */
+#define GAME_TITLE "Chythm"
+
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 
 #define LETTER_WIDTH 50
 #define LETTER_HEIGHT 100
+
+#define MAX_FPS 60; // this should not exceed 1000
+
+#define SAVES_PATH "../saves/"
+#define BGM_PATH
+#define FONT_PATH "../assets/fonts/font.TTF"
+#define FONT_SIZE 32
 
 enum SceneType {
     MENU,
@@ -57,7 +66,19 @@ typedef enum ObjectType ObjectType;
 extern const SDL_Color button_colors[];
 
 /* Menu Scene */
-#define MENU_SCENE_BACKGROUND "../assets/images/background.jpg"
+#define MENU_SCENE_BACKGROUND "../assets/images/ background.png"
 #define MENU_SCENE_BUTTON_SIZE 2
+
+/* Select Scene */
+#define CHART_LIST_INIT_CAPACITY 1 << 3
+#define CHART_LIST_NAME_MAX_SIZE SCREEN_HEIGHT / (LETTER_HEIGHT + 50)
+#define SELECT_SCENE_BACKGROUND "../assets/images/ background.png"
+
+extern const SDL_Rect preview_rect;
+extern const SDL_Color title_color;
+
+/* Pause Scene */
+#define PAUSE_SCENE_BUTTON_SIZE 3
+#define PAUSE_SCENE_BACKGROUND "../assets/images/ background.png"
 
 #endif

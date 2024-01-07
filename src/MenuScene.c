@@ -1,7 +1,9 @@
 #include "../inc/MenuScene.h"
 
+MenuScene* menu_scene = NULL;
+
 MenuScene* CreateMenuScene(SDL_Renderer* renderer) {
-    MenuScene* menu_scene = malloc(sizeof(MenuScene));
+    menu_scene = malloc(sizeof(MenuScene));
     if (menu_scene == NULL) {
         printf("[MenuScene]Failed to malloc menu scene\n");
         is_error = 1;
@@ -15,8 +17,9 @@ MenuScene* CreateMenuScene(SDL_Renderer* renderer) {
     }
     InitButton(&menu_scene->buttons[0], 100, 640, "START", Start);
     InitButton(&menu_scene->buttons[1], 100, 640 + 2 * LETTER_HEIGHT, "QUIT", Quit);
+    menu_scene->cur_button = 0;
 }
-void DestroyMenuScene(MenuScene* menu_scene) {
+void DestroyMenuScene() {
     if (menu_scene != NULL) {
         if (menu_scene->background != NULL) {
             SDL_DestroyTexture(menu_scene->background);
@@ -26,7 +29,7 @@ void DestroyMenuScene(MenuScene* menu_scene) {
         free(menu_scene);
     }
 }
-void MenuSceneUpdate(MenuScene* menu_scene, SDL_Event* event) {
+void MenuSceneUpdate(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.sym) {
         case SDLK_w:
@@ -48,7 +51,7 @@ void MenuSceneUpdate(MenuScene* menu_scene, SDL_Event* event) {
         }
     }
 }
-void MenuSceneDraw(MenuScene* menu_scene, SDL_Renderer* renderer, TTF_Font* font) {
+void MenuSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_RenderCopy(renderer, menu_scene->background, NULL, NULL);
     for (int i = 0; i < MENU_SCENE_BUTTON_SIZE; i++) {
         ButtonDraw(&menu_scene->buttons[i], renderer, font);

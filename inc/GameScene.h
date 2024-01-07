@@ -25,13 +25,16 @@ struct GameScene {
     Lane* lanes;
 };
 typedef struct GameScene GameScene;
+
+extern GameScene* game_scene;
+
 /* chart_path sample: ../saves/test/ */
 GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path);
-void DestroyGameScene(GameScene* game_scene);
-void GameSceneStart(GameScene* game_scene);
-void GameScenePause(GameScene* game_scene);
-void GameSceneResume(GameScene* game_scene);
-void GameSceneUpdate(GameScene* game_scene, SDL_Event* event);
-void GameSceneDraw(GameScene* game_scene, SDL_Renderer* renderer);
+void DestroyGameScene();
+void GameSceneStart();
+void GameScenePause();
+void GameSceneResume();
+void GameSceneUpdate(SDL_Event* event);
+void GameSceneDraw(SDL_Renderer* renderer);
 
 #endif

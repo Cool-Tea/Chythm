@@ -1,11 +1,13 @@
 #include "../inc/GameScene.h"
 
+GameScene* game_scene = NULL;
+
 static inline void CompletePath(char* buf, const char* path, const char* file) {
     strcpy(buf, path);
     strcat(buf, file);
 }
 GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
-    GameScene* game_scene = malloc(sizeof(GameScene));
+    game_scene = malloc(sizeof(GameScene));
     if (game_scene == NULL) {
         printf("[GameScene]Failed to malloc game scene\n");
         is_error = 1;
@@ -184,7 +186,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     free(buffer);
     return game_scene;
 }
-void DestroyGameScene(GameScene* game_scene) {
+void DestroyGameScene() {
     if (game_scene != NULL) {
         if (game_scene->background != NULL) SDL_DestroyTexture(game_scene->background);
         if (game_scene->music != NULL) Mix_FreeMusic(game_scene->music);
@@ -193,22 +195,22 @@ void DestroyGameScene(GameScene* game_scene) {
         free(game_scene);
     }
 }
-void GameSceneStart(GameScene* game_scene) {
+void GameSceneStart() {
     game_scene->cur_time = game_scene->base_time = SDL_GetTicks();
     game_scene->relative_time = 0;
     Mix_PlayMusic(game_scene->music, 0);
 }
-void GameScenePause(GameScene* game_scene) {
+void GameScenePause() {
     game_scene->cur_time = SDL_GetTicks();
     Mix_PauseMusic();
 }
-void GameSceneResume(GameScene* game_scene) {
+void GameSceneResume() {
     game_scene->base_time += SDL_GetTicks() - game_scene->cur_time;
     game_scene->cur_time = SDL_GetTicks();
     game_scene->relative_time = game_scene->cur_time - game_scene->base_time;
     Mix_ResumeMusic();
 }
-void GameSceneUpdate(GameScene* game_scene, SDL_Event* event) {
+void GameSceneUpdate(SDL_Event* event) {
     game_scene->cur_time = SDL_GetTicks();
     game_scene->relative_time = game_scene->cur_time - game_scene->base_time;
     for (size_t i = 0; i < game_scene->lane_size; i++) {
@@ -221,7 +223,7 @@ void GameSceneUpdate(GameScene* game_scene, SDL_Event* event) {
         game_scene->event_list.cur_event++;
     }
 }
-void GameSceneDraw(GameScene* game_scene, SDL_Renderer* renderer) {
+void GameSceneDraw(SDL_Renderer* renderer) {
     SDL_RenderCopy(renderer, game_scene->background, NULL, NULL);
     /* TODO: draw event stuff */
     for (size_t i = 0; i < game_scene->lane_size; i++) {
