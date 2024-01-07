@@ -33,6 +33,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     }
     fseek(fp, 0, SEEK_END);
     long len = ftell(fp);
+    rewind(fp);
     buffer = realloc(buffer, len + 1);
     if (buffer == NULL) {
         printf("[GameScene]Failed to malloc buffer\n");
@@ -40,7 +41,8 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
         fclose(fp);
         return game_scene;
     }
-    fread(buffer, len + 1, 1, fp);
+    fread(buffer, 1, len, fp);
+    buffer[len] = '\0';
     fclose(fp);
 
     cJSON* file = cJSON_Parse(buffer);
@@ -58,7 +60,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     CompletePath(buffer, chart_path, audio->valuestring);
     game_scene->music = Mix_LoadMUS(buffer);
     if (game_scene->music == NULL) {
-        printf("[GameScene]Failed to load audio: %s\n", Mix_GetError());
+        printf("[GameScene]Failed to load audio: %s - %s\n", buffer, Mix_GetError());
         is_error = 1;
         free(buffer);
         cJSON_Delete(file);
@@ -140,6 +142,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     cJSON* hit_points = cJSON_GetObjectItem(chart, "hit_points");
     for (int i = 0; i < game_scene->lane_size; i++) {
         cJSON* hit_point = cJSON_GetArrayItem(hit_points, i);
+        if (hit_point == NULL) continue;
         cJSON* lane = cJSON_GetObjectItem(hit_point, "lane");
         cJSON* position = cJSON_GetObjectItem(hit_point, "position");
         cJSON* x = cJSON_GetObjectItem(position, "x");
@@ -149,6 +152,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     }
 
     /* Get events */
+    InitEventList(&game_scene->event_list);
     cJSON* events = cJSON_GetObjectItem(chart, "events");
     int event_size = cJSON_GetArraySize(events);
     for (int i = 0; i < event_size; i++) {
@@ -167,6 +171,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
             coord[0] = x->valueint, coord[1] = x->valueint;
             EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
                 time->valueint, type->valueint, coord);
+            break;
         }
         case GAME_SCENE: {
             /* TODO: More Type*/
@@ -176,6 +181,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
             strcpy(txt, text->valuestring);
             EventListEmplaceBack(&game_scene->event_list,
                 time->valueint, type->valueint, txt);
+            break;
         }
         default:
             break;
@@ -201,8 +207,8 @@ void GameSceneStart() {
     Mix_PlayMusic(game_scene->music, 0);
 }
 void GameScenePause() {
-    game_scene->cur_time = SDL_GetTicks();
     Mix_PauseMusic();
+    game_scene->cur_time = SDL_GetTicks();
 }
 void GameSceneResume() {
     game_scene->base_time += SDL_GetTicks() - game_scene->cur_time;
@@ -211,6 +217,18 @@ void GameSceneResume() {
     Mix_ResumeMusic();
 }
 void GameSceneUpdate(SDL_Event* event) {
+    if (event->type == SDL_KEYDOWN) {
+        switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_ESCAPE: {
+            GameScenePause();
+            cur_scene = PAUSE;
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
     game_scene->cur_time = SDL_GetTicks();
     game_scene->relative_time = game_scene->cur_time - game_scene->base_time;
     for (size_t i = 0; i < game_scene->lane_size; i++) {

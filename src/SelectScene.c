@@ -122,6 +122,10 @@ void ChartListRefresh(ChartList* list) {
         cJSON* title = cJSON_GetObjectItem(info, "title");
         cJSON* artist = cJSON_GetObjectItem(info, "artist");
         cJSON* preview = cJSON_GetObjectItem(info, "preview");
+
+        len = strlen(buffer);
+        buffer[len - 10] = '\0';
+
         ChartListPushBack(list,
             buffer,
             title->valuestring,
@@ -179,17 +183,20 @@ void DestroySelectScene() {
 }
 void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
-        switch (event->key.keysym.sym) {
-        case SDLK_KP_ENTER: {
+        switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_E:
+        case SDL_SCANCODE_KP_ENTER: {
             CreateGameScene(renderer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
+            cur_scene = GAME;
+            GameSceneStart();
             break;
         }
-        case SDLK_ESCAPE: {
+        case SDL_SCANCODE_ESCAPE: {
             cur_scene = MENU;
             break;
         }
-        case SDLK_w:
-        case SDLK_UP: {
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP: {
             select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
             SDL_DestroyTexture(select_scene->preview);
             SDL_DestroyTexture(select_scene->title);
@@ -202,8 +209,8 @@ void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event) {
             select_scene->preview = select_scene->title = select_scene->artist = NULL;
             break;
         }
-        case SDLK_d:
-        case SDLK_DOWN: {
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN: {
             select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
             SDL_DestroyTexture(select_scene->preview);
             SDL_DestroyTexture(select_scene->title);
@@ -216,7 +223,7 @@ void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event) {
             select_scene->preview = select_scene->title = select_scene->artist = NULL;
             break;
         }
-        case SDLK_r: {
+        case SDL_SCANCODE_R: {
             ChartListRefresh(&select_scene->chart_list);
             break;
         }
@@ -227,9 +234,16 @@ void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event) {
 }
 void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_RenderCopy(renderer, select_scene->background, NULL, NULL);
+    if (select_scene->preview == NULL) {
+        char buffer[1 << 8] = { 0 };
+        strcat(buffer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
+        strcat(buffer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].preview);
+        select_scene->preview = IMG_LoadTexture(renderer, buffer);
+    }
     if (select_scene->preview == NULL)
-        select_scene->preview = IMG_LoadTexture(renderer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].preview);
-    SDL_RenderCopy(renderer, select_scene->preview, NULL, &preview_rect);
+        printf("[SelectScene]Failed to load preview: %s\n", IMG_GetError());
+    else
+        SDL_RenderCopy(renderer, select_scene->preview, NULL, &preview_rect);
     if (select_scene->title == NULL) {
         SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, title_color);
         select_scene->title = SDL_CreateTextureFromSurface(renderer, sur);
@@ -238,7 +252,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_Rect rect = { .h = LETTER_HEIGHT, .y = preview_rect.y + preview_rect.h + LETTER_HEIGHT };
     size_t len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title);
     rect.w = len * LETTER_WIDTH;
-    rect.x = (preview_rect.x + preview_rect.w >> 1) - rect.w;
+    rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
     SDL_RenderCopy(renderer, select_scene->title, NULL, &rect);
     if (select_scene->artist == NULL) {
         SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, title_color);
@@ -246,11 +260,11 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
         SDL_FreeSurface(sur);
     }
     len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist);
-    rect.y += 2 * LETTER_HEIGHT;
+    rect.y += LETTER_HEIGHT;
     rect.w = len * LETTER_WIDTH;
-    rect.x = (preview_rect.x + preview_rect.w >> 1) - rect.w;
+    rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
     SDL_RenderCopy(renderer, select_scene->artist, NULL, &rect);
-    /* TODO: draw list */
+    /* TODO: draw cursor */
     for (size_t i = 0, cur = (select_scene->chart_list.cur_chart - CHART_LIST_NAME_MAX_SIZE >> 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
         i < CHART_LIST_NAME_MAX_SIZE;
         i++, cur = (cur + 1) % select_scene->chart_list.size) {
@@ -260,7 +274,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
             SDL_FreeSurface(sur);
         }
         len = strlen(select_scene->chart_list.charts[cur].title);
-        rect.y = (LETTER_HEIGHT + 50) * i + 100;
+        rect.y = LETTER_HEIGHT * i * 2 + LETTER_HEIGHT;
         rect.w = len * LETTER_WIDTH;
         rect.x = 100;
         SDL_RenderCopy(renderer, select_scene->list[i], NULL, &rect);

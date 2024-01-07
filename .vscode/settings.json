@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "sdl.h": "c",
-        "sdl2_gfxprimitives.h": "c"
+        "sdl2_gfxprimitives.h": "c",
+        "gamescene.h": "c",
+        "sdl_mixer.h": "c"
     }
 }

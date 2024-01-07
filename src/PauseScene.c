@@ -33,18 +33,18 @@ void DestroyPauseScene() {
 }
 void PauseSceneUpdate(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
-        switch (event->key.keysym.sym) {
-        case SDLK_w:
-        case SDLK_UP: {
+        switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP: {
             pause_scene->cur_button = (pause_scene->cur_button - 1 + PAUSE_SCENE_BUTTON_SIZE) % PAUSE_SCENE_BUTTON_SIZE;
             break;
         }
-        case SDLK_d:
-        case SDLK_DOWN: {
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN: {
             pause_scene->cur_button = (pause_scene->cur_button + 1) % PAUSE_SCENE_BUTTON_SIZE;
             break;
         }
-        case SDLK_KP_ENTER: {
+        case SDL_SCANCODE_E: {
             ButtonFunc(&pause_scene->buttons[pause_scene->cur_button]);
             break;
         }
@@ -56,7 +56,7 @@ void PauseSceneUpdate(SDL_Event* event) {
 void PauseSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_RenderCopy(renderer, pause_scene->background, NULL, NULL);
     for (size_t i = 0; i < PAUSE_SCENE_BUTTON_SIZE; i++) {
-        ButtonDraw(&pause_scene->buttons[i], renderer, font);
+        ButtonDraw(&pause_scene->buttons[i], renderer, font, i == pause_scene->cur_button);
     }
 }
 
@@ -66,6 +66,7 @@ static void Resume() {
 }
 static void BackToMenu() {
     GameScenePause();
+    DestroyGameScene();
     cur_scene = MENU;
 }
 static void Quit() {

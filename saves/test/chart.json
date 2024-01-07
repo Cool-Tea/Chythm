@@ -2,27 +2,27 @@
     "info": {
         "title": "TEST",
         "artist": "OFFICIAL",
-        "preview": "./preview.jpg"
+        "preview": "cat.jpg"
     },
     "chart": {
-        "audio": "./audio.mp3",
+        "audio": "audio.mp3",
         "bpm": 180,
         "offset": 0,
-        "background": "./background.png",
+        "background": "background.jpg",
         "lane_size": 4,
         "notes": [
             {
                 "type": 0,
-                "time": 2000,
+                "time": 10000,
                 "lane": 0,
                 "move": {
                     "start": {
-                        "x": 30,
-                        "y": 40
+                        "x": -30,
+                        "y": -40
                     },
                     "end": {
-                        "x": 50,
-                        "y": 40
+                        "x": 500,
+                        "y": 600
                     }
                 }
             },
@@ -33,12 +33,12 @@
                 "lane": 1,
                 "move": {
                     "start": {
-                        "x": 30,
-                        "y": 40
+                        "x": -30,
+                        "y": -40
                     },
                     "end": {
-                        "x": 50,
-                        "y": 40
+                        "x": 500,
+                        "y": 400
                     }
                 }
             }
@@ -56,7 +56,7 @@
             {
                 "object": 0,
                 "type": "text",
-                "time": 2,
+                "time": 2000,
                 "data": {
                     "text": "Hello Chythm"
                 }
@@ -65,7 +65,7 @@
                 "object": 1,
                 "lane": 0,
                 "type": "move",
-                "time": 3,
+                "time": 3000,
                 "data": {
                     "x": 3.0,
                     "y": 4.0

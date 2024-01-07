@@ -31,18 +31,19 @@ void DestroyMenuScene() {
 }
 void MenuSceneUpdate(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
-        switch (event->key.keysym.sym) {
-        case SDLK_w:
-        case SDLK_UP: {
+        switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP: {
             menu_scene->cur_button = (menu_scene->cur_button - 1 + MENU_SCENE_BUTTON_SIZE) % MENU_SCENE_BUTTON_SIZE;
             break;
         }
-        case SDLK_s:
-        case SDLK_DOWN: {
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN: {
             menu_scene->cur_button = (menu_scene->cur_button + 1) % MENU_SCENE_BUTTON_SIZE;
             break;
         }
-        case SDLK_KP_ENTER: {
+        case SDL_SCANCODE_E:
+        case SDL_SCANCODE_KP_ENTER: {
             ButtonFunc(&menu_scene->buttons[menu_scene->cur_button]);
             break;
         }
@@ -54,7 +55,7 @@ void MenuSceneUpdate(SDL_Event* event) {
 void MenuSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_RenderCopy(renderer, menu_scene->background, NULL, NULL);
     for (int i = 0; i < MENU_SCENE_BUTTON_SIZE; i++) {
-        ButtonDraw(&menu_scene->buttons[i], renderer, font);
+        ButtonDraw(&menu_scene->buttons[i], renderer, font, i == menu_scene->cur_button);
     }
     /* TODO: draw cursor */
 }

@@ -7,7 +7,7 @@ find_library(NAME SDL2_image REQUIRED)
 find_library(NAME SDL2_ttf REQUIRED)
 find_library(NAME SDL2_mixer REQUIRED)
 find_library(NAME SDL2_gfx REQUIRED)
-link_libraries(SDL2_image SDL2_ttf SDL2_mixer SDL2_gfx)
+link_libraries(SDL2_image SDL2_ttf SDL2_mixer)
 
 aux_source_directory(src DIR_SRCS)
 
@@ -19,5 +19,4 @@ target_link_libraries(Demo
     ${SDL2_image_LIBRARIES} 
     ${SDL2_ttf_LIBRARIES} 
     ${SDL2_mixer_LIBRARIES}
-    ${SDL2_gfx_LIBRARIES}
 )

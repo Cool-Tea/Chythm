@@ -17,7 +17,7 @@
 #define SAVES_PATH "../saves/"
 #define BGM_PATH
 #define FONT_PATH "../assets/fonts/font.TTF"
-#define FONT_SIZE 32
+#define FONT_SIZE 128
 
 enum SceneType {
     MENU,
@@ -57,8 +57,8 @@ extern const SDL_Color hit_point_colors[];
 
 /* Game Scene */
 enum ObjectType {
-    LANE,
-    GAME_SCENE
+    GAME_SCENE = 0,
+    LANE = 1
 };
 typedef enum ObjectType ObjectType;
 
@@ -71,7 +71,7 @@ extern const SDL_Color button_colors[];
 
 /* Select Scene */
 #define CHART_LIST_INIT_CAPACITY 1 << 3
-#define CHART_LIST_NAME_MAX_SIZE SCREEN_HEIGHT / (LETTER_HEIGHT + 50)
+#define CHART_LIST_NAME_MAX_SIZE SCREEN_HEIGHT / (2 * LETTER_HEIGHT)
 #define SELECT_SCENE_BACKGROUND "../assets/images/ background.png"
 
 extern const SDL_Rect preview_rect;
