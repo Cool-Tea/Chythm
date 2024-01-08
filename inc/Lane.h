@@ -25,7 +25,7 @@ struct Lane {
 typedef struct Lane Lane;
 void InitLane(Lane* lane);
 void FreeLane(Lane* lane);
-void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event);
+void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event, const char** game_text);
 void LaneDraw(Lane* lane, SDL_Renderer* renderer);
 
 #endif

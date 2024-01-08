@@ -57,7 +57,7 @@ void MenuSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     for (int i = 0; i < MENU_SCENE_BUTTON_SIZE; i++) {
         ButtonDraw(&menu_scene->buttons[i], renderer, font, i == menu_scene->cur_button);
     }
-    /* TODO: draw cursor */
+    DrawCursor(renderer, menu_scene->buttons[menu_scene->cur_button].rect);
 }
 static void Start() {
     cur_scene = SELECT;

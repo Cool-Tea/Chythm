@@ -9,4 +9,6 @@ extern Uint8 is_error;
 
 extern SceneType cur_scene;
 
+extern Uint64 score;
+
 #endif

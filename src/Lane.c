@@ -10,32 +10,38 @@ void FreeLane(Lane* lane) {
     FreeNoteList(&lane->note_list);
     FreeEventList(&lane->event_list);
 }
-void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event) {
+void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event, const char** game_text) {
     /* Key Handling */
     if (event != NULL) {
-        if (event->type == SDL_KEYDOWN &&
-            !lane->hit_point.isDown &&
+        if (event->type == SDL_KEYDOWN && !lane->hit_point.isDown &&
             event->key.keysym.sym == lane->hit_point.key) {
-            /* TODO: give feed back */
+            lane->hit_point.isDown = 1;
             for (; lane->note_list.head != lane->note_list.tail; lane->note_list.head++) {
                 if (lane->note_list.head->end_time >= relative_time + MISS_HIT_INTERVAL) break;
-                if (abs(lane->note_list.head->end_time - relative_time) <= PERFECT_HIT_INTERVAL) {
+                if (lane->note_list.head->end_time - relative_time <= PERFECT_HIT_INTERVAL) {
                     /* TODO: give feed back */
+                    *game_text = game_scene_texts[0];
+                    score += PERFECT_HIT_SCORE;
                 }
-                else if (abs(lane->note_list.head->end_time - relative_time) <= GOOD_HIT_INTERVAL) {
+                else if (lane->note_list.head->end_time - relative_time <= GOOD_HIT_INTERVAL) {
                     /* TODO: */
+                    *game_text = game_scene_texts[1];
+                    score += GOOD_HIT_SCORE;
                 }
                 else {
                     /* TODO: */
+                    *game_text = game_scene_texts[2];
                 }
             }
         }
-        else if (event->type == SDL_KEYUP) {
+        else if (event->type == SDL_KEYUP && lane->hit_point.isDown &&
+            event->key.keysym.sym == lane->hit_point.key) {
             /* TODO: give feed back */
+            lane->hit_point.isDown = 0;
         }
     }
     /* Note Update */
-    while (lane->note_list.head->end_time <= relative_time - MISS_HIT_INTERVAL &&
+    while (lane->note_list.head->end_time <= relative_time &&
         lane->note_list.head != lane->note_list.tail) {
         lane->note_list.head++;
     }
@@ -55,7 +61,7 @@ void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event) {
     }
 }
 void LaneDraw(Lane* lane, SDL_Renderer* renderer) {
-    /* TODO: draw hitpoint */
+    DrawHitPoint(renderer, lane->hit_point.cur_x, lane->hit_point.cur_y, hit_point_colors[lane->hit_point.isDown]);
     for (Note* ptr = lane->note_list.head;
         ptr != lane->note_list.tail; ptr++) {
         NoteDraw(ptr, renderer);

@@ -6,6 +6,7 @@
 #include "cJSON.h"
 #include "Constants.h"
 #include "Lane.h"
+#include "Drawer.h"
 
 struct GameScene {
     /* timer */
@@ -16,6 +17,9 @@ struct GameScene {
     /* image and audio */
     SDL_Texture* background;
     Mix_Music* music;
+
+    /* text */
+    const char* text;
 
     /* event */
     EventList event_list;
@@ -35,6 +39,6 @@ void GameSceneStart();
 void GameScenePause();
 void GameSceneResume();
 void GameSceneUpdate(SDL_Event* event);
-void GameSceneDraw(SDL_Renderer* renderer);
+void GameSceneDraw(SDL_Renderer* renderer, TTF_Font* font);
 
 #endif

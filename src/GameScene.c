@@ -16,6 +16,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     game_scene->background = NULL;
     game_scene->music = NULL;
     game_scene->lanes = NULL;
+    game_scene->text = NULL;
 
     char* buffer = malloc(1 << 8);
     if (buffer == NULL) {
@@ -91,6 +92,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         /* TODO: allocate key for each lane */
         InitLane(&game_scene->lanes[i]);
+        game_scene->lanes[i].hit_point.key = default_keys[i];
     }
     if (is_error) {
         printf("[GameScene]Failed to init lanes\n");
@@ -202,6 +204,7 @@ void DestroyGameScene() {
     }
 }
 void GameSceneStart() {
+    score = 0;
     game_scene->cur_time = game_scene->base_time = SDL_GetTicks();
     game_scene->relative_time = 0;
     Mix_PlayMusic(game_scene->music, 0);
@@ -217,12 +220,15 @@ void GameSceneResume() {
     Mix_ResumeMusic();
 }
 void GameSceneUpdate(SDL_Event* event) {
+
+    static Uint32 time = 0;
+
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.scancode) {
         case SDL_SCANCODE_ESCAPE: {
             GameScenePause();
             cur_scene = PAUSE;
-            break;
+            return;
         }
         default:
             break;
@@ -231,8 +237,14 @@ void GameSceneUpdate(SDL_Event* event) {
 
     game_scene->cur_time = SDL_GetTicks();
     game_scene->relative_time = game_scene->cur_time - game_scene->base_time;
+    if (game_scene->relative_time - time > GAME_SCENE_TEXT_PERSISTENCE) {
+        game_scene->text = NULL;
+    }
+    if (game_scene->text != NULL) {
+        time = game_scene->relative_time;
+    }
     for (size_t i = 0; i < game_scene->lane_size; i++) {
-        LaneUpdate(&game_scene->lanes[i], game_scene->relative_time, event);
+        LaneUpdate(&game_scene->lanes[i], game_scene->relative_time, event, &game_scene->text);
     }
     /* Event Update */
     while (game_scene->event_list.cur_event - game_scene->event_list.events < game_scene->event_list.size &&
@@ -241,9 +253,44 @@ void GameSceneUpdate(SDL_Event* event) {
         game_scene->event_list.cur_event++;
     }
 }
-void GameSceneDraw(SDL_Renderer* renderer) {
+void GameSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_RenderCopy(renderer, game_scene->background, NULL, NULL);
+
+#ifdef DEV
+    char buf[1 << 4];
+    int len = sprintf(buf, "time: %us", game_scene->relative_time / 1000);
+    SDL_Rect rect = { .w = 10 * len, .h = 20, .x = 0, .y = 800 };
+    DrawText(renderer, rect, buf, font, button_colors[0]);
+#endif /* dev */
+
     /* TODO: draw event stuff */
+
+    if (game_scene->text != NULL) {
+        int len = strlen(game_scene->text);
+        SDL_Rect rect = {
+                .w = GAME_SCENE_LETTER_WIDTH * len, .h = GAME_SCENE_LETTER_HEIGHT,
+                .x = SCREEN_WIDTH / 2 - GAME_SCENE_LETTER_WIDTH * len / 2, .y = 0
+        };
+        DrawText(renderer, rect, game_scene->text, font, button_colors[0]);
+    }
+
+    /* Draw Score */
+#ifdef DEV
+    len = sprintf(buf, "SCORE: %lu", score);
+    rect = (SDL_Rect){
+            .w = GAME_SCENE_LETTER_WIDTH * len, .h = GAME_SCENE_LETTER_HEIGHT,
+            .x = 0, .y = 0
+    };
+#else
+    char buf[1 << 4];
+    int len = sprintf(buf, "SCORE: %llu", score);
+    SDL_Rect rect = {
+            .w = GAME_SCENE_LETTER_WIDTH * len, .h = GAME_SCENE_LETTER_HEIGHT,
+            .x = 0, .y = 0
+    };
+#endif
+    DrawText(renderer, rect, buf, font, button_colors[0]);
+
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneDraw(&game_scene->lanes[i], renderer);
     }

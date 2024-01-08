@@ -22,9 +22,5 @@ void ButtonFunc(Button* button) {
     }
 }
 void ButtonDraw(Button* button, SDL_Renderer* renderer, TTF_Font* font, Uint8 status) {
-    SDL_Surface* sur = TTF_RenderText_Blended(font, button->text, button_colors[status]);
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, sur);
-    SDL_RenderCopy(renderer, texture, NULL, &button->rect);
-    SDL_FreeSurface(sur);
-    SDL_DestroyTexture(texture);
+    DrawText(renderer, button->rect, button->text, font, button_colors[status]);
 }

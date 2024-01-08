@@ -9,10 +9,15 @@ Application* CreateApplication() {
         is_error = 1;
         return app;
     }
-    app->win = app->ren = app->font = app->menu = app->select = app->game = app->pause = NULL;
+    app->win = NULL, app->ren = NULL, app->font = NULL, app->menu = NULL, app->select = NULL, app->game = NULL, app->pause = NULL;
 
     /* SDL related */
-    app->win = SDL_CreateWindow(GAME_TITLE, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
+    app->win = SDL_CreateWindow(
+        GAME_TITLE,
+        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+        SCREEN_WIDTH, SCREEN_HEIGHT,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN
+    );
     if (app->win == NULL) {
         printf("[Application]Failed to create window: %s\n", SDL_GetError());
         is_error = 1;
@@ -38,6 +43,7 @@ Application* CreateApplication() {
     app->pause = CreatePauseScene(app->ren);
 
     app->timer.cur_time = SDL_GetTicks();
+    app->timer.delta_time = 1;
 
     return app;
 }
@@ -72,7 +78,7 @@ void ApplicationUpdate() {
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
             is_running = 0;
-            break;
+            return;
         }
         switch (cur_scene) {
         case MENU: {
@@ -96,6 +102,27 @@ void ApplicationUpdate() {
             break;
         }
     }
+    switch (cur_scene) {
+    case MENU: {
+        MenuSceneUpdate(&e);
+        break;
+    }
+    case SELECT: {
+        SelectSceneUpdate(app->ren, &e);
+        break;
+    }
+    case GAME: {
+        if (app->game == NULL && game_scene != NULL) app->game = game_scene;
+        GameSceneUpdate(&e);
+        break;
+    }
+    case PAUSE: {
+        PauseSceneUpdate(&e);
+        break;
+    }
+    default:
+        break;
+    }
 }
 void ApplicationDraw() {
     SDL_RenderClear(app->ren);
@@ -109,7 +136,7 @@ void ApplicationDraw() {
         break;
     }
     case GAME: {
-        GameSceneDraw(app->ren);
+        GameSceneDraw(app->ren, app->font);
         break;
     }
     case PAUSE: {
@@ -119,6 +146,14 @@ void ApplicationDraw() {
     default:
         break;
     }
+
+#ifdef DEV
+    char fps[1 << 4];
+    int len = sprintf(fps, "fps: %u", 1000u / app->timer.delta_time);
+    SDL_Rect rect = { .w = 10 * len, .h = 20, .x = 1800, .y = 0 };
+    DrawText(app->ren, rect, fps, app->font, button_colors[0]);
+#endif /* dev */
+
     SDL_RenderPresent(app->ren);
 }
 void ApplicationTick() {
@@ -126,5 +161,6 @@ void ApplicationTick() {
     while (SDL_GetTicks() < app->timer.cur_time + fps_time) {
         SDL_Delay(1);
     }
-    app->timer.cur_time = SDL_GetTicks();
+    app->timer.delta_time = SDL_GetTicks() - app->timer.cur_time;
+    app->timer.cur_time += app->timer.delta_time;
 }

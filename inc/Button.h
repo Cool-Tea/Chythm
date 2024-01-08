@@ -1,9 +1,9 @@
 #ifndef _BUTTON_H_
 #define _BUTTON_H_
 
-#include <SDL_ttf.h>
 #include "Constants.h"
 #include "Globals.h"
+#include "Drawer.h"
 
 typedef void (*OnHit)();
 

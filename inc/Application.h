@@ -10,6 +10,7 @@
 
 struct Timer {
     Uint32 cur_time;
+    Uint32 delta_time;
 };
 typedef struct Timer Timer;
 

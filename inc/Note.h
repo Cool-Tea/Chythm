@@ -3,6 +3,7 @@
 
 #include "Constants.h"
 #include "Globals.h"
+#include "Drawer.h"
 
 struct Note {
     NoteType type;

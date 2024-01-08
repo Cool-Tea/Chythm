@@ -264,7 +264,6 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     rect.w = len * LETTER_WIDTH;
     rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
     SDL_RenderCopy(renderer, select_scene->artist, NULL, &rect);
-    /* TODO: draw cursor */
     for (size_t i = 0, cur = (select_scene->chart_list.cur_chart - CHART_LIST_NAME_MAX_SIZE >> 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
         i < CHART_LIST_NAME_MAX_SIZE;
         i++, cur = (cur + 1) % select_scene->chart_list.size) {
@@ -278,5 +277,8 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
         rect.w = len * LETTER_WIDTH;
         rect.x = 100;
         SDL_RenderCopy(renderer, select_scene->list[i], NULL, &rect);
+        if (i == (CHART_LIST_NAME_MAX_SIZE - 1) / 2) {
+            DrawCursor(renderer, rect);
+        }
     }
 }

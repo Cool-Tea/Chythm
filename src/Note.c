@@ -3,15 +3,23 @@
 void NoteUpdate(Note* note, Uint32 relative_time) {
     note->cur_x = (
         (note->end_x - note->start_x) * (relative_time - note->start_time)
-        + note->start_x * (note->end_time - relative_time)
+        + note->start_x * (note->end_time - note->start_time)
         ) / (note->end_time - note->start_time);
     note->cur_y = (
         (note->end_y - note->start_y) * (relative_time - note->start_time)
-        + note->start_y * (note->end_time - relative_time)
+        + note->start_y * (note->end_time - note->start_time)
         ) / (note->end_time - note->start_time);
 }
 void NoteDraw(Note* note, SDL_Renderer* renderer) {
     /* TODO: get the image of the note and draw */
+    switch (note->type) {
+    case SINGLE: {
+        DrawSingleNote(renderer, note->cur_x, note->cur_y, 0, 0, note_colors[0]);
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void InitNoteList(NoteList* note_list) {
