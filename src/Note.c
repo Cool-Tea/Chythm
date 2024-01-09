@@ -10,12 +10,20 @@ void NoteUpdate(Note* note, Uint32 relative_time) {
         + note->start_y * (note->end_time - note->start_time)
         ) / (note->end_time - note->start_time);
 }
-void NoteDraw(Note* note, SDL_Renderer* renderer) {
+void NoteDraw(Note* note, SDL_Renderer* renderer, Note* related_note) {
     /* TODO: get the image of the note and draw */
     switch (note->type) {
     case SINGLE: {
-        DrawSingleNote(renderer, note->cur_x, note->cur_y, 0, 0, note_colors[0]);
+        DrawSingleNote(renderer, note->cur_x, note->cur_y, note_colors[0]);
         break;
+    }
+    case LONG_HEAD: {
+        DrawLongNote(
+            renderer,
+            note->cur_x, note->cur_y,
+            related_note->cur_x, related_note->cur_y,
+            note_colors[1]
+        );
     }
     default:
         break;
@@ -49,7 +57,8 @@ void NoteListEmplaceBack(NoteList* note_list,
         .cur_x = start_x,
         .cur_y = start_y,
         .end_x = end_x,
-        .end_y = end_y
+        .end_y = end_y,
+        .isDown = 0
     };
     if (note_list->size >= note_list->capacity) {
         note_list->capacity <<= 1;

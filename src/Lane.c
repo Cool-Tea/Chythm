@@ -18,18 +18,28 @@ void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event, const char**
             lane->hit_point.isDown = 1;
             for (; lane->note_list.head != lane->note_list.tail; lane->note_list.head++) {
                 if (lane->note_list.head->end_time >= relative_time + MISS_HIT_INTERVAL) break;
-                if (lane->note_list.head->end_time - relative_time <= PERFECT_HIT_INTERVAL) {
+                if (lane->note_list.head->end_time - relative_time <= PERFECT_HIT_INTERVAL ||
+                    relative_time - lane->note_list.head->end_time <= PERFECT_HIT_INTERVAL) {
                     /* TODO: give feed back */
+                    if (lane->note_list.head->type == LONG_HEAD) {
+                        lane->note_list.head->isDown = 1;
+                        break;
+                    }
                     *game_text = game_scene_texts[0];
                     score += PERFECT_HIT_SCORE;
                 }
-                else if (lane->note_list.head->end_time - relative_time <= GOOD_HIT_INTERVAL) {
-                    /* TODO: */
+                else if (lane->note_list.head->end_time - relative_time <= GOOD_HIT_INTERVAL ||
+                    relative_time - lane->note_list.head->end_time <= GOOD_HIT_INTERVAL) {
+                    /* TODO: give feed back */
+                    if (lane->note_list.head->type == LONG_HEAD) {
+                        lane->note_list.head->isDown = 1;
+                        break;
+                    }
                     *game_text = game_scene_texts[1];
                     score += GOOD_HIT_SCORE;
                 }
                 else {
-                    /* TODO: */
+                    /* TODO: give feed back */
                     *game_text = game_scene_texts[2];
                 }
             }
@@ -38,11 +48,40 @@ void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event, const char**
             event->key.keysym.sym == lane->hit_point.key) {
             /* TODO: give feed back */
             lane->hit_point.isDown = 0;
+            for (; lane->note_list.head != lane->note_list.tail; lane->note_list.head++) {
+                if (lane->note_list.head->type != LONG_HEAD) break;
+                Note* tail = lane->note_list.head + 1;
+                if (tail->end_time >= relative_time + MISS_HIT_INTERVAL) {
+                    *game_text = game_scene_texts[2];
+                    continue;
+                }
+                if ((tail->end_time - relative_time <= PERFECT_HIT_INTERVAL ||
+                    relative_time - tail->end_time <= PERFECT_HIT_INTERVAL) &&
+                    lane->note_list.head->isDown) {
+                    *game_text = game_scene_texts[0];
+                    score += PERFECT_HIT_SCORE;
+                }
+                else if ((tail->end_time - relative_time <= GOOD_HIT_INTERVAL ||
+                    relative_time - tail->end_time <= GOOD_HIT_INTERVAL) &&
+                    lane->note_list.head->isDown) {
+                    *game_text = game_scene_texts[0];
+                    score += GOOD_HIT_SCORE;
+                }
+                else {
+                    *game_text = game_scene_texts[2];
+                }
+            }
         }
     }
     /* Note Update */
     while (lane->note_list.head->end_time <= relative_time &&
-        lane->note_list.head != lane->note_list.tail) {
+        lane->note_list.head < lane->note_list.tail) {
+        if (lane->note_list.head->type == LONG_HEAD && lane->note_list.head->isDown &&
+            (lane->note_list.head + 1)->end_time > relative_time) {
+            lane->note_list.head->start_x = lane->note_list.head->end_x;
+            lane->note_list.head->start_y = lane->note_list.head->end_y;
+            break;
+        }
         lane->note_list.head++;
     }
     while (lane->note_list.tail->start_time <= relative_time + MISS_HIT_INTERVAL &&
@@ -63,7 +102,18 @@ void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event, const char**
 void LaneDraw(Lane* lane, SDL_Renderer* renderer) {
     DrawHitPoint(renderer, lane->hit_point.cur_x, lane->hit_point.cur_y, hit_point_colors[lane->hit_point.isDown]);
     for (Note* ptr = lane->note_list.head;
-        ptr != lane->note_list.tail; ptr++) {
-        NoteDraw(ptr, renderer);
+        ptr < lane->note_list.tail; ptr++) {
+        switch (ptr->type) {
+        case SINGLE: {
+            NoteDraw(ptr, renderer, NULL);
+            break;
+        }
+        case LONG_HEAD: {
+            Note* head = ptr++;
+            NoteDraw(head, renderer, ptr);
+        }
+        default:
+            break;
+        }
     }
 }

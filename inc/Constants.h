@@ -32,8 +32,9 @@ typedef enum SceneType SceneType;
 #define NOTE_RADIUS 30
 
 enum NoteType {
-    SINGLE,
-    LONG
+    SINGLE = 0,
+    LONG_HEAD = 1,
+    LONG_TAIL = 2
 };
 typedef enum NoteType NoteType;
 extern const SDL_Color note_colors[];
@@ -52,9 +53,9 @@ typedef enum EventType EventType;
 /* Lane */
 #define PERFECT_HIT_INTERVAL 100 //ms
 #define PERFECT_HIT_SCORE 500
-#define GOOD_HIT_INTERVAL 200 //ms
+#define GOOD_HIT_INTERVAL 150 //ms
 #define GOOD_HIT_SCORE 200
-#define MISS_HIT_INTERVAL 300 //ms
+#define MISS_HIT_INTERVAL 200 //ms
 #define HIT_POINT_RADIUS 35
 
 extern const SDL_Keycode default_keys[];

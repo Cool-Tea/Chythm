@@ -11,10 +11,14 @@ struct Note {
     int start_x, start_y;
     int cur_x, cur_y;
     int end_x, end_y;
+    Uint8 isDown; // this is for LONG type
 };
 typedef struct Note Note;
 void NoteUpdate(Note* note, Uint32 relative_time);
-void NoteDraw(Note* note, SDL_Renderer* renderer);
+/**
+ * \param related_note currently is the tail note of LONG type. For SINGLE pass NULL
+*/
+void NoteDraw(Note* note, SDL_Renderer* renderer, Note* related_note);
 
 /* A CPP-vector-like array, designed specially for this project*/
 struct NoteList {

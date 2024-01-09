@@ -90,9 +90,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
         return game_scene;
     }
     for (size_t i = 0; i < game_scene->lane_size; i++) {
-        /* TODO: allocate key for each lane */
         InitLane(&game_scene->lanes[i]);
-        game_scene->lanes[i].hit_point.key = default_keys[i];
     }
     if (is_error) {
         printf("[GameScene]Failed to init lanes\n");
@@ -116,28 +114,12 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
         cJSON* end = cJSON_GetObjectItem(move, "end");
         cJSON* end_x = cJSON_GetObjectItem(end, "x");
         cJSON* end_y = cJSON_GetObjectItem(end, "y");
-        switch (type->valueint) {
-            /* TODO: more note */
-        case SINGLE: {
-            cJSON* time = cJSON_GetObjectItem(note, "time");
-            NoteListEmplaceBack(&game_scene->lanes[lane->valueint].note_list,
-                type->valueint, time->valueint, time->valueint + 60000u / bpm->valueint,
-                start_x->valueint, start_y->valueint, end_x->valueint, end_y->valueint
-            );
-            break;
-        }
-        case LONG: {
-            cJSON* start_time = cJSON_GetObjectItem(note, "start_time");
-            cJSON* end_time = cJSON_GetObjectItem(note, "end_time");
-            NoteListEmplaceBack(&game_scene->lanes[lane->valueint].note_list,
-                type->valueint, start_time->valueint, end_time->valueint,
-                start_x->valueint, start_y->valueint, end_x->valueint, end_y->valueint
-            );
-            break;
-        }
-        default:
-            break;
-        }
+        /* TODO: more note */
+        cJSON* time = cJSON_GetObjectItem(note, "time");
+        NoteListEmplaceBack(&game_scene->lanes[lane->valueint].note_list,
+            type->valueint, time->valueint - 60000u / bpm->valueint, time->valueint,
+            start_x->valueint, start_y->valueint, end_x->valueint, end_y->valueint
+        );
     }
 
     /* Get hit points */
@@ -151,6 +133,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
         cJSON* y = cJSON_GetObjectItem(position, "y");
         game_scene->lanes[lane->valueint].hit_point.cur_x = x->valueint;
         game_scene->lanes[lane->valueint].hit_point.cur_y = y->valueint;
+        game_scene->lanes[lane->valueint].hit_point.key = default_keys[lane->valueint];
     }
 
     /* Get events */
@@ -220,9 +203,6 @@ void GameSceneResume() {
     Mix_ResumeMusic();
 }
 void GameSceneUpdate(SDL_Event* event) {
-
-    static Uint32 time = 0;
-
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.scancode) {
         case SDL_SCANCODE_ESCAPE: {
@@ -237,12 +217,6 @@ void GameSceneUpdate(SDL_Event* event) {
 
     game_scene->cur_time = SDL_GetTicks();
     game_scene->relative_time = game_scene->cur_time - game_scene->base_time;
-    if (game_scene->relative_time - time > GAME_SCENE_TEXT_PERSISTENCE) {
-        game_scene->text = NULL;
-    }
-    if (game_scene->text != NULL) {
-        time = game_scene->relative_time;
-    }
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneUpdate(&game_scene->lanes[i], game_scene->relative_time, event, &game_scene->text);
     }
@@ -256,10 +230,13 @@ void GameSceneUpdate(SDL_Event* event) {
 void GameSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_RenderCopy(renderer, game_scene->background, NULL, NULL);
 
+    static int len;
+    static char buf[1 << 4];
+    static SDL_Rect rect;
+
 #ifdef DEV
-    char buf[1 << 4];
-    int len = sprintf(buf, "time: %us", game_scene->relative_time / 1000);
-    SDL_Rect rect = { .w = 10 * len, .h = 20, .x = 0, .y = 800 };
+    len = sprintf(buf, "time: %us", game_scene->relative_time / 1000);
+    rect.w = 10 * len, rect.h = 20, rect.x = 0, rect.y = 800;
     DrawText(renderer, rect, buf, font, button_colors[0]);
 #endif /* dev */
 
@@ -275,20 +252,8 @@ void GameSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     }
 
     /* Draw Score */
-#ifdef DEV
     len = sprintf(buf, "SCORE: %lu", score);
-    rect = (SDL_Rect){
-            .w = GAME_SCENE_LETTER_WIDTH * len, .h = GAME_SCENE_LETTER_HEIGHT,
-            .x = 0, .y = 0
-    };
-#else
-    char buf[1 << 4];
-    int len = sprintf(buf, "SCORE: %llu", score);
-    SDL_Rect rect = {
-            .w = GAME_SCENE_LETTER_WIDTH * len, .h = GAME_SCENE_LETTER_HEIGHT,
-            .x = 0, .y = 0
-    };
-#endif
+    rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.h = GAME_SCENE_LETTER_HEIGHT, rect.x = 0, rect.y = 0;
     DrawText(renderer, rect, buf, font, button_colors[0]);
 
     for (size_t i = 0; i < game_scene->lane_size; i++) {
