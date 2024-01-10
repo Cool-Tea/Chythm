@@ -1,14 +1,10 @@
 #include "../inc/Note.h"
 
 void NoteUpdate(Note* note, Uint32 relative_time) {
-    note->cur_x = (
-        (note->end_x - note->start_x) * (relative_time - note->start_time)
-        + note->start_x * (note->end_time - note->start_time)
-        ) / (note->end_time - note->start_time);
-    note->cur_y = (
-        (note->end_y - note->start_y) * (relative_time - note->start_time)
-        + note->start_y * (note->end_time - note->start_time)
-        ) / (note->end_time - note->start_time);
+    note->cur_x = ((note->end_x - note->start_x) * (relative_time - note->start_time))
+        / (note->end_time - note->start_time) + note->start_x;
+    note->cur_y = ((note->end_y - note->start_y) * (relative_time - note->start_time))
+        / (note->end_time - note->start_time) + note->start_y;
 }
 void NoteDraw(Note* note, SDL_Renderer* renderer, Note* related_note) {
     /* TODO: get the image of the note and draw */

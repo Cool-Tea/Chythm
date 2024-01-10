@@ -8,7 +8,7 @@
         "audio": "audio.mp3",
         "bpm": 60,
         "offset": 0,
-        "background": "background.jpg",
+        "background": "pure.png",
         "lane_size": 4,
         "notes": [
             {
@@ -66,7 +66,7 @@
                         "y": -40
                     },
                     "end": {
-                        "x": 1800,
+                        "x": 1600,
                         "y": 600
                     }
                 }
@@ -195,8 +195,8 @@
         "events": [
             {
                 "object": 0,
-                "type": "text",
-                "time": 2000,
+                "type": 0,
+                "time": 10000,
                 "data": {
                     "text": "Hello Chythm"
                 }
@@ -204,12 +204,19 @@
             {
                 "object": 1,
                 "lane": 0,
-                "type": "move",
-                "time": 3000,
+                "type": 1,
+                "time": 8000,
                 "data": {
-                    "x": 3.0,
-                    "y": 4.0
+                    "x": 0,
+                    "y": 4
                 }
+            },
+            {
+                "object": 1,
+                "lane": 0,
+                "type": 2,
+                "time": 9000,
+                "data": null
             }
         ]
     }

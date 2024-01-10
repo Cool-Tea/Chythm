@@ -7,6 +7,7 @@
 
 struct HitPoint {
     int cur_x, cur_y;
+    int velo_x, velo_y;
     Uint8 isDown;
     SDL_Keycode key;
 };

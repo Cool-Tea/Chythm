@@ -9,7 +9,7 @@ Application* CreateApplication() {
         is_error = 1;
         return app;
     }
-    app->win = NULL, app->ren = NULL, app->font = NULL, app->menu = NULL, app->select = NULL, app->game = NULL, app->pause = NULL;
+    app->win = NULL, app->ren = NULL, app->font = NULL;
 
     /* SDL related */
     app->win = SDL_CreateWindow(
@@ -37,10 +37,9 @@ Application* CreateApplication() {
     }
 
     /* Scene related */
-    app->menu = CreateMenuScene(app->ren);
-    app->select = CreateSelectScene(app->ren);
-    app->game = game_scene;
-    app->pause = CreatePauseScene(app->ren);
+    CreateMenuScene(app->ren);
+    CreateSelectScene(app->ren);
+    CreatePauseScene(app->ren);
 
     app->timer.cur_time = SDL_GetTicks();
     app->timer.delta_time = 1;
@@ -90,7 +89,6 @@ void ApplicationUpdate() {
             break;
         }
         case GAME: {
-            if (app->game == NULL && game_scene != NULL) app->game = game_scene;
             GameSceneUpdate(&e);
             break;
         }
@@ -112,7 +110,6 @@ void ApplicationUpdate() {
         break;
     }
     case GAME: {
-        if (app->game == NULL && game_scene != NULL) app->game = game_scene;
         GameSceneUpdate(&e);
         break;
     }
@@ -148,16 +145,17 @@ void ApplicationDraw() {
     }
 
 #ifdef DEV
-    char fps[1 << 4];
+    static char fps[1 << 4];
+    static SDL_Rect rect = { .h = 20, .x = 1800, .y = 0 };
     int len = sprintf(fps, "fps: %u", 1000u / app->timer.delta_time);
-    SDL_Rect rect = { .w = 10 * len, .h = 20, .x = 1800, .y = 0 };
-    DrawText(app->ren, rect, fps, app->font, button_colors[0]);
+    rect.w = 10 * len;
+    DrawText(app->ren, rect, fps, app->font, default_colors[0]);
 #endif /* dev */
 
     SDL_RenderPresent(app->ren);
 }
 void ApplicationTick() {
-    Uint32 fps_time = 1000 / MAX_FPS;
+    static Uint32 fps_time = 1000 / MAX_FPS;
     while (SDL_GetTicks() < app->timer.cur_time + fps_time) {
         SDL_Delay(1);
     }

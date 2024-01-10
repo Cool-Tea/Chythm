@@ -19,11 +19,6 @@ struct Application {
     SDL_Renderer* ren;
     TTF_Font* font;
 
-    MenuScene* menu;
-    SelectScene* select;
-    GameScene* game;
-    PauseScene* pause;
-
     Timer timer;
 };
 typedef struct Application Application;

@@ -17,6 +17,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     game_scene->music = NULL;
     game_scene->lanes = NULL;
     game_scene->text = NULL;
+    game_scene->hit_status = NULL;
 
     char* buffer = malloc(1 << 8);
     if (buffer == NULL) {
@@ -147,17 +148,6 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
         cJSON* time = cJSON_GetObjectItem(event, "time");
         cJSON* data = cJSON_GetObjectItem(event, "data");
         switch (object->valueint) {
-        case LANE: {
-            /* TODO: More Type*/
-            cJSON* lane = cJSON_GetObjectItem(event, "lane");
-            cJSON* x = cJSON_GetObjectItem(data, "x");
-            cJSON* y = cJSON_GetObjectItem(data, "y");
-            int* coord = malloc(2 * sizeof(int));
-            coord[0] = x->valueint, coord[1] = x->valueint;
-            EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
-                time->valueint, type->valueint, coord);
-            break;
-        }
         case GAME_SCENE: {
             /* TODO: More Type*/
             cJSON* text = cJSON_GetObjectItem(data, "text");
@@ -166,6 +156,29 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
             strcpy(txt, text->valuestring);
             EventListEmplaceBack(&game_scene->event_list,
                 time->valueint, type->valueint, txt);
+            break;
+        }
+        case LANE: {
+            /* TODO: More Type*/
+            cJSON* lane = cJSON_GetObjectItem(event, "lane");
+            switch (type->valueint) {
+            case MOVE: {
+                cJSON* x = cJSON_GetObjectItem(data, "x");
+                cJSON* y = cJSON_GetObjectItem(data, "y");
+                int* coord = malloc(2 * sizeof(int));
+                coord[0] = x->valueint, coord[1] = y->valueint;
+                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
+                    time->valueint, type->valueint, coord);
+                break;
+            }
+            case STOP: {
+                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
+                    time->valueint, type->valueint, NULL);
+                break;
+            }
+            default:
+                break;
+            }
             break;
         }
         default:
@@ -203,6 +216,7 @@ void GameSceneResume() {
     Mix_ResumeMusic();
 }
 void GameSceneUpdate(SDL_Event* event) {
+    /* Key Handling */
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.scancode) {
         case SDL_SCANCODE_ESCAPE: {
@@ -214,16 +228,25 @@ void GameSceneUpdate(SDL_Event* event) {
             break;
         }
     }
-
+    /* Time Update */
     game_scene->cur_time = SDL_GetTicks();
     game_scene->relative_time = game_scene->cur_time - game_scene->base_time;
+    /* Lane Update */
     for (size_t i = 0; i < game_scene->lane_size; i++) {
-        LaneUpdate(&game_scene->lanes[i], game_scene->relative_time, event, &game_scene->text);
+        LaneUpdate(&game_scene->lanes[i], game_scene->relative_time, event, &game_scene->hit_status);
     }
     /* Event Update */
     while (game_scene->event_list.cur_event - game_scene->event_list.events < game_scene->event_list.size &&
         game_scene->event_list.cur_event->time <= game_scene->relative_time) {
-        /* TODO: perform event */
+        /* TODO: perform more event */
+        switch (game_scene->event_list.cur_event->type) {
+        case TEXT: {
+            game_scene->text = game_scene->event_list.cur_event->data;
+            break;
+        }
+        default:
+            break;
+        }
         game_scene->event_list.cur_event++;
     }
 }
@@ -237,24 +260,28 @@ void GameSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
 #ifdef DEV
     len = sprintf(buf, "time: %us", game_scene->relative_time / 1000);
     rect.w = 10 * len, rect.h = 20, rect.x = 0, rect.y = 800;
-    DrawText(renderer, rect, buf, font, button_colors[0]);
+    DrawText(renderer, rect, buf, font, default_colors[0]);
 #endif /* dev */
 
     /* TODO: draw event stuff */
-
     if (game_scene->text != NULL) {
-        int len = strlen(game_scene->text);
-        SDL_Rect rect = {
-                .w = GAME_SCENE_LETTER_WIDTH * len, .h = GAME_SCENE_LETTER_HEIGHT,
-                .x = SCREEN_WIDTH / 2 - GAME_SCENE_LETTER_WIDTH * len / 2, .y = 0
-        };
-        DrawText(renderer, rect, game_scene->text, font, button_colors[0]);
+        len = strlen(game_scene->text);
+        rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.h = GAME_SCENE_LETTER_HEIGHT,
+            rect.x = SCREEN_WIDTH / 2 - GAME_SCENE_LETTER_WIDTH * len / 2, rect.y = 0;
+        DrawText(renderer, rect, game_scene->text, font, default_colors[0]);
+    }
+
+    if (game_scene->hit_status != NULL) {
+        len = strlen(game_scene->hit_status);
+        rect.w = LETTER_WIDTH * len, rect.h = LETTER_HEIGHT,
+            rect.x = SCREEN_WIDTH - LETTER_WIDTH * len, rect.y = GAME_SCENE_LETTER_HEIGHT;
+        DrawText(renderer, rect, game_scene->hit_status, font, default_colors[0]);
     }
 
     /* Draw Score */
     len = sprintf(buf, "SCORE: %lu", score);
     rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.h = GAME_SCENE_LETTER_HEIGHT, rect.x = 0, rect.y = 0;
-    DrawText(renderer, rect, buf, font, button_colors[0]);
+    DrawText(renderer, rect, buf, font, default_colors[0]);
 
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneDraw(&game_scene->lanes[i], renderer);

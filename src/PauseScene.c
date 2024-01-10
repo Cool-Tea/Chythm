@@ -67,6 +67,7 @@ static void Resume() {
 static void BackToMenu() {
     GameScenePause();
     DestroyGameScene();
+    game_scene = NULL;
     cur_scene = MENU;
 }
 static void Quit() {

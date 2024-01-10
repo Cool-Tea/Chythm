@@ -20,6 +20,7 @@ struct GameScene {
 
     /* text */
     const char* text;
+    const char* hit_status;
 
     /* event */
     EventList event_list;

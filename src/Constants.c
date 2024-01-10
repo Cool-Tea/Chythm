@@ -1,5 +1,10 @@
 #include "../inc/Constants.h"
 
+/* Common */
+const SDL_Color default_colors[] = {
+    {0xff,0xff,0xff,0xff} // white
+};
+
 /* Note */
 const SDL_Color note_colors[] = {
     {0x00,0x00,0xff,0xff}, // SINGLE
