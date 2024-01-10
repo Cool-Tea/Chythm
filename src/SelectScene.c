@@ -233,7 +233,9 @@ void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event) {
     }
 }
 void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
+    /* Draw background */
     SDL_RenderCopy(renderer, select_scene->background, NULL, NULL);
+    /* Draw preview */
     if (select_scene->preview == NULL) {
         char buffer[1 << 8] = { 0 };
         strcat(buffer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
@@ -244,6 +246,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
         printf("[SelectScene]Failed to load preview: %s\n", IMG_GetError());
     else
         SDL_RenderCopy(renderer, select_scene->preview, NULL, &preview_rect);
+    /* Draw title */
     if (select_scene->title == NULL) {
         SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, title_color);
         select_scene->title = SDL_CreateTextureFromSurface(renderer, sur);
@@ -254,6 +257,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     rect.w = len * LETTER_WIDTH;
     rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
     SDL_RenderCopy(renderer, select_scene->title, NULL, &rect);
+    /* Draw artist */
     if (select_scene->artist == NULL) {
         SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, title_color);
         select_scene->artist = SDL_CreateTextureFromSurface(renderer, sur);
@@ -264,6 +268,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     rect.w = len * LETTER_WIDTH;
     rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
     SDL_RenderCopy(renderer, select_scene->artist, NULL, &rect);
+    /* Draw list */
     for (size_t i = 0, cur = (select_scene->chart_list.cur_chart - CHART_LIST_NAME_MAX_SIZE >> 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
         i < CHART_LIST_NAME_MAX_SIZE;
         i++, cur = (cur + 1) % select_scene->chart_list.size) {
