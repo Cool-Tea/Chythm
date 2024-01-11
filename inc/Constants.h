@@ -23,7 +23,8 @@ enum SceneType {
     MENU,
     SELECT,
     GAME,
-    PAUSE
+    PAUSE,
+    END
 };
 typedef enum SceneType SceneType;
 
@@ -91,10 +92,19 @@ extern const SDL_Color cursor_color;
 #define SELECT_SCENE_BACKGROUND "../assets/images/pure.png"
 
 extern const SDL_Rect preview_rect;
-extern const SDL_Color title_color;
 
 /* Pause Scene */
 #define PAUSE_SCENE_BUTTON_SIZE 3
 #define PAUSE_SCENE_BACKGROUND "../assets/images/pure.png"
+
+/* End Scene */
+#define END_SCENE_BUTTON_SIZE 3
+#define END_SCENE_BACKGROUND "../assets/images/pure.png"
+#define RATING_S_PERCENTAGE 0.9
+#define RATING_A_PERCENTAGE 0.8
+#define RATING_B_PERCENTAGE 0.7
+#define RATING_C_PERCENTAGE 0.5
+
+extern const char* end_scene_ratings[];
 
 #endif

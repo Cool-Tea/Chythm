@@ -40,6 +40,7 @@ Application* CreateApplication() {
     CreateMenuScene(app->ren);
     CreateSelectScene(app->ren);
     CreatePauseScene(app->ren);
+    CreateEndScene(app->ren);
 
     app->timer.cur_time = SDL_GetTicks();
     app->timer.delta_time = 1;
@@ -48,6 +49,7 @@ Application* CreateApplication() {
 }
 void DestroyApplication() {
     if (app != NULL) {
+        DestroyEndScene();
         DestroyPauseScene();
         DestroyGameScene();
         DestroySelectScene();
@@ -63,6 +65,7 @@ void DestroyApplication() {
             SDL_DestroyWindow(app->win);
         }
         free(app);
+        app = NULL;
     }
 }
 void ApplicationStart() {
@@ -73,7 +76,7 @@ void ApplicationStop() {
     Mix_HaltMusic();
 }
 void ApplicationUpdate() {
-    SDL_Event e;
+    static SDL_Event e;
     while (SDL_PollEvent(&e)) {
         if (e.type == SDL_QUIT) {
             is_running = 0;
@@ -96,6 +99,10 @@ void ApplicationUpdate() {
             PauseSceneUpdate(&e);
             break;
         }
+        case END: {
+            EndSceneUpdate(&e);
+            break;
+        }
         default:
             break;
         }
@@ -115,6 +122,10 @@ void ApplicationUpdate() {
     }
     case PAUSE: {
         PauseSceneUpdate(&e);
+        break;
+    }
+    case END: {
+        EndSceneUpdate(&e);
         break;
     }
     default:
@@ -139,6 +150,9 @@ void ApplicationDraw() {
     case PAUSE: {
         PauseSceneDraw(app->ren, app->font);
         break;
+    }
+    case END: {
+        EndSceneDraw(app->ren, app->font);
     }
     default:
         break;

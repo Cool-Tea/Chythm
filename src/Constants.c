@@ -44,6 +44,12 @@ const SDL_Color cursor_color = {
 const SDL_Rect preview_rect = {
     SCREEN_WIDTH / 2 - 250, SCREEN_HEIGHT / 2 - 400, 500, 500
 };
-const SDL_Color title_color = {
-    0xff, 0xff, 0xff, 0xff
+
+/* End Scene */
+const char* end_scene_ratings[] = {
+    "RATING: S",
+    "RATING: A",
+    "RATING: B",
+    "RATING: C",
+    "RATING: D"
 };

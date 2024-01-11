@@ -8,6 +8,12 @@
 #include "Lane.h"
 #include "Drawer.h"
 
+struct ResetPack {
+    SDL_Renderer* ren;
+    const char* chart_path;
+};
+typedef struct ResetPack ResetPack;
+
 struct GameScene {
     /* timer */
     Uint32 base_time;
@@ -32,11 +38,14 @@ struct GameScene {
 typedef struct GameScene GameScene;
 
 extern GameScene* game_scene;
+extern ResetPack reset_pack;
 
 /* chart_path sample: ../saves/test/ */
 GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path);
 void DestroyGameScene();
+void GameSceneReset();
 void GameSceneStart();
+void GameSceneEnd();
 void GameScenePause();
 void GameSceneResume();
 void GameSceneUpdate(SDL_Event* event);

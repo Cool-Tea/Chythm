@@ -5,7 +5,7 @@
         "preview": "cat.jpg"
     },
     "chart": {
-        "audio": "audio.mp3",
+        "audio": "audio_short.mp3",
         "bpm": 60,
         "offset": 0,
         "background": "pure.png",

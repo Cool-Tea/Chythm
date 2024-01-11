@@ -1,5 +1,7 @@
 #include "../inc/Application.h"
 
+/* TODO: clear out the #includes */
+
 void InitGame();
 void QuitGame();
 

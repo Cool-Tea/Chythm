@@ -5,6 +5,7 @@
 #include "SelectScene.h"
 #include "GameScene.h"
 #include "PauseScene.h"
+#include "EndScene.h"
 
 /* TODO: timer and music */
 

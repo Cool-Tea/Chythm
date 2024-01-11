@@ -21,7 +21,9 @@ PauseScene* CreatePauseScene(SDL_Renderer* renderer);
 void DestroyPauseScene();
 void PauseSceneUpdate(SDL_Event* event);
 void PauseSceneDraw(SDL_Renderer* renderer, TTF_Font* font);
+
 /* this is for the button */
+
 static void Resume();
 static void BackToMenu();
 static void Quit();

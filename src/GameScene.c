@@ -1,6 +1,7 @@
 #include "../inc/GameScene.h"
 
 GameScene* game_scene = NULL;
+ResetPack reset_pack = { NULL, NULL };
 
 static inline void CompletePath(char* buf, const char* path, const char* file) {
     strcpy(buf, path);
@@ -188,6 +189,11 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
 
     cJSON_Delete(file);
     free(buffer);
+
+    /* Reset Pack */
+    reset_pack.chart_path = chart_path;
+    reset_pack.ren = renderer;
+
     return game_scene;
 }
 void DestroyGameScene() {
@@ -197,13 +203,23 @@ void DestroyGameScene() {
         FreeEventList(&game_scene->event_list);
         if (game_scene->lanes != NULL) free(game_scene->lanes);
         free(game_scene);
+        game_scene = NULL;
     }
+}
+void GameSceneReset() {
+    DestroyGameScene();
+    CreateGameScene(reset_pack.ren, reset_pack.chart_path);
 }
 void GameSceneStart() {
     score = 0;
     game_scene->cur_time = game_scene->base_time = SDL_GetTicks();
     game_scene->relative_time = 0;
     Mix_PlayMusic(game_scene->music, 0);
+}
+extern void EndSceneRate();
+void GameSceneEnd() {
+    cur_scene = END;
+    EndSceneRate();
 }
 void GameScenePause() {
     Mix_PauseMusic();
@@ -216,6 +232,12 @@ void GameSceneResume() {
     Mix_ResumeMusic();
 }
 void GameSceneUpdate(SDL_Event* event) {
+    /* Music checking */
+    if (Mix_PlayingMusic() == 0) {
+        GameSceneEnd();
+        return;
+    }
+
     /* Key Handling */
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.scancode) {

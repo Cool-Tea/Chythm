@@ -29,6 +29,7 @@ void DestroyPauseScene() {
             FreeButton(&pause_scene->buttons[i]);
         }
         free(pause_scene);
+        pause_scene = NULL;
     }
 }
 void PauseSceneUpdate(SDL_Event* event) {
@@ -67,7 +68,6 @@ static void Resume() {
 static void BackToMenu() {
     GameScenePause();
     DestroyGameScene();
-    game_scene = NULL;
     cur_scene = MENU;
 }
 static void Quit() {

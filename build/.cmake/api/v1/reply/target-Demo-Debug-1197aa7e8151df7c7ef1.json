@@ -82,7 +82,8 @@
 				10,
 				11,
 				12,
-				13
+				13,
+				14
 			]
 		}
 	],
@@ -148,7 +149,8 @@
 				10,
 				11,
 				12,
-				13
+				13,
+				14
 			]
 		}
 	],
@@ -176,6 +178,12 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/Drawer.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "src/EndScene.c",
 			"sourceGroupIndex" : 0
 		},
 		{

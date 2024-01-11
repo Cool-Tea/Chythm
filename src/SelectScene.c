@@ -179,6 +179,7 @@ void DestroySelectScene() {
         }
         FreeChartList(&select_scene->chart_list);
         free(select_scene);
+        select_scene = NULL;
     }
 }
 void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event) {
@@ -248,7 +249,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
         SDL_RenderCopy(renderer, select_scene->preview, NULL, &preview_rect);
     /* Draw title */
     if (select_scene->title == NULL) {
-        SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, title_color);
+        SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, default_colors[0]);
         select_scene->title = SDL_CreateTextureFromSurface(renderer, sur);
         SDL_FreeSurface(sur);
     }
@@ -259,7 +260,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     SDL_RenderCopy(renderer, select_scene->title, NULL, &rect);
     /* Draw artist */
     if (select_scene->artist == NULL) {
-        SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, title_color);
+        SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, default_colors[0]);
         select_scene->artist = SDL_CreateTextureFromSurface(renderer, sur);
         SDL_FreeSurface(sur);
     }
@@ -273,7 +274,7 @@ void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
         i < CHART_LIST_NAME_MAX_SIZE;
         i++, cur = (cur + 1) % select_scene->chart_list.size) {
         if (select_scene->list[i] == NULL) {
-            SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[cur].title, title_color);
+            SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[cur].title, default_colors[0]);
             select_scene->list[i] = SDL_CreateTextureFromSurface(renderer, sur);
             SDL_FreeSurface(sur);
         }
