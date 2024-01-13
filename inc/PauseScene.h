@@ -1,7 +1,6 @@
 #ifndef _PAUSE_SCENE_H_
 #define _PAUSE_SCENE_H_
 
-#include <SDL_image.h>
 #include "Button.h"
 #include "GameScene.h"
 

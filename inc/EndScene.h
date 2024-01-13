@@ -1,7 +1,6 @@
 #ifndef _END_SCENE_H
 #define _END_SCENE_H
 
-#include <SDL_image.h>
 #include "Button.h"
 #include "GameScene.h"
 

@@ -21,26 +21,35 @@ void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event, const char**
             if (lane->note_list.head->end_time - relative_time <= PERFECT_HIT_INTERVAL ||
                 relative_time - lane->note_list.head->end_time <= PERFECT_HIT_INTERVAL) {
                 /* TODO: give feed back */
+                lane->note_list.head->isDown = 1;
                 if (lane->note_list.head->type == LONG_HEAD) {
-                    lane->note_list.head->isDown = 1;
+                    lane->note_list.head->start_x = lane->note_list.head->end_x;
+                    lane->note_list.head->start_y = lane->note_list.head->end_y;
                     break;
                 }
                 *game_text = game_scene_texts[0];
                 score += PERFECT_HIT_SCORE;
+                score += combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ? COMBO_MAX_SCORE : combo * COMBO_EXTRA_SCORE;
+                combo++;
             }
             else if (lane->note_list.head->end_time - relative_time <= GOOD_HIT_INTERVAL ||
                 relative_time - lane->note_list.head->end_time <= GOOD_HIT_INTERVAL) {
                 /* TODO: give feed back */
+                lane->note_list.head->isDown = 1;
                 if (lane->note_list.head->type == LONG_HEAD) {
-                    lane->note_list.head->isDown = 1;
+                    lane->note_list.head->start_x = lane->note_list.head->end_x;
+                    lane->note_list.head->start_y = lane->note_list.head->end_y;
                     break;
                 }
                 *game_text = game_scene_texts[1];
                 score += GOOD_HIT_SCORE;
+                score += combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ? COMBO_MAX_SCORE : combo * COMBO_EXTRA_SCORE;
+                combo++;
             }
             else {
                 /* TODO: give feed back */
                 *game_text = game_scene_texts[2];
+                combo = 0;
             }
         }
     }
@@ -53,34 +62,39 @@ void LaneUpdate(Lane* lane, Uint32 relative_time, SDL_Event* event, const char**
             Note* tail = lane->note_list.head + 1;
             if (tail->end_time >= relative_time + MISS_HIT_INTERVAL) {
                 *game_text = game_scene_texts[2];
+                combo = 0;
                 continue;
             }
             if ((tail->end_time - relative_time <= PERFECT_HIT_INTERVAL ||
                 relative_time - tail->end_time <= PERFECT_HIT_INTERVAL) &&
                 lane->note_list.head->isDown) {
+                (lane->note_list.head + 1)->isDown = 1;
                 *game_text = game_scene_texts[0];
                 score += PERFECT_HIT_SCORE;
+                score += combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ? COMBO_MAX_SCORE : combo * COMBO_EXTRA_SCORE;
+                combo++;
             }
             else if ((tail->end_time - relative_time <= GOOD_HIT_INTERVAL ||
                 relative_time - tail->end_time <= GOOD_HIT_INTERVAL) &&
                 lane->note_list.head->isDown) {
+                (lane->note_list.head + 1)->isDown = 1;
                 *game_text = game_scene_texts[1];
                 score += GOOD_HIT_SCORE;
+                score += combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ? COMBO_MAX_SCORE : combo * COMBO_EXTRA_SCORE;
+                combo++;
             }
             else {
                 *game_text = game_scene_texts[2];
+                combo = 0;
             }
         }
     }
     /* Note Update */
-    while (lane->note_list.head->end_time <= relative_time &&
+    while (lane->note_list.head->end_time + MISS_HIT_INTERVAL <= relative_time &&
         lane->note_list.head < lane->note_list.tail) {
         if (lane->note_list.head->type == LONG_HEAD && lane->note_list.head->isDown &&
-            (lane->note_list.head + 1)->end_time > relative_time) {
-            lane->note_list.head->start_x = lane->note_list.head->end_x;
-            lane->note_list.head->start_y = lane->note_list.head->end_y;
-            break;
-        }
+            (lane->note_list.head + 1)->end_time > relative_time) break;
+        if (lane->note_list.head->isDown == 0) combo = 0;
         lane->note_list.head++;
     }
     while (lane->note_list.tail->start_time <= relative_time + MISS_HIT_INTERVAL &&

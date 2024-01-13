@@ -26,7 +26,7 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
         is_error = 1;
         return game_scene;
     }
-    CompletePath(buffer, chart_path, "./chart.json");
+    CompletePath(buffer, chart_path, "chart.json");
     FILE* fp = fopen(buffer, "r");
     if (fp == NULL) {
         printf("[GameScene]Failed to open chart: %s\n", buffer);
@@ -188,6 +188,19 @@ GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path) {
     }
 
     cJSON_Delete(file);
+
+    /* Histroy Best Score */
+    CompletePath(buffer, chart_path, "score.txt");
+    fp = fopen(buffer, "w+");
+    if (fp == NULL) {
+        printf("[GameScene]Failed to read histroy score: %s\n", buffer);
+        is_error = 1;
+        free(buffer);
+        return game_scene;
+    }
+    len = fscanf(fp, "HistoryBestScore = %lu", &history_best);
+    if (len == 0) history_best = 0;
+    fclose(fp);
     free(buffer);
 
     /* Reset Pack */
@@ -211,13 +224,21 @@ void GameSceneReset() {
     CreateGameScene(reset_pack.ren, reset_pack.chart_path);
 }
 void GameSceneStart() {
-    score = 0;
+    score = 0, combo = 0;
     game_scene->cur_time = game_scene->base_time = SDL_GetTicks();
     game_scene->relative_time = 0;
     Mix_PlayMusic(game_scene->music, 0);
 }
 extern void EndSceneRate();
 void GameSceneEnd() {
+    if (score > history_best) {
+        history_best = score;
+        char buf[1 << 8];
+        CompletePath(buf, reset_pack.chart_path, "score.txt");
+        FILE* fp = fopen(buf, "w+");
+        fprintf(fp, "HistoryBestScore = %lu\n", history_best);
+        fclose(fp);
+    }
     cur_scene = END;
     EndSceneRate();
 }
@@ -303,6 +324,11 @@ void GameSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     /* Draw Score */
     len = sprintf(buf, "SCORE: %lu", score);
     rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.h = GAME_SCENE_LETTER_HEIGHT, rect.x = 0, rect.y = 0;
+    DrawText(renderer, rect, buf, font, default_colors[0]);
+
+    /* Draw Combo */
+    len = sprintf(buf, "COMBO x %u", combo);
+    rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.h = GAME_SCENE_LETTER_HEIGHT, rect.x = 0, rect.y = rect.h;
     DrawText(renderer, rect, buf, font, default_colors[0]);
 
     for (size_t i = 0; i < game_scene->lane_size; i++) {

@@ -11,7 +11,7 @@ struct Note {
     int start_x, start_y;
     int cur_x, cur_y;
     int end_x, end_y;
-    Uint8 isDown; // this is for LONG type
+    Uint8 isDown;
 };
 typedef struct Note Note;
 void NoteUpdate(Note* note, Uint32 relative_time);

@@ -59,6 +59,8 @@ typedef enum EventType EventType;
 #define GOOD_HIT_SCORE 200
 #define MISS_HIT_INTERVAL 150 //ms
 #define HIT_POINT_RADIUS 35
+#define COMBO_EXTRA_SCORE 50
+#define COMBO_MAX_SCORE 400
 
 extern const SDL_Keycode default_keys[];
 extern const SDL_Color hit_point_colors[];

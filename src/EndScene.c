@@ -88,16 +88,32 @@ void EndSceneUpdate(SDL_Event* event) {
 }
 void EndSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
     static int len;
-    static SDL_Rect rect = { .y = 200, .h = LETTER_HEIGHT };
+    static char buf[1 << 6];
+    static SDL_Rect rect = { .y = 100, .h = LETTER_HEIGHT };
 
     SDL_RenderCopy(renderer, end_scene->background, NULL, NULL);
 
+    /* Draw Rating */
     if (end_scene->rating != NULL) {
         len = strlen(end_scene->rating);
+        rect.y = 100, rect.h = LETTER_HEIGHT;
         rect.w = len * LETTER_WIDTH;
         rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
         DrawText(renderer, rect, end_scene->rating, font, default_colors[0]);
     }
+
+    /* Draw Score */
+    len = sprintf(buf, "SCORE: %lu", score);
+    rect.y += rect.h;
+    rect.w = len * LETTER_WIDTH;
+    rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
+    DrawText(renderer, rect, buf, font, default_colors[0]);
+
+    len = sprintf(buf, "HISTORY BEST: %lu", history_best);
+    rect.y += rect.h;
+    rect.w = len * LETTER_WIDTH;
+    rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
+    DrawText(renderer, rect, buf, font, default_colors[0]);
 
     for (size_t i = 0; i < END_SCENE_BUTTON_SIZE; i++) {
         ButtonDraw(&end_scene->buttons[i], renderer, font, i == end_scene->cur_button);
