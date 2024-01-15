@@ -2,24 +2,26 @@
 
 PauseScene* pause_scene = NULL;
 
-PauseScene* CreatePauseScene(SDL_Renderer* renderer) {
+PauseScene* CreatePauseScene() {
     pause_scene = malloc(sizeof(PauseScene));
     if (pause_scene == NULL) {
-        printf("[PauseScene]Failed to malloc pause scene\n");
-        is_error = 1;
+        fprintf(stderr, "[PauseScene]Failed to malloc pause scene\n");
+        app.is_error = 1;
         return pause_scene;
     }
-    pause_scene->background = IMG_LoadTexture(renderer, PAUSE_SCENE_BACKGROUND);
+    pause_scene->background = IMG_LoadTexture(app.ren, PAUSE_SCENE_BACKGROUND);
     if (pause_scene->background == NULL) {
-        printf("[PauseScene]Failed to load background: %s\n", IMG_GetError());
-        is_error = 1;
+        fprintf(stderr, "[PauseScene]Failed to load background: %s\n", IMG_GetError());
+        app.is_error = 1;
         return pause_scene;
     }
     InitButton(&pause_scene->buttons[0], SCREEN_WIDTH / 2 - 3 * LETTER_WIDTH, 200, "Resume", Resume);
     InitButton(&pause_scene->buttons[1], SCREEN_WIDTH / 2 - 6 * LETTER_WIDTH, 200 + 2 * LETTER_HEIGHT, "Back To Menu", BackToMenu);
     InitButton(&pause_scene->buttons[2], SCREEN_WIDTH / 2 - 2 * LETTER_WIDTH, 200 + 4 * LETTER_HEIGHT, "Quit", Quit);
     pause_scene->cur_button = 0;
+    pause_scene->buttons[pause_scene->cur_button].is_on = 1;
 }
+
 void DestroyPauseScene() {
     if (pause_scene != NULL) {
         if (pause_scene->background != NULL) {
@@ -32,44 +34,46 @@ void DestroyPauseScene() {
         pause_scene = NULL;
     }
 }
-void PauseSceneUpdate(SDL_Event* event) {
-    if (event->type == SDL_KEYDOWN) {
-        switch (event->key.keysym.scancode) {
-        case SDL_SCANCODE_W:
-        case SDL_SCANCODE_UP: {
-            pause_scene->cur_button = (pause_scene->cur_button - 1 + PAUSE_SCENE_BUTTON_SIZE) % PAUSE_SCENE_BUTTON_SIZE;
-            break;
-        }
-        case SDL_SCANCODE_S:
-        case SDL_SCANCODE_DOWN: {
-            pause_scene->cur_button = (pause_scene->cur_button + 1) % PAUSE_SCENE_BUTTON_SIZE;
-            break;
-        }
-        case SDL_SCANCODE_E: {
-            ButtonFunc(&pause_scene->buttons[pause_scene->cur_button]);
-            break;
-        }
-        default:
-            break;
-        }
+
+static void PauseSceneHandleKey() {
+    if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
+        ButtonFunc(&pause_scene->buttons[pause_scene->cur_button]);
+        return;
+    }
+    if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
+        pause_scene->buttons[pause_scene->cur_button].is_on = 0;
+        pause_scene->cur_button = (pause_scene->cur_button - 1 + PAUSE_SCENE_BUTTON_SIZE) % PAUSE_SCENE_BUTTON_SIZE;
+        pause_scene->buttons[pause_scene->cur_button].is_on = 1;
+    }
+    if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
+        pause_scene->buttons[pause_scene->cur_button].is_on = 0;
+        pause_scene->cur_button = (pause_scene->cur_button + 1) % PAUSE_SCENE_BUTTON_SIZE;
+        pause_scene->buttons[pause_scene->cur_button].is_on = 1;
     }
 }
-void PauseSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
-    SDL_RenderCopy(renderer, pause_scene->background, NULL, NULL);
+
+void PauseSceneUpdate(SDL_Event* event) {
+    /* TODO: need to add event->type condition?*/
+    if (event->type == SDL_KEYDOWN)
+        PauseSceneHandleKey();
+}
+
+void PauseSceneDraw() {
+    SDL_RenderCopy(app.ren, pause_scene->background, NULL, NULL);
     for (size_t i = 0; i < PAUSE_SCENE_BUTTON_SIZE; i++) {
-        ButtonDraw(&pause_scene->buttons[i], renderer, font, i == pause_scene->cur_button);
+        ButtonDraw(&pause_scene->buttons[i]);
     }
 }
 
 static void Resume() {
     GameSceneResume();
-    cur_scene = GAME;
+    app.cur_scene = GAME;
 }
 static void BackToMenu() {
     GameScenePause();
     DestroyGameScene();
-    cur_scene = MENU;
+    app.cur_scene = MENU;
 }
 static void Quit() {
-    is_running = 0;
+    app.is_running = 0;
 }

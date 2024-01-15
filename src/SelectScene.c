@@ -5,8 +5,8 @@ SelectScene* select_scene = NULL;
 void InitChartList(ChartList* list, const char* saves_path) {
     list->saves_path = malloc(strlen(saves_path) + 1);
     if (list->saves_path == NULL) {
-        printf("[ChartList]Failed to malloc saves path\n");
-        is_error = 1;
+        fprintf(stderr, "[ChartList]Failed to malloc saves path\n");
+        app.is_error = 1;
         return;
     }
     strcpy(list->saves_path, saves_path);
@@ -15,17 +15,18 @@ void InitChartList(ChartList* list, const char* saves_path) {
     list->cur_chart = 0;
     list->charts = malloc(list->capacity * sizeof(ChartInfo));
     if (list->charts == NULL) {
-        printf("[ChartList]Failed to malloc charts\n");
-        is_error = 1;
+        fprintf(stderr, "[ChartList]Failed to malloc charts\n");
+        app.is_error = 1;
         return;
     }
 
     /* Read saves dir and initial the list */
     ChartListRefresh(list);
-    if (is_error) {
-        printf("[ChartList]Failed to init list\n");
+    if (app.is_error) {
+        fprintf(stderr, "[ChartList]Failed to init list\n");
     }
 }
+
 void FreeChartList(ChartList* list) {
     if (list->saves_path != NULL) {
         free(list->saves_path);
@@ -50,6 +51,7 @@ void FreeChartList(ChartList* list) {
         list->charts = NULL;
     }
 }
+
 void ChartListPushBack(ChartList* list,
     const char* path,
     const char* title,
@@ -59,38 +61,39 @@ void ChartListPushBack(ChartList* list,
     size_t len = strlen(path);
     list->charts[list->size].chart_path = malloc(len + 1);
     if (list->charts[list->size].chart_path == NULL) {
-        printf("[ChartList]Failed to malloc chart path\n");
-        is_error = 1;
+        fprintf(stderr, "[ChartList]Failed to malloc chart path\n");
+        app.is_error = 1;
     }
     else strcpy(list->charts[list->size].chart_path, path);
     len = strlen(title);
     list->charts[list->size].title = malloc(len + 1);
     if (list->charts[list->size].title == NULL) {
-        printf("[ChartList]Failed to malloc name\n");
-        is_error = 1;
+        fprintf(stderr, "[ChartList]Failed to malloc name\n");
+        app.is_error = 1;
     }
     else strcpy(list->charts[list->size].title, title);
     len = strlen(artist);
     list->charts[list->size].artist = malloc(len + 1);
     if (list->charts[list->size].artist == NULL) {
-        printf("[ChartList]Failed to malloc author\n");
-        is_error = 1;
+        fprintf(stderr, "[ChartList]Failed to malloc author\n");
+        app.is_error = 1;
     }
     else strcpy(list->charts[list->size].artist, artist);
     len = strlen(preview);
     list->charts[list->size].preview = malloc(len + 1);
     if (list->charts[list->size].preview == NULL) {
-        printf("[ChartList]Failed to malloc preview\n");
-        is_error = 1;
+        fprintf(stderr, "[ChartList]Failed to malloc preview\n");
+        app.is_error = 1;
     }
     else strcpy(list->charts[list->size].preview, preview);
-    if (!is_error) list->size++;
+    if (!app.is_error) list->size++;
 }
+
 void ChartListRefresh(ChartList* list) {
     DIR* saves = opendir(list->saves_path);
     if (saves == NULL) {
-        printf("[ChartList]Failed to open saves dir\n");
-        is_error = 1;
+        fprintf(stderr, "[ChartList]Failed to open saves dir\n");
+        app.is_error = 1;
         return;
     }
     struct dirent* chart;
@@ -140,26 +143,32 @@ void ChartListRefresh(ChartList* list) {
     closedir(saves);
 }
 
-SelectScene* CreateSelectScene(SDL_Renderer* renderer) {
+SelectScene* CreateSelectScene() {
     select_scene = malloc(sizeof(SelectScene));
     if (select_scene == NULL) {
-        printf("[SelectScene]Failed to malloc select scene\n");
-        is_error = 1;
+        fprintf(stderr, "[SelectScene]Failed to malloc select scene\n");
+        app.is_error = 1;
         return select_scene;
     }
-    select_scene->background = select_scene->preview = select_scene->title = select_scene->artist = NULL;
+    select_scene->background = NULL;
+    select_scene->preview = NULL;
+    select_scene->title = NULL;
+    select_scene->artist = NULL;
+
     for (size_t i = 0; i < CHART_LIST_NAME_MAX_SIZE; i++) select_scene->list[i] = NULL;
     InitChartList(&select_scene->chart_list, SAVES_PATH);
-    if (is_error) {
-        printf("[SelectScene]Failed to init chart list\n");
+    if (app.is_error) {
+        fprintf(stderr, "[SelectScene]Failed to init chart list\n");
     }
-    select_scene->background = IMG_LoadTexture(renderer, SELECT_SCENE_BACKGROUND);
+
+    select_scene->background = IMG_LoadTexture(app.ren, SELECT_SCENE_BACKGROUND);
     if (select_scene->background == NULL) {
-        printf("[SelectScene]Failed to load background: %s\n", IMG_GetError());
-        is_error = 1;
+        fprintf(stderr, "[SelectScene]Failed to load background: %s\n", IMG_GetError());
+        app.is_error = 1;
     }
     return select_scene;
 }
+
 void DestroySelectScene() {
     if (select_scene != NULL) {
         if (select_scene->background != NULL) {
@@ -182,109 +191,118 @@ void DestroySelectScene() {
         select_scene = NULL;
     }
 }
-void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event) {
-    if (event->type == SDL_KEYDOWN) {
-        switch (event->key.keysym.scancode) {
-        case SDL_SCANCODE_E:
-        case SDL_SCANCODE_KP_ENTER: {
-            CreateGameScene(renderer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
-            cur_scene = GAME;
-            GameSceneStart();
-            break;
+
+static void SelectSceneHandleKey() {
+    if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
+        CreateGameScene(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
+        app.cur_scene = GAME;
+        GameSceneStart();
+    }
+    else if (app.key_status[SDL_SCANCODE_ESCAPE]) {
+        app.cur_scene = MENU;
+    }
+    else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
+        select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
+        SDL_DestroyTexture(select_scene->preview);
+        SDL_DestroyTexture(select_scene->title);
+        SDL_DestroyTexture(select_scene->artist);
+        SDL_DestroyTexture(select_scene->list[CHART_LIST_NAME_MAX_SIZE - 1]);
+        for (size_t i = CHART_LIST_NAME_MAX_SIZE - 1; i > 0; i--) {
+            select_scene->list[i] = select_scene->list[i - 1];
         }
-        case SDL_SCANCODE_ESCAPE: {
-            cur_scene = MENU;
-            break;
+        select_scene->list[0] = NULL;
+        select_scene->preview = select_scene->title = select_scene->artist = NULL;
+    }
+    else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
+        select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
+        SDL_DestroyTexture(select_scene->preview);
+        SDL_DestroyTexture(select_scene->title);
+        SDL_DestroyTexture(select_scene->artist);
+        SDL_DestroyTexture(select_scene->list[0]);
+        for (size_t i = 0; i < CHART_LIST_NAME_MAX_SIZE - 1; i++) {
+            select_scene->list[i] = select_scene->list[i + 1];
         }
-        case SDL_SCANCODE_W:
-        case SDL_SCANCODE_UP: {
-            select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
-            SDL_DestroyTexture(select_scene->preview);
-            SDL_DestroyTexture(select_scene->title);
-            SDL_DestroyTexture(select_scene->artist);
-            SDL_DestroyTexture(select_scene->list[CHART_LIST_NAME_MAX_SIZE - 1]);
-            for (size_t i = CHART_LIST_NAME_MAX_SIZE - 1; i > 0; i--) {
-                select_scene->list[i] = select_scene->list[i - 1];
-            }
-            select_scene->list[0] = NULL;
-            select_scene->preview = select_scene->title = select_scene->artist = NULL;
-            break;
-        }
-        case SDL_SCANCODE_S:
-        case SDL_SCANCODE_DOWN: {
-            select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
-            SDL_DestroyTexture(select_scene->preview);
-            SDL_DestroyTexture(select_scene->title);
-            SDL_DestroyTexture(select_scene->artist);
-            SDL_DestroyTexture(select_scene->list[0]);
-            for (size_t i = 0; i < CHART_LIST_NAME_MAX_SIZE - 1; i++) {
-                select_scene->list[i] = select_scene->list[i + 1];
-            }
-            select_scene->list[CHART_LIST_NAME_MAX_SIZE - 1] = NULL;
-            select_scene->preview = select_scene->title = select_scene->artist = NULL;
-            break;
-        }
-        case SDL_SCANCODE_R: {
-            ChartListRefresh(&select_scene->chart_list);
-            break;
-        }
-        default:
-            break;
-        }
+        select_scene->list[CHART_LIST_NAME_MAX_SIZE - 1] = NULL;
+        select_scene->preview = select_scene->title = select_scene->artist = NULL;
+    }
+    else if (app.key_status[SDL_SCANCODE_R]) {
+        ChartListRefresh(&select_scene->chart_list);
     }
 }
-void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font) {
-    /* Draw background */
-    SDL_RenderCopy(renderer, select_scene->background, NULL, NULL);
+
+void SelectSceneUpdate(SDL_Event* event) {
+    if (event->type == SDL_KEYDOWN)
+        SelectSceneHandleKey();
+}
+
+static void SelectSceneDrawInfo() {
+    static SDL_Rect rect = { .h = LETTER_HEIGHT };
+    static int len;
     /* Draw preview */
     if (select_scene->preview == NULL) {
         char buffer[1 << 8] = { 0 };
         strcat(buffer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
         strcat(buffer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].preview);
-        select_scene->preview = IMG_LoadTexture(renderer, buffer);
+        select_scene->preview = IMG_LoadTexture(app.ren, buffer);
     }
     if (select_scene->preview == NULL)
-        printf("[SelectScene]Failed to load preview: %s\n", IMG_GetError());
+        fprintf(stderr, "[SelectScene]Failed to load preview: %s\n", IMG_GetError());
     else
-        SDL_RenderCopy(renderer, select_scene->preview, NULL, &preview_rect);
+        SDL_RenderCopy(app.ren, select_scene->preview, NULL, &preview_rect);
+
     /* Draw title */
     if (select_scene->title == NULL) {
-        SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, default_colors[0]);
-        select_scene->title = SDL_CreateTextureFromSurface(renderer, sur);
+        SDL_Surface* sur = TTF_RenderText_Blended(app.font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, default_colors[0]);
+        select_scene->title = SDL_CreateTextureFromSurface(app.ren, sur);
         SDL_FreeSurface(sur);
     }
-    SDL_Rect rect = { .h = LETTER_HEIGHT, .y = preview_rect.y + preview_rect.h + LETTER_HEIGHT };
-    size_t len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title);
+    len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title);
+    rect.y = preview_rect.y + preview_rect.h + LETTER_HEIGHT;
     rect.w = len * LETTER_WIDTH;
     rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
-    SDL_RenderCopy(renderer, select_scene->title, NULL, &rect);
+    SDL_RenderCopy(app.ren, select_scene->title, NULL, &rect);
+
     /* Draw artist */
     if (select_scene->artist == NULL) {
-        SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, default_colors[0]);
-        select_scene->artist = SDL_CreateTextureFromSurface(renderer, sur);
+        SDL_Surface* sur = TTF_RenderText_Blended(app.font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, default_colors[0]);
+        select_scene->artist = SDL_CreateTextureFromSurface(app.ren, sur);
         SDL_FreeSurface(sur);
     }
     len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist);
     rect.y += LETTER_HEIGHT;
     rect.w = len * LETTER_WIDTH;
     rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
-    SDL_RenderCopy(renderer, select_scene->artist, NULL, &rect);
-    /* Draw list */
+    SDL_RenderCopy(app.ren, select_scene->artist, NULL, &rect);
+}
+
+static void SelectSceneDrawList() {
+    static int len;
+    static SDL_Rect rect = { .h = LETTER_HEIGHT };
+
     for (size_t i = 0, cur = (select_scene->chart_list.cur_chart - CHART_LIST_NAME_MAX_SIZE >> 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
         i < CHART_LIST_NAME_MAX_SIZE;
         i++, cur = (cur + 1) % select_scene->chart_list.size) {
         if (select_scene->list[i] == NULL) {
-            SDL_Surface* sur = TTF_RenderText_Blended(font, select_scene->chart_list.charts[cur].title, default_colors[0]);
-            select_scene->list[i] = SDL_CreateTextureFromSurface(renderer, sur);
+            SDL_Surface* sur = TTF_RenderText_Blended(app.font, select_scene->chart_list.charts[cur].title, default_colors[0]);
+            select_scene->list[i] = SDL_CreateTextureFromSurface(app.ren, sur);
             SDL_FreeSurface(sur);
         }
         len = strlen(select_scene->chart_list.charts[cur].title);
         rect.y = LETTER_HEIGHT * i * 2 + LETTER_HEIGHT;
         rect.w = len * LETTER_WIDTH;
         rect.x = 100;
-        SDL_RenderCopy(renderer, select_scene->list[i], NULL, &rect);
+        SDL_RenderCopy(app.ren, select_scene->list[i], NULL, &rect);
         if (i == (CHART_LIST_NAME_MAX_SIZE - 1) / 2) {
-            DrawCursor(renderer, rect);
+            DrawCursor(app.ren, rect);
         }
     }
+}
+
+void SelectSceneDraw() {
+    /* Draw background */
+    SDL_RenderCopy(app.ren, select_scene->background, NULL, NULL);
+    /* Draw Info */
+    SelectSceneDrawInfo();
+    /* Draw list */
+    SelectSceneDrawList();
 }

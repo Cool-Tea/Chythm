@@ -7,18 +7,16 @@
 
 struct Note {
     NoteType type;
-    Uint32 start_time, end_time; // ms
-    int start_x, start_y;
     int cur_x, cur_y;
-    int end_x, end_y;
-    Uint8 isDown;
+    int speed_x, speed_y;
+    Uint32 update_time; // when the note starts to be update
+    Uint32 reach_time; // when the note reached the hit point
+    bool is_missed; // whether the note is missed or not
 };
 typedef struct Note Note;
-void NoteUpdate(Note* note, Uint32 relative_time);
-/**
- * \param related_note currently is the tail note of LONG type. For SINGLE pass NULL
-*/
-void NoteDraw(Note* note, SDL_Renderer* renderer, Note* related_note);
+
+void NoteUpdate(Note* note, int target_x, int target_y);
+void NoteDraw(Note* note);
 
 /* A CPP-vector-like array, designed specially for this project*/
 struct NoteList {
@@ -29,12 +27,20 @@ struct NoteList {
     Note* tail;
 };
 typedef struct NoteList NoteList;
+
+#define NoteListFor(note_list) for (Note* ptr = (note_list)->head; ptr != (note_list)->tail; ptr++)
+
 void InitNoteList(NoteList* note_list);
 void FreeNoteList(NoteList* note_list);
 void NoteListEmplaceBack(NoteList* note_list,
     NoteType type,
-    Uint32 start_time, Uint32 end_time,
-    int start_x, int start_y, int end_x, int end_y
+    int start_x, int start_y,
+    Uint32 update_time, Uint32 reach_time
 );
+void NoteListUpdate(NoteList* note_list, int target_x, int target_y);
+void NoteListDraw(NoteList* note_list);
+static void NoteListPop(NoteList* note_list);
+static void NoteListPush(NoteList* note_list);
+static bool isNoteListTailEnd(NoteList* note_list);
 
 #endif

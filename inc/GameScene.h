@@ -8,25 +8,13 @@
 #include "Lane.h"
 #include "Drawer.h"
 
-struct ResetPack {
-    SDL_Renderer* ren;
-    const char* chart_path;
-};
-typedef struct ResetPack ResetPack;
-
 struct GameScene {
-    /* timer */
-    Uint32 base_time;
-    Uint32 relative_time;
-    Uint32 cur_time;
+    /* file path*/
+    const char* chart_path;
 
     /* image and audio */
     SDL_Texture* background;
     Mix_Music* music;
-
-    /* text */
-    const char* text;
-    const char* hit_status;
 
     /* event */
     EventList event_list;
@@ -34,21 +22,38 @@ struct GameScene {
     /* lane */
     size_t lane_size;
     Lane* lanes;
+
+    /* scores */
+    int combo;
+    Uint64 score;
+    Uint64 history_score; // the best score in history
 };
 typedef struct GameScene GameScene;
 
 extern GameScene* game_scene;
-extern ResetPack reset_pack;
 
 /* chart_path sample: ../saves/test/ */
-GameScene* CreateGameScene(SDL_Renderer* renderer, const char* chart_path);
+static inline void CompletePath(char* buf, const char* path, const char* file);
+static cJSON* OpenJson(const char* chart_path);
+static int GetAudio(const char* chart_path, const char* audio_path);
+static int GetBackground(const char* chart_path, const char* img_path);
+static SDL_Scancode AllocateKey(int size, int i);
+static int GetLanes(cJSON* hit_points, int size);
+static void GetNotes(cJSON* notes, int bpm);
+static void GetEvents(cJSON* events);
+static int GetScore(const char* chart_path);
+GameScene* CreateGameScene(const char* chart_path);
 void DestroyGameScene();
 void GameSceneReset();
 void GameSceneStart();
 void GameSceneEnd();
 void GameScenePause();
 void GameSceneResume();
+static void GameSceneCheckEnd();
+static void GameSceneHandleKey();
+static void GameSceneHandleEvent();
+static void GameSceneUpdateTime();
 void GameSceneUpdate(SDL_Event* event);
-void GameSceneDraw(SDL_Renderer* renderer, TTF_Font* font);
+void GameSceneDraw();
 
 #endif

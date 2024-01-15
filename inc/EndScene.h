@@ -19,11 +19,14 @@ typedef struct EndScene EndScene;
 
 extern EndScene* end_scene;
 
-EndScene* CreateEndScene(SDL_Renderer* renderer);
+EndScene* CreateEndScene();
 void DestroyEndScene();
 void EndSceneRate();
+static void EndSceneHandleKey();
 void EndSceneUpdate(SDL_Event* event);
-void EndSceneDraw(SDL_Renderer* renderer, TTF_Font* font);
+static void EndSceneDrawRating();
+static void EndSceneDrawScore();
+void EndSceneDraw();
 
 /* this is for the button */
 

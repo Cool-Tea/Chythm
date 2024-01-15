@@ -18,8 +18,15 @@ const SDL_Color note_colors[] = {
 };
 
 /* Lane */
-const SDL_Keycode default_keys[] = {
-    SDLK_j, SDLK_f, SDLK_k, SDLK_d, SDLK_l, SDLK_s
+const SDL_Scancode default_keys[] = {
+    SDL_SCANCODE_S,
+    SDL_SCANCODE_D,
+    SDL_SCANCODE_F,
+    SDL_SCANCODE_G,
+    SDL_SCANCODE_H,
+    SDL_SCANCODE_J,
+    SDL_SCANCODE_K,
+    SDL_SCANCODE_L
 };
 const SDL_Color hit_point_colors[] = {
     {0x47,0xa5,0xeb,0xff}, // key up

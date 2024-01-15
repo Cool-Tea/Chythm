@@ -16,10 +16,11 @@ typedef struct PauseScene PauseScene;
 
 extern PauseScene* pause_scene;
 
-PauseScene* CreatePauseScene(SDL_Renderer* renderer);
+PauseScene* CreatePauseScene();
 void DestroyPauseScene();
+static void PauseSceneHandleKey();
 void PauseSceneUpdate(SDL_Event* event);
-void PauseSceneDraw(SDL_Renderer* renderer, TTF_Font* font);
+void PauseSceneDraw();
 
 /* this is for the button */
 

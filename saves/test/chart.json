@@ -164,7 +164,7 @@
         ],
         "hit_points": [
             {
-                "lane": 3,
+                "lane": 0,
                 "position": {
                     "x": 400,
                     "y": 600
@@ -178,14 +178,14 @@
                 }
             },
             {
-                "lane": 0,
+                "lane": 2,
                 "position": {
                     "x": 1200,
                     "y": 600
                 }
             },
             {
-                "lane": 2,
+                "lane": 3,
                 "position": {
                     "x": 1600,
                     "y": 600
@@ -197,8 +197,11 @@
                 "object": 0,
                 "type": 0,
                 "time": 10000,
+                "lasting_time": 2000,
                 "data": {
-                    "text": "Hello Chythm"
+                    "text": "Hello Chythm",
+                    "x": 400,
+                    "y": 100
                 }
             },
             {
@@ -206,6 +209,7 @@
                 "lane": 0,
                 "type": 1,
                 "time": 8000,
+                "lasting_time": 2000,
                 "data": {
                     "x": 0,
                     "y": 4
@@ -216,6 +220,7 @@
                 "lane": 0,
                 "type": 2,
                 "time": 9000,
+                "lasting_time": 2000,
                 "data": null
             }
         ]

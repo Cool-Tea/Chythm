@@ -46,9 +46,12 @@ typedef struct SelectScene SelectScene;
 
 extern SelectScene* select_scene;
 
-SelectScene* CreateSelectScene(SDL_Renderer* renderer);
+SelectScene* CreateSelectScene();
 void DestroySelectScene();
-void SelectSceneUpdate(SDL_Renderer* renderer, SDL_Event* event);
-void SelectSceneDraw(SDL_Renderer* renderer, TTF_Font* font);
+static void SelectSceneHandleKey();
+void SelectSceneUpdate(SDL_Event* event);
+static void SelectSceneDrawInfo();
+static void SelectSceneDrawList();
+void SelectSceneDraw();
 
 #endif

@@ -16,11 +16,14 @@ typedef struct MenuScene MenuScene;
 
 extern MenuScene* menu_scene;
 
-MenuScene* CreateMenuScene(SDL_Renderer* renderer);
+MenuScene* CreateMenuScene();
 void DestroyMenuScene();
+static void MenuSceneHandleKey();
 void MenuSceneUpdate(SDL_Event* event);
-void MenuSceneDraw(SDL_Renderer* renderer, TTF_Font* font);
+void MenuSceneDraw();
+
 /* this is for the button */
+
 static void Start();
 static void Quit();
 
