@@ -1,6 +1,7 @@
 #include "../inc/GameScene.h"
 
 GameScene* game_scene = NULL;
+UpdateData update_data = { NULL, NULL, -1 };
 
 static inline void CompletePath(char* buf, const char* path, const char* file) {
     strcpy(buf, path);
@@ -88,9 +89,8 @@ static int GetLanes(cJSON* hit_points, int size) {
         cJSON* position = cJSON_GetObjectItem(hit_point, "position");
         cJSON* x = cJSON_GetObjectItem(position, "x");
         cJSON* y = cJSON_GetObjectItem(position, "y");
-        game_scene->lanes[lane->valueint].hit_point.cur_x = x->valueint;
-        game_scene->lanes[lane->valueint].hit_point.cur_y = y->valueint;
-        game_scene->lanes[lane->valueint].hit_point.key = AllocateKey(game_scene->lane_size, lane->valueint);
+        InitHitPoint(&game_scene->lanes[lane->valueint].hit_point,
+            x->valueint, y->valueint, AllocateKey(game_scene->lane_size, lane->valueint));
     }
     return 0;
 }
@@ -132,12 +132,21 @@ static void GetEvents(cJSON* events) {
         switch (object->valueint) {
         case GAME_SCENE: {
             /* TODO: More Type*/
-            cJSON* text = cJSON_GetObjectItem(data, "text");
-            size_t len = strlen(text->valuestring);
-            char* txt = malloc(len + 1);
-            strcpy(txt, text->valuestring);
-            EventListEmplaceBack(&game_scene->event_list,
-                time->valueint, lasting_time->valueint, type->valueint, txt);
+            switch (type->valueint) {
+            case TEXT: {
+                cJSON* x = cJSON_GetObjectItem(data, "x");
+                cJSON* y = cJSON_GetObjectItem(data, "y");
+                cJSON* text = cJSON_GetObjectItem(data, "text");
+                size_t len = strlen(text->valuestring);
+                char* txt = malloc(len + 1);
+                strcpy(txt, text->valuestring);
+                EventListEmplaceBack(&game_scene->event_list,
+                    time->valueint, lasting_time->valueint, TEXT, x->valueint, y->valueint, txt);
+                break;
+            }
+            default:
+                break;
+            }
             break;
         }
         case LANE: {
@@ -148,12 +157,18 @@ static void GetEvents(cJSON* events) {
                 cJSON* x = cJSON_GetObjectItem(data, "x");
                 cJSON* y = cJSON_GetObjectItem(data, "y");
                 EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
-                    time->valueint, lasting_time->valueint, type->valueint, x->valueint, y->valueint);
+                    time->valueint, lasting_time->valueint, MOVE, x->valueint, y->valueint);
+                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
+                    time->valueint + lasting_time->valueint, 1000, STOP, NULL);
                 break;
             }
-            case STOP: {
+            case MOVETO: {
+                cJSON* x = cJSON_GetObjectItem(data, "x");
+                cJSON* y = cJSON_GetObjectItem(data, "y");
                 EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
-                    time->valueint, lasting_time->valueint, type->valueint, NULL);
+                    time->valueint, lasting_time->valueint, MOVETO, x->valueint, y->valueint);
+                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
+                    time->valueint + lasting_time->valueint, 1000, STOP, NULL);
                 break;
             }
             default:
@@ -181,6 +196,11 @@ static int GetScore(const char* chart_path) {
     game_scene->score = 0;
     fclose(fp);
     return 0;
+}
+
+static void InitUpdateData() {
+    update_data.combo = &game_scene->combo;
+    update_data.score = &game_scene->score;
 }
 
 GameScene* CreateGameScene(const char* chart_path) {
@@ -230,6 +250,7 @@ GameScene* CreateGameScene(const char* chart_path) {
     cJSON_Delete(file);
 
     GetScore(chart_path);
+    InitUpdateData();
     return game_scene;
 }
 
@@ -258,27 +279,52 @@ void GameSceneStart() {
     Mix_PlayMusic(game_scene->music, 0);
 }
 
+static void SaveScore() {
+    if (game_scene->score > game_scene->history_score) {
+        char buffer[1 << 8];
+        CompletePath(buffer, game_scene->chart_path, "score.txt");
+        FILE* fp = fopen(buffer, "w+");
+        fprintf(fp, "HistoryBestScore = %lu\n", game_scene->score);
+        fclose(fp);
+    }
+}
+
+extern void EndSceneRate();
 void GameSceneEnd() {
     /* TODO: do something */
+    SaveScore();
+    EndSceneRate();
     app.cur_scene = END;
+}
+
+/**
+ * On calling record the current time, return the mark which was recorded last time
+*/
+static Uint32 GameSceneTimeMark() {
+    static Uint32 time = 0;
+    Uint32 tem = time;
+    time = SDL_GetTicks();
+    return tem;
 }
 
 void GameScenePause() {
     Mix_PauseMusic();
-    app.timer.real_time = SDL_GetTicks();
+    GameSceneTimeMark();
 }
 
 void GameSceneResume() {
-    app.timer.base_time += SDL_GetTicks() - app.timer.real_time;
+    app.timer.base_time += SDL_GetTicks() - GameSceneTimeMark();
     app.timer.real_time = SDL_GetTicks();
     app.timer.relative_time = app.timer.real_time - app.timer.base_time;
     Mix_ResumeMusic();
 }
 
-static void GameSceneCheckEnd() {
+static int GameSceneCheckEnd() {
     if (Mix_PlayingMusic() == 0) {
         GameSceneEnd();
+        return -1;
     }
+    return 0;
 }
 
 static void GameSceneHandleKey() {
@@ -293,14 +339,8 @@ static void GameSceneHandleEvent() {
     EventListUpdate(&game_scene->event_list);
 }
 
-static void GameSceneUpdateTime() {
-    app.timer.real_time = SDL_GetTicks();
-    app.timer.relative_time = app.timer.real_time - app.timer.base_time;
-}
-
 void GameSceneUpdate(SDL_Event* event) {
-    GameSceneCheckEnd();
-    //GameSceneUpdateTime(); TODO: really need this ?
+    if (GameSceneCheckEnd() < 0) return;
     if (event->type == SDL_KEYDOWN)
         GameSceneHandleKey();
     for (size_t i = 0; i < game_scene->lane_size; i++) {
@@ -309,34 +349,61 @@ void GameSceneUpdate(SDL_Event* event) {
     GameSceneHandleEvent();
 }
 
-void GameSceneDraw() {
-    SDL_RenderCopy(app.ren, game_scene->background, NULL, NULL);
-
+static void GameSceneDrawFPS() {
     static int len;
     static char buf[1 << 4];
-    static SDL_Rect rect;
-
-#ifdef DEV
+    static SDL_Rect rect = { .h = 20, .y = 800, .x = 0 };
     len = sprintf(buf, "time: %us", app.timer.relative_time / 1000);
-    rect.w = 10 * len, rect.h = 20, rect.x = 0, rect.y = 800;
-    DrawText(app.ren, rect, buf, app.font, default_colors[0]);
-#endif /* dev */
+    rect.w = 10 * len;
+    DrawText(rect, buf, default_colors[0]);
+}
 
-    /* TODO: draw event stuff */
+static void GameSceneDrawScore() {
+    static int len;
+    static char buf[1 << 4];
+    static SDL_Rect rect = { .h = GAME_SCENE_LETTER_HEIGHT, .x = 0 };
 
     /* Draw Score */
     len = sprintf(buf, "SCORE: %lu", game_scene->score);
-    rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.h = GAME_SCENE_LETTER_HEIGHT, rect.x = 0, rect.y = 0;
-    DrawText(app.ren, rect, buf, app.font, default_colors[0]);
+    rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.y = 0;
+    DrawText(rect, buf, default_colors[0]);
 
     /* Draw Combo */
     len = sprintf(buf, "COMBO x %u", game_scene->combo);
-    rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.h = GAME_SCENE_LETTER_HEIGHT, rect.x = 0, rect.y = rect.h;
-    DrawText(app.ren, rect, buf, app.font, default_colors[0]);
+    rect.w = GAME_SCENE_LETTER_WIDTH * len, rect.y = rect.h;
+    DrawText(rect, buf, default_colors[0]);
+}
 
+static void GameSceneDrawHitText() {
+    static int len, hit_status = -1;
+    static Uint32 time = 0;
+    static SDL_Rect rect = { .h = LETTER_HEIGHT, .y = 100 };
+    if (hit_status != -1 && update_data.hit_status == hit_status) {
+        if (time + GAME_SCENE_TEXT_PERSISTENCE < app.timer.relative_time) {
+            hit_status = -1;
+            update_data.hit_status = -1;
+            return;
+        }
+        len = strlen(game_scene_texts[hit_status]);
+        rect.w = len * LETTER_WIDTH;
+        rect.x = 1920 - rect.w;
+        DrawText(rect, game_scene_texts[hit_status], default_colors[0]);
+    }
+    else {
+        time = app.timer.relative_time;
+        hit_status = update_data.hit_status;
+    }
+}
+
+void GameSceneDraw() {
+    SDL_RenderCopy(app.ren, game_scene->background, NULL, NULL);
+#ifdef DEV
+    GameSceneDrawFPS();
+#endif /* dev */
+    GameSceneDrawScore();
+    GameSceneDrawHitText();
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneDraw(&game_scene->lanes[i]);
     }
-
     EventListDraw(&game_scene->event_list);
 }

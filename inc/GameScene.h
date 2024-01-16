@@ -42,18 +42,27 @@ static int GetLanes(cJSON* hit_points, int size);
 static void GetNotes(cJSON* notes, int bpm);
 static void GetEvents(cJSON* events);
 static int GetScore(const char* chart_path);
+static void InitUpdateData();
+
 GameScene* CreateGameScene(const char* chart_path);
 void DestroyGameScene();
+
 void GameSceneReset();
 void GameSceneStart();
+static void SaveScore();
 void GameSceneEnd();
+static Uint32 GameSceneTimeMark();
 void GameScenePause();
 void GameSceneResume();
-static void GameSceneCheckEnd();
+
+static int GameSceneCheckEnd();
 static void GameSceneHandleKey();
 static void GameSceneHandleEvent();
-static void GameSceneUpdateTime();
 void GameSceneUpdate(SDL_Event* event);
+
+static void GameSceneDrawFPS();
+static void GameSceneDrawScore();
+static void GameSceneDrawHitText();
 void GameSceneDraw();
 
 #endif

@@ -30,7 +30,8 @@ struct Application {
     SceneType cur_scene;
 
     /* key status */
-    bool key_status[SDL_NUM_SCANCODES];
+    const Uint8* key_status; // SDL built in keyboard status
+    //bool key_status[SDL_NUM_SCANCODES];
 };
 typedef struct Application Application;
 

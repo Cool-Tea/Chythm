@@ -26,5 +26,5 @@ void ButtonFunc(Button* button) {
 }
 
 void ButtonDraw(Button* button) {
-    DrawText(app.ren, button->rect, button->text, app.font, button_colors[button->is_on]);
+    DrawText(button->rect, button->text, button_colors[button->is_on]);
 }

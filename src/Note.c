@@ -1,14 +1,28 @@
 #include "../inc/Note.h"
 
 void NoteUpdate(Note* note, int target_x, int target_y) {
-    note->speed_x = (target_x - note->cur_x) / (note->reach_time - app.timer.relative_time);
-    note->speed_y = (target_y - note->cur_y) / (note->reach_time - app.timer.relative_time);
-    note->cur_x += note->speed_x;
-    note->cur_y += note->speed_y;
+    if (note->update_enable == 0) return;
+    note->cur_x =
+        (target_x - note->update_x)
+        * (signed)(app.timer.relative_time - note->update_time)
+        / (signed)(note->reach_time - note->update_time)
+        + note->update_x;
+    note->cur_y = (target_y - note->update_y)
+        * (signed)(app.timer.relative_time - note->update_time)
+        / (signed)(note->reach_time - note->update_time)
+        + note->update_y;
 }
 
 void NoteDraw(Note* note) {
     /* TODO: draw different note */
+    switch (note->type) {
+    case SINGLE: {
+        DrawSingleNote(note->cur_x, note->cur_y, note->cur_x - note->update_x, note->cur_y - note->update_y);
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void InitNoteList(NoteList* note_list) {
@@ -35,8 +49,9 @@ void NoteListEmplaceBack(NoteList* note_list,
         .type = type,
         .cur_x = start_x,
         .cur_y = start_y,
-        .speed_x = 0,
-        .speed_y = 0,
+        .update_enable = 1,
+        .update_x = start_x,
+        .update_y = start_y,
         .update_time = update_time,
         .reach_time = reach_time,
         .is_missed = 0

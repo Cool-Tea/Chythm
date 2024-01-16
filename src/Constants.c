@@ -12,10 +12,6 @@ const SDL_Color default_colors[] = {
 };
 
 /* Note */
-const SDL_Color note_colors[] = {
-    {0x00,0xb1,0x94,0xff}, // SINGLE
-    {0xfd,0xd6,0x00,0xff}  // LONG
-};
 
 /* Lane */
 const SDL_Scancode default_keys[] = {
@@ -27,10 +23,6 @@ const SDL_Scancode default_keys[] = {
     SDL_SCANCODE_J,
     SDL_SCANCODE_K,
     SDL_SCANCODE_L
-};
-const SDL_Color hit_point_colors[] = {
-    {0x47,0xa5,0xeb,0xff}, // key up
-    {0x47,0xa5,0xeb,0x9f} // key down
 };
 
 /* Game Scene */

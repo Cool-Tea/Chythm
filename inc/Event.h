@@ -14,6 +14,9 @@ struct Event {
 };
 typedef struct Event Event;
 static void InitTextEvent(Event* event, va_list* args);
+static void InitMoveEvent(Event* event, va_list* args);
+static void InitStopEvent(Event* event);
+static void InitMoveToEvent(Event* event, va_list* args);
 void FreeEvent(Event* event);
 void EventUpdate(Event* event);
 static void TextEventDraw(Event* event);
@@ -29,7 +32,7 @@ struct EventList {
 };
 typedef struct EventList EventList;
 
-#define EventListFor(event_list) for (Event* ptr = (event_list)->head; ptr != (event_list)->tail; ptr++)
+#define EventListFor(event_list) for (Event* ptr = (event_list)->head; ptr < (event_list)->tail; ptr++)
 
 void InitEventList(EventList* event_list);
 void FreeEventList(EventList* event_list);

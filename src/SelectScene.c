@@ -293,7 +293,7 @@ static void SelectSceneDrawList() {
         rect.x = 100;
         SDL_RenderCopy(app.ren, select_scene->list[i], NULL, &rect);
         if (i == (CHART_LIST_NAME_MAX_SIZE - 1) / 2) {
-            DrawCursor(app.ren, rect);
+            DrawCursor(rect);
         }
     }
 }

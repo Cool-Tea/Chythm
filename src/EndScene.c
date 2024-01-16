@@ -18,11 +18,11 @@ EndScene* CreateEndScene() {
         return end_scene;
     }
 
-    end_scene->cur_button = 0;
-    end_scene->buttons[end_scene->cur_button].is_on = 1;
     InitButton(&end_scene->buttons[0], 100, 480, "Try Again", TryAgain);
     InitButton(&end_scene->buttons[1], 100, 480 + 2 * LETTER_HEIGHT, "Back To Select", BackToSelect);
     InitButton(&end_scene->buttons[2], 100, 480 + 4 * LETTER_HEIGHT, "Back To Menu", BackToMenu);
+    end_scene->cur_button = 0;
+    end_scene->buttons[end_scene->cur_button].is_on = 1;
     return end_scene;
 }
 
@@ -96,7 +96,7 @@ static void EndSceneDrawRating() {
         len = strlen(end_scene->rating);
         rect.w = len * LETTER_WIDTH;
         rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
-        DrawText(app.ren, rect, end_scene->rating, app.font, default_colors[0]);
+        DrawText(rect, end_scene->rating, default_colors[0]);
     }
 }
 
@@ -109,13 +109,13 @@ static void EndSceneDrawScore() {
     rect.y = 100 + rect.h;
     rect.w = len * LETTER_WIDTH;
     rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
-    DrawText(app.ren, rect, buf, app.font, default_colors[0]);
+    DrawText(rect, buf, default_colors[0]);
 
     len = sprintf(buf, "HISTORY BEST: %lu", game_scene->history_score);
     rect.y += rect.h;
     rect.w = len * LETTER_WIDTH;
     rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
-    DrawText(app.ren, rect, buf, app.font, default_colors[0]);
+    DrawText(rect, buf, default_colors[0]);
 }
 
 void EndSceneDraw() {

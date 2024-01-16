@@ -6,5 +6,5 @@ Application app = {
     .font = NULL,
     .is_running = 1,
     .is_error = 0,
-    .key_status = { 0 }
+    .key_status = NULL
 };

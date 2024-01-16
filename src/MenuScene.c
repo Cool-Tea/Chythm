@@ -62,7 +62,7 @@ void MenuSceneDraw() {
     for (int i = 0; i < MENU_SCENE_BUTTON_SIZE; i++) {
         ButtonDraw(&menu_scene->buttons[i]);
     }
-    DrawCursor(app.ren, menu_scene->buttons[menu_scene->cur_button].rect);
+    DrawCursor(menu_scene->buttons[menu_scene->cur_button].rect);
 }
 
 static void Start() {

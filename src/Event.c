@@ -1,7 +1,9 @@
 #include "../inc/Event.h"
 
 static void InitTextEvent(Event* event, va_list* args) {
-    const char* text = va_arg(*args, const char*);
+    int x = va_arg(*args, int);
+    int y = va_arg(*args, int);
+    const char* text = va_arg(*args, char*);
     int len = strlen(text);
     int size = len + 1 + sizeof(SDL_Rect);
     event->data = malloc(size);
@@ -10,17 +12,36 @@ static void InitTextEvent(Event* event, va_list* args) {
         app.is_error = 1;
         return;
     }
-    int x = va_arg(*args, int);
-    int y = va_arg(*args, int);
     SDL_Rect rect = {
         .h = GAME_SCENE_LETTER_HEIGHT,
         .w = len * GAME_SCENE_LETTER_WIDTH,
         .x = x,
         .y = y
     };
-    memcpy(event->data, &rect, sizeof(SDL_Rect));
-    memcpy(event->data + sizeof(SDL_Rect), text, len);
+    memcpy((SDL_Rect*)event->data, &rect, sizeof(SDL_Rect));
+    memcpy((char*)event->data + sizeof(SDL_Rect), text, len);
     *((char*)event->data + sizeof(SDL_Rect) + len) = '\0';
+}
+
+static void InitMoveEvent(Event* event, va_list* args) {
+    int x = va_arg(*args, int);
+    int y = va_arg(*args, int);
+    event->data = malloc(2 * sizeof(int));
+    if (event->data == NULL) {
+        fprintf(stderr, "[Event]Failed to malloc data\n");
+        app.is_error = 1;
+        return;
+    }
+    memcpy((int*)event->data, &x, sizeof(int));
+    memcpy((int*)event->data + 1, &y, sizeof(int));
+}
+
+static void InitMoveToEvent(Event* event, va_list* args) {
+    InitMoveEvent(event, args);
+}
+
+static void InitStopEvent(Event* event) {
+    event->data = NULL;
 }
 
 void FreeEvent(Event* event) {
@@ -34,10 +55,7 @@ void EventUpdate(Event* event) {
 }
 
 static void TextEventDraw(Event* event) {
-    DrawText(app.ren,
-        *((SDL_Rect*)event->data),
-        ((char*)event->data + sizeof(SDL_Rect)),
-        app.font, default_colors[0]);
+    DrawText(*((SDL_Rect*)event->data), ((char*)event->data + sizeof(SDL_Rect)), default_colors[0]);
 }
 
 void EventDraw(Event* event) {
@@ -83,9 +101,18 @@ void EventListEmplaceBack(EventList* event_list,
         InitTextEvent(&event_list->events[event_list->size], &args);
         break;
     }
-             /* TODO: perform event */
-    case MOVE:
-    case STOP:
+    case MOVE: {
+        InitMoveEvent(&event_list->events[event_list->size], &args);
+        break;
+    }
+    case MOVETO: {
+        InitMoveToEvent(&event_list->events[event_list->size], &args);
+        break;
+    }
+    case STOP: {
+        InitStopEvent(&event_list->events[event_list->size]);
+        break;
+    }
     default:
         break;
     }
@@ -118,7 +145,6 @@ void EventListDraw(EventList* event_list) {
             break;
         }
         case MOVE:
-        case STOP:
         default:
             break;
         }

@@ -15,6 +15,8 @@
 #define MAX_FPS 60; // this should not exceed 1000
 
 #define SAVES_PATH "../saves/"
+#define DEFAULT_BACKGROUND "../assets/images/Chythm.png"
+#define DEFAULT_BACKGROUND_PURE "../assets/images/pure.png"
 #define BGM_PATH
 #define FONT_PATH "../assets/fonts/font.TTF"
 #define FONT_SIZE 128
@@ -31,28 +33,41 @@ typedef enum SceneType SceneType;
 extern const SDL_Color default_colors[];
 
 /* Note */
+#define SINGLE_NOTE_IMG "../assets/images/single_note.png"
+
 #define NOTE_LIST_INIT_CAPACITY 1 << 4
 #define NOTE_RADIUS 30
 
 enum NoteType {
     SINGLE = 0,
     LONG_HEAD = 1,
-    LONG_TAIL = 2
+    LONG_TAIL = 2,
+
+    NOTE_TYPE_NUM
 };
 typedef enum NoteType NoteType;
-extern const SDL_Color note_colors[];
 
 /* Event */
 #define EVENT_LIST_INIT_CAPACITY 1 << 3
 
 enum EventType {
-    TEXT = 0,
-    MOVE = 1,
-    STOP = 2
+    /* Reserved */
+    NONE = 0x00, // do nothing
+
+    /* Game Scene */
+    TEXT = 0x10, // show text on the screen
+
+    /* Lane */
+    MOVE = 0x20, // move hit point for some miliseconds
+    MOVETO,       // move hit point to somewhere within some miliseconds
+    STOP        // stop hit point movement
 };
 typedef enum EventType EventType;
 
 /* Lane */
+#define HIT_POINT_DEFAULT_IMG "../assets/images/hit_point_default.png"
+#define HIT_POINT_DOWN_IMG "../assets/images/hit_point_down.png"
+
 #define PERFECT_HIT_INTERVAL 50 //ms
 #define PERFECT_HIT_SCORE 500
 #define GOOD_HIT_INTERVAL 100 //ms
@@ -64,7 +79,6 @@ typedef enum EventType EventType;
 #define KEY_NUM 8
 
 extern const SDL_Scancode default_keys[];
-extern const SDL_Color hit_point_colors[];
 
 /* Game Scene */
 #define GAME_SCENE_TEXT_PERSISTENCE 2000
@@ -86,23 +100,23 @@ extern const SDL_Color button_colors[];
 extern const SDL_Color cursor_color;
 
 /* Menu Scene */
-#define MENU_SCENE_BACKGROUND "../assets/images/Chythm.png"
+#define MENU_SCENE_BACKGROUND DEFAULT_BACKGROUND
 #define MENU_SCENE_BUTTON_SIZE 2
 
 /* Select Scene */
 #define CHART_LIST_INIT_CAPACITY 1 << 3
 #define CHART_LIST_NAME_MAX_SIZE SCREEN_HEIGHT / LETTER_HEIGHT / 2
-#define SELECT_SCENE_BACKGROUND "../assets/images/pure.png"
+#define SELECT_SCENE_BACKGROUND DEFAULT_BACKGROUND_PURE
 
 extern const SDL_Rect preview_rect;
 
 /* Pause Scene */
 #define PAUSE_SCENE_BUTTON_SIZE 3
-#define PAUSE_SCENE_BACKGROUND "../assets/images/pure.png"
+#define PAUSE_SCENE_BACKGROUND DEFAULT_BACKGROUND_PURE
 
 /* End Scene */
 #define END_SCENE_BUTTON_SIZE 3
-#define END_SCENE_BACKGROUND "../assets/images/pure.png"
+#define END_SCENE_BACKGROUND DEFAULT_BACKGROUND_PURE
 #define RATING_S_PERCENTAGE 0.9
 #define RATING_A_PERCENTAGE 0.8
 #define RATING_B_PERCENTAGE 0.7

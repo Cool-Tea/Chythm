@@ -5,11 +5,24 @@
 #include "Globals.h"
 #include "Drawer.h"
 
+/**
+ * This is specially desigin to pass parameters from game_scene to lane or note
+*/
+struct UpdateData {
+    int* combo;
+    Uint64* score;
+    int hit_status;
+};
+typedef struct UpdateData UpdateData;
+
+extern UpdateData update_data;
+
 struct Note {
     NoteType type;
     int cur_x, cur_y;
-    int speed_x, speed_y;
-    Uint32 update_time; // when the note starts to be update
+    bool update_enable; // whether update is enabled
+    int update_x, update_y; // where when the note starts to be updated
+    Uint32 update_time; // when the note starts to be updated
     Uint32 reach_time; // when the note reached the hit point
     bool is_missed; // whether the note is missed or not
 };
@@ -28,7 +41,7 @@ struct NoteList {
 };
 typedef struct NoteList NoteList;
 
-#define NoteListFor(note_list) for (Note* ptr = (note_list)->head; ptr != (note_list)->tail; ptr++)
+#define NoteListFor(note_list) for (Note* ptr = (note_list)->head; ptr < (note_list)->tail; ptr++)
 
 void InitNoteList(NoteList* note_list);
 void FreeNoteList(NoteList* note_list);

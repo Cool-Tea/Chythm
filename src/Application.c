@@ -10,7 +10,7 @@ void InitApplication() {
         GAME_TITLE,
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         SCREEN_WIDTH, SCREEN_HEIGHT,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP
+        SDL_WINDOW_OPENGL /*| SDL_WINDOW_FULLSCREEN_DESKTOP*/
     );
     if (app.win == NULL) {
         fprintf(stderr, "[Application]Failed to create window: %s\n", SDL_GetError());
@@ -42,9 +42,17 @@ void InitApplication() {
     app.timer.delta_time = 1;
     app.timer.base_time = app.timer.real_time;
     app.timer.relative_time = 0;
+
+    /* keyboard status */
+    app.key_status = SDL_GetKeyboardState(NULL);
+
+    /* assets */
+    InitAssets();
 }
 
 void DestroyApplication() {
+    FreeAssets();
+
     DestroyEndScene();
     DestroyPauseScene();
     DestroyGameScene();
@@ -71,20 +79,10 @@ void ApplicationStop() {
     Mix_HaltMusic();
 }
 
-static void ApplicationHandleKey(SDL_Event* event) {
-    if (event->type == SDL_KEYDOWN) {
-        app.key_status[event->key.keysym.scancode] = 1;
-    }
-    else if (event->type == SDL_KEYUP) {
-        app.key_status[event->key.keysym.scancode] = 0;
-    }
-}
-
 void ApplicationUpdate() {
-    static SDL_Event e;
+    SDL_Event e;
     SDL_PollEvent(&e);
     do {
-        ApplicationHandleKey(&e);
         switch (app.cur_scene) {
         case MENU: {
             MenuSceneUpdate(&e);
@@ -133,6 +131,7 @@ void ApplicationDraw() {
     }
     case END: {
         EndSceneDraw(app.ren, app.font);
+        break;
     }
     default:
         break;
@@ -143,7 +142,7 @@ void ApplicationDraw() {
     static SDL_Rect rect = { .h = 20, .x = 1800, .y = 0 };
     int len = sprintf(fps, "fps: %u", 1000u / app.timer.delta_time);
     rect.w = 10 * len;
-    DrawText(app.ren, rect, fps, app.font, default_colors[0]);
+    DrawText(rect, fps, default_colors[0]);
 #endif /* dev */
 
     SDL_RenderPresent(app.ren);

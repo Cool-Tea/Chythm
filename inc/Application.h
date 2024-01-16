@@ -11,7 +11,6 @@ void InitApplication();
 void DestroyApplication();
 void ApplicationStart();
 void ApplicationStop();
-static void ApplicationHandleKey(SDL_Event* event);
 void ApplicationUpdate();
 void ApplicationDraw();
 void ApplicationTick();
