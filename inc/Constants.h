@@ -32,8 +32,20 @@ typedef enum SceneType SceneType;
 
 extern const SDL_Color default_colors[];
 
+/* Particle and Effect */
+#define PARTICLE_IMG_DIR_PATH "../assets/images/effects/"
+
+enum EffectType {
+    SCORCH,
+    CIRCLE,
+    MAGIC,
+    MUZZLE,
+    STAR
+};
+typedef enum EffectType EffectType;
+
 /* Note */
-#define SINGLE_NOTE_IMG "../assets/images/single_note.png"
+#define SINGLE_NOTE_IMG "../assets/images/sprites/single_note.png"
 
 #define NOTE_LIST_INIT_CAPACITY 1 << 4
 #define NOTE_RADIUS 30
@@ -65,8 +77,8 @@ enum EventType {
 typedef enum EventType EventType;
 
 /* Lane */
-#define HIT_POINT_DEFAULT_IMG "../assets/images/hit_point_default.png"
-#define HIT_POINT_DOWN_IMG "../assets/images/hit_point_down.png"
+#define HIT_POINT_DEFAULT_IMG "../assets/images/sprites/hit_point_default.png"
+#define HIT_POINT_DOWN_IMG "../assets/images/sprites/hit_point_down.png"
 
 #define PERFECT_HIT_INTERVAL 50 //ms
 #define PERFECT_HIT_SCORE 500

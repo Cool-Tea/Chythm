@@ -11,13 +11,16 @@ void NoteUpdate(Note* note, int target_x, int target_y) {
         * (signed)(app.timer.relative_time - note->update_time)
         / (signed)(note->reach_time - note->update_time)
         + note->update_y;
+    EffectUpdate(&note->effect);
 }
 
 void NoteDraw(Note* note) {
     /* TODO: draw different note */
     switch (note->type) {
     case SINGLE: {
-        DrawSingleNote(note->cur_x, note->cur_y, note->cur_x - note->update_x, note->cur_y - note->update_y);
+        /* TODO: chech whether just render effect */
+        // DrawSingleNote(note->cur_x, note->cur_y, note->cur_x - note->update_x, note->cur_y - note->update_y);
+        EffectDraw(&note->effect, note->cur_x, note->cur_y, NOTE_RADIUS << 1);
         break;
     }
     default:
@@ -37,6 +40,9 @@ void InitNoteList(NoteList* note_list) {
 }
 
 void FreeNoteList(NoteList* note_list) {
+    for (size_t i = 0; i < note_list->size; i++) {
+        FreeEffect(&note_list->notes[i].effect);
+    }
     free(note_list->notes);
 }
 
@@ -45,7 +51,7 @@ void NoteListEmplaceBack(NoteList* note_list,
     int start_x, int start_y,
     Uint32 update_time, Uint32 reach_time
 ) {
-    note_list->notes[note_list->size++] = (Note){
+    note_list->notes[note_list->size] = (Note){
         .type = type,
         .cur_x = start_x,
         .cur_y = start_y,
@@ -56,6 +62,8 @@ void NoteListEmplaceBack(NoteList* note_list,
         .reach_time = reach_time,
         .is_missed = 0
     };
+    InitEffect(&note_list->notes[note_list->size].effect, STAR, 1);
+    note_list->size++;
     if (note_list->size >= note_list->capacity) {
         note_list->capacity <<= 1;
         note_list->notes = realloc(note_list->notes, note_list->capacity * sizeof(Note));
@@ -81,10 +89,12 @@ void NoteListDraw(NoteList* note_list) {
 }
 
 static void NoteListPop(NoteList* note_list) {
+    note_list->head->effect.is_active = 0;
     note_list->head++;
 }
 
 static void NoteListPush(NoteList* note_list) {
+    note_list->tail->effect.is_active = 1;
     note_list->tail++;
 }
 

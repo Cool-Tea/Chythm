@@ -4,6 +4,7 @@
 #include "Constants.h"
 #include "Globals.h"
 #include "Drawer.h"
+#include "Effect.h"
 
 /**
  * This is specially desigin to pass parameters from game_scene to lane or note
@@ -25,6 +26,7 @@ struct Note {
     Uint32 update_time; // when the note starts to be updated
     Uint32 reach_time; // when the note reached the hit point
     bool is_missed; // whether the note is missed or not
+    Effect effect;
 };
 typedef struct Note Note;
 

@@ -11,6 +11,13 @@ void InitHitPoint(HitPoint* hit_point, int x, int y, SDL_Scancode key) {
     hit_point->dest.update_x = x, hit_point->dest.update_y = y;
     hit_point->dest.update_time = hit_point->dest.reach_time = 0;
     hit_point->dest.move_enable = 0;
+
+    InitEffect(&hit_point->down_effect, CIRCLE, 1);
+    InitEffect(&hit_point->hit_effect, MAGIC, 0);
+}
+
+void FreeHitPoint(HitPoint* hit_point) {
+    FreeEffect(&hit_point->down_effect);
 }
 
 static void HitPointUpdateSpeed(HitPoint* hit_point) {
@@ -38,10 +45,14 @@ void HitPointUpdate(HitPoint* hit_point) {
     if (hit_point->dest.move_enable) {
         HitPointUpdateDest(hit_point);
     }
+    EffectUpdate(&hit_point->down_effect);
+    EffectUpdate(&hit_point->hit_effect);
 }
 
 void HitPointDraw(HitPoint* hit_point) {
+    EffectDraw(&hit_point->down_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 20);
     DrawHitPoint(hit_point->cur_x, hit_point->cur_y, hit_point->is_down);
+    EffectDraw(&hit_point->hit_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 40);
 }
 
 void InitLane(Lane* lane) {
@@ -51,6 +62,7 @@ void InitLane(Lane* lane) {
 }
 
 void FreeLane(Lane* lane) {
+    FreeHitPoint(&lane->hit_point);
     FreeNoteList(&lane->note_list);
     FreeEventList(&lane->event_list);
 }
@@ -87,10 +99,11 @@ static int isGoodHit(const HitPoint* hit_point, const Note* note) {
 static void LaneHandleKey(Lane* lane) {
     if (app.key_status[lane->hit_point.key]) {
         lane->hit_point.is_down = 1;
+        lane->hit_point.down_effect.is_active = 1;
         NoteListFor(&lane->note_list) {
             if (isBeyondHit(&lane->hit_point, ptr)) break;
             else if (!ptr->is_missed && isPerfectHit(&lane->hit_point, ptr)) {
-                /* TODO: hit effect */
+                lane->hit_point.hit_effect.is_active = 1;
                 update_data.hit_status = 0;
                 *update_data.score += PERFECT_HIT_SCORE;
                 *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
@@ -98,6 +111,7 @@ static void LaneHandleKey(Lane* lane) {
                 (*update_data.combo)++;
             }
             else if (!ptr->is_missed && isGoodHit(&lane->hit_point, ptr)) {
+                lane->hit_point.hit_effect.is_active = 1;
                 update_data.hit_status = 1;
                 *update_data.score += GOOD_HIT_SCORE;
                 *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
@@ -105,6 +119,7 @@ static void LaneHandleKey(Lane* lane) {
                 (*update_data.combo)++;
             }
             else {
+                lane->hit_point.hit_effect.is_active = 0;
                 update_data.hit_status = 2;
                 ptr->is_missed = 1;
                 *update_data.combo = 0;
@@ -113,6 +128,7 @@ static void LaneHandleKey(Lane* lane) {
     }
     else {
         lane->hit_point.is_down = 0;
+        lane->hit_point.down_effect.is_active = 0;
         /* TODO: when hit point is up */
     }
 }

@@ -19,9 +19,12 @@ struct HitPoint {
     } dest; // this should not collided with speed
     SDL_Scancode key; // the key for this point
     bool is_down;
+    Effect down_effect;
+    Effect hit_effect;
 };
 typedef struct HitPoint HitPoint;
 void InitHitPoint(HitPoint* hit_point, int x, int y, SDL_Scancode key);
+void FreeHitPoint(HitPoint* hit_point);
 static void HitPointUpdateSpeed(HitPoint* hit_point);
 static void HitPointUpdateDest(HitPoint* hit_point);
 void HitPointUpdate(HitPoint* hit_point);
