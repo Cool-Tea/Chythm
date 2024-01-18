@@ -50,9 +50,14 @@ void HitPointUpdate(HitPoint* hit_point) {
 }
 
 void HitPointDraw(HitPoint* hit_point) {
-    EffectDraw(&hit_point->down_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 20);
-    DrawHitPoint(hit_point->cur_x, hit_point->cur_y, hit_point->is_down);
-    EffectDraw(&hit_point->hit_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 40);
+    static SDL_Rect rect = { .h = HIT_POINT_RADIUS << 1, .w = HIT_POINT_RADIUS << 1 };
+
+    EffectDraw(&hit_point->down_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 20, 0.0);
+
+    rect.x = hit_point->cur_x - HIT_POINT_RADIUS, rect.y = hit_point->cur_y - HIT_POINT_RADIUS;
+    SDL_RenderCopy(app.ren, assets.hit_points[hit_point->is_down], NULL, &rect);
+
+    EffectDraw(&hit_point->hit_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 40, 0.0);
 }
 
 void InitLane(Lane* lane) {
@@ -102,34 +107,84 @@ static void LaneHandleKey(Lane* lane) {
         lane->hit_point.down_effect.is_active = 1;
         NoteListFor(&lane->note_list) {
             if (isBeyondHit(&lane->hit_point, ptr)) break;
-            else if (!ptr->is_missed && isPerfectHit(&lane->hit_point, ptr)) {
+            if (!ptr->is_missed && isPerfectHit(&lane->hit_point, ptr)) {
                 lane->hit_point.hit_effect.is_active = 1;
                 update_data.hit_status = 0;
-                *update_data.score += PERFECT_HIT_SCORE;
-                *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                    COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+                ptr->is_hit = 1;
                 (*update_data.combo)++;
+                switch (ptr->type) {
+                case SINGLE: {
+                    *update_data.score += PERFECT_HIT_SCORE;
+                    *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+                        COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+                    break;
+                }
+                case LONG: {
+                    *update_data.score += LONG_HIT_SCORE;
+                    break;
+                }
+                default:
+                    break;
+                }
             }
             else if (!ptr->is_missed && isGoodHit(&lane->hit_point, ptr)) {
                 lane->hit_point.hit_effect.is_active = 1;
                 update_data.hit_status = 1;
-                *update_data.score += GOOD_HIT_SCORE;
-                *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                    COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+                ptr->is_hit = 1;
                 (*update_data.combo)++;
+                switch (ptr->type) {
+                case SINGLE: {
+                    *update_data.score += GOOD_HIT_SCORE;
+                    *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+                        COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+                    break;
+                }
+                case LONG: {
+                    *update_data.score += LONG_HIT_SCORE;
+                    break;
+                }
+                default:
+                    break;
+                }
             }
             else {
-                lane->hit_point.hit_effect.is_active = 0;
-                update_data.hit_status = 2;
-                ptr->is_missed = 1;
-                *update_data.combo = 0;
+                switch (ptr->type) {
+                case SINGLE: {
+                    lane->hit_point.hit_effect.is_active = 0;
+                    update_data.hit_status = 2;
+                    ptr->is_missed = 1;
+                    *update_data.combo = 0;
+                    break;
+                }
+                case LONG: {
+                    if (ptr->linked_notes[0]->reach_time >= app.timer.relative_time) {
+                        lane->hit_point.hit_effect.is_active = 0;
+                        update_data.hit_status = 2;
+                        ptr->is_missed = 1;
+                        *update_data.combo = 0;
+                    }
+                    break;
+                }
+                default:
+                    break;
+                }
             }
         }
     }
     else {
         lane->hit_point.is_down = 0;
         lane->hit_point.down_effect.is_active = 0;
-        /* TODO: when hit point is up */
+        /* TODO: better check */
+        NoteListFor(&lane->note_list) {
+            if (ptr->type != LONG ||
+                ptr->is_hit == 0) break;
+            ptr->is_missed = 1;
+            ptr->is_hit = 0;
+            ptr->linked_notes[0]->is_missed = 1;
+            ptr->is_hit = 0;
+            update_data.hit_status = 2;
+            *update_data.combo = 0;
+        }
     }
 }
 

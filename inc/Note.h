@@ -20,17 +20,25 @@ extern UpdateData update_data;
 
 struct Note {
     NoteType type;
+    struct Note* linked_notes[2]; // for special linked note like LONG or sth else
     int cur_x, cur_y;
-    bool update_enable; // whether update is enabled
     int update_x, update_y; // where when the note starts to be updated
     Uint32 update_time; // when the note starts to be updated
     Uint32 reach_time; // when the note reached the hit point
+    bool update_enable; // whether update is enabled
     bool is_missed; // whether the note is missed or not
-    Effect effect;
+    bool is_hit; // whether the note is hit or not
+    Effect effect; // the effect note pocessed
 };
 typedef struct Note Note;
 
+void NoteLink(Note* lnote, Note* rnote);
 void NoteUpdate(Note* note, int target_x, int target_y);
+
+#if !NOTE_ONLY_EFFECT
+static void TypeNoteDraw(Note* note);
+#endif
+
 void NoteDraw(Note* note);
 
 /* A CPP-vector-like array, designed specially for this project*/
@@ -44,6 +52,7 @@ struct NoteList {
 typedef struct NoteList NoteList;
 
 #define NoteListFor(note_list) for (Note* ptr = (note_list)->head; ptr < (note_list)->tail; ptr++)
+#define NoteListBack(note_list) ((note_list)->notes + (note_list)->size)
 
 void InitNoteList(NoteList* note_list);
 void FreeNoteList(NoteList* note_list);

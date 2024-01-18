@@ -19,7 +19,7 @@ void InitParticle(Particle* particle, EffectType type, size_t i);
 void FreeParticle(Particle* particle);
 void ParticleReset(Particle* particle);
 void ParticleUpdate(Particle* particle);
-void ParticleDraw(Particle* particle, int x, int y, int r);
+void ParticleDraw(Particle* particle, int x, int y, int r, double angle);
 bool isParticleEnd(Particle* particle);
 
 struct Effect {
@@ -36,7 +36,7 @@ static void InitTypeEffect(Effect* effect, EffectType type);
 void InitEffect(Effect* effect, EffectType type, bool repeat_enale);
 void FreeEffect(Effect* effect);
 void EffectUpdate(Effect* effect);
-void EffectDraw(Effect* effect, int x, int y, int r);
+void EffectDraw(Effect* effect, int x, int y, int r, double angle);
 bool isEffectEnd(Effect* effect);
 
 #endif

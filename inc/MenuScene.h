@@ -6,7 +6,9 @@
 
 struct MenuScene {
     /* image */
+#if !USE_DEFAULT_BACKGROUND
     SDL_Texture* background;
+#endif
 
     /* button */
     Button buttons[MENU_SCENE_BUTTON_SIZE]; // start and quit

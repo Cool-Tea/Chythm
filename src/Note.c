@@ -1,5 +1,10 @@
 #include "../inc/Note.h"
 
+void NoteLink(Note* lnote, Note* rnote) {
+    lnote->linked_notes[lnote->linked_notes[0] != NULL] = rnote;
+    rnote->linked_notes[rnote->linked_notes[0] != NULL] = lnote;
+}
+
 void NoteUpdate(Note* note, int target_x, int target_y) {
     if (note->update_enable == 0) return;
     note->cur_x =
@@ -14,13 +19,38 @@ void NoteUpdate(Note* note, int target_x, int target_y) {
     EffectUpdate(&note->effect);
 }
 
+#if !NOTE_ONLY_EFFECT
+static void TypeNoteDraw(Note* note) {
+    static SDL_Rect rect = { .h = NOTE_RADIUS << 1, .w = NOTE_RADIUS << 1 };
+    rect.x = note->cur_x - NOTE_RADIUS, rect.y = note->cur_y - NOTE_RADIUS;
+    double angle =
+        SDL_atan2(note->cur_x - note->update_x, note->cur_y - note->update_y)
+        * 180.0 / PI;
+    if (note->cur_x > note->update_x) angle = -angle;
+    SDL_RenderCopyEx(app.ren, assets.notes[note->type], NULL, &rect, angle, NULL, SDL_FLIP_NONE);
+}
+#endif
+
 void NoteDraw(Note* note) {
+    double angle =
+        SDL_atan2(note->cur_x - note->update_x, note->cur_y - note->update_y)
+        * 180.0 / PI;
+    if (note->cur_x > note->update_x) angle = -angle;
+    EffectDraw(&note->effect, note->cur_x, note->cur_y, NOTE_RADIUS << 1, angle);
+
+#if !NOTE_ONLY_EFFECT
+    TypeNoteDraw(note);
+#endif
+
     /* TODO: draw different note */
     switch (note->type) {
-    case SINGLE: {
-        /* TODO: chech whether just render effect */
-        // DrawSingleNote(note->cur_x, note->cur_y, note->cur_x - note->update_x, note->cur_y - note->update_y);
-        EffectDraw(&note->effect, note->cur_x, note->cur_y, NOTE_RADIUS << 1);
+    case LONG: {
+        lineRGBA(
+            app.ren,
+            note->cur_x, note->cur_y,
+            note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
+            default_colors[0].r, default_colors[0].g, default_colors[0].b, default_colors[0].a
+        );
         break;
     }
     default:
@@ -53,6 +83,7 @@ void NoteListEmplaceBack(NoteList* note_list,
 ) {
     note_list->notes[note_list->size] = (Note){
         .type = type,
+        .linked_notes = { NULL, NULL },
         .cur_x = start_x,
         .cur_y = start_y,
         .update_enable = 1,
@@ -60,9 +91,21 @@ void NoteListEmplaceBack(NoteList* note_list,
         .update_y = start_y,
         .update_time = update_time,
         .reach_time = reach_time,
-        .is_missed = 0
+        .is_missed = 0,
+        .is_hit = 0
     };
-    InitEffect(&note_list->notes[note_list->size].effect, STAR, 1);
+    switch (type) {
+    case SINGLE: {
+        InitEffect(&note_list->notes[note_list->size].effect, MUZZLE, 1);
+        break;
+    }
+    case LONG: {
+        InitEffect(&note_list->notes[note_list->size].effect, STAR, 1);
+        break;
+    }
+    default:
+        break;
+    }
     note_list->size++;
     if (note_list->size >= note_list->capacity) {
         note_list->capacity <<= 1;
@@ -71,9 +114,38 @@ void NoteListEmplaceBack(NoteList* note_list,
 }
 
 void NoteListUpdate(NoteList* note_list, int target_x, int target_y) {
-    while (note_list->head != note_list->tail && note_list->head->reach_time <= app.timer.relative_time) {
-        NoteListPop(note_list);
+    NoteListFor(note_list) {
+        if (ptr->reach_time > app.timer.relative_time) break;
+        else if (ptr->reach_time + 150 <= app.timer.relative_time) continue;
+        ptr->update_enable = 0;
     }
+    while (note_list->head < note_list->tail && note_list->head->reach_time + 150 <= app.timer.relative_time) {
+        switch (note_list->head->type) {
+        case SINGLE: {
+            if (note_list->head->is_hit == 0) {
+                *update_data.combo = 0;
+                update_data.hit_status = 2;
+            }
+            NoteListPop(note_list);
+            break;
+        }
+        case LONG: {
+            if (note_list->head->is_hit == 0) {
+                *update_data.combo = 0;
+                update_data.hit_status = 2;
+            }
+            if (note_list->head->linked_notes[0]->reach_time <= app.timer.relative_time) {
+                NoteListPop(note_list);
+                NoteListPop(note_list);
+            }
+            else goto out; // jump out of this loop (out is exactly below this loop)
+            break;
+        }
+        default:
+            break;
+        }
+    }
+out:
     while (!isNoteListTailEnd(note_list) && note_list->tail->update_time <= app.timer.relative_time) {
         NoteListPush(note_list);
     }

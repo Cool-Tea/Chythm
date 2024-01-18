@@ -6,7 +6,9 @@
 
 struct PauseScene {
     /* image */
+#if !USE_DEFAULT_BACKGROUND
     SDL_Texture* background;
+#endif
 
     /* button */
     Button buttons[PAUSE_SCENE_BUTTON_SIZE];

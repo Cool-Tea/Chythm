@@ -11,12 +11,14 @@ EndScene* CreateEndScene() {
     }
     end_scene->rating = NULL;
 
+#if !USE_DEFAULT_BACKGROUND
     end_scene->background = IMG_LoadTexture(app.ren, END_SCENE_BACKGROUND);
     if (end_scene->background == NULL) {
         fprintf(stderr, "[EndScene]Failed to load background: %s\n", IMG_GetError());
         app.is_error = 1;
         return end_scene;
     }
+#endif
 
     InitButton(&end_scene->buttons[0], 100, 480, "Try Again", TryAgain);
     InitButton(&end_scene->buttons[1], 100, 480 + 2 * LETTER_HEIGHT, "Back To Select", BackToSelect);
@@ -31,9 +33,13 @@ void DestroyEndScene() {
         for (end_scene->cur_button = 0; end_scene->cur_button < END_SCENE_BUTTON_SIZE; end_scene->cur_button++) {
             FreeButton(&end_scene->buttons[end_scene->cur_button]);
         }
+
+#if !USE_DEFAULT_BACKGROUND
         if (end_scene->background != NULL) {
             SDL_DestroyTexture(end_scene->background);
         }
+#endif
+
         free(end_scene);
         end_scene = NULL;
     }
@@ -119,7 +125,11 @@ static void EndSceneDrawScore() {
 }
 
 void EndSceneDraw() {
+#if USE_DEFAULT_BACKGROUND
+    DrawDefaultBackgroundPure();
+#else
     SDL_RenderCopy(app.ren, end_scene->background, NULL, NULL);
+#endif
     EndSceneDrawRating();
     EndSceneDrawScore();
     for (size_t i = 0; i < END_SCENE_BUTTON_SIZE; i++) {

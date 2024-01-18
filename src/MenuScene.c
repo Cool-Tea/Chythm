@@ -10,12 +10,14 @@ MenuScene* CreateMenuScene() {
         return menu_scene;
     }
 
+#if !USE_DEFAULT_BACKGROUND
     menu_scene->background = IMG_LoadTexture(app.ren, MENU_SCENE_BACKGROUND);
     if (menu_scene->background == NULL) {
         fprintf(stderr, "[MenuScene]Failed to load background: %s\n", IMG_GetError());
         app.is_error = 1;
         return menu_scene;
     }
+#endif
 
     InitButton(&menu_scene->buttons[0], 100, 640, "START", Start);
     InitButton(&menu_scene->buttons[1], 100, 640 + 2 * LETTER_HEIGHT, "QUIT", Quit);
@@ -26,9 +28,13 @@ MenuScene* CreateMenuScene() {
 
 void DestroyMenuScene() {
     if (menu_scene != NULL) {
+
+#if !USE_DEFAULT_BACKGROUND
         if (menu_scene->background != NULL) {
             SDL_DestroyTexture(menu_scene->background);
         }
+#endif
+
         FreeButton(menu_scene->buttons);
         FreeButton(menu_scene->buttons + 1);
         free(menu_scene);
@@ -58,7 +64,11 @@ void MenuSceneUpdate(SDL_Event* event) {
 }
 
 void MenuSceneDraw() {
+#if USE_DEFAULT_BACKGROUND
+    DrawDefaultBackground();
+#else
     SDL_RenderCopy(app.ren, menu_scene->background, NULL, NULL);
+#endif
     for (int i = 0; i < MENU_SCENE_BUTTON_SIZE; i++) {
         ButtonDraw(&menu_scene->buttons[i]);
     }

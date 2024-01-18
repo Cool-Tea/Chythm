@@ -54,6 +54,7 @@ static int GetAudio(const char* chart_path, const char* audio_path) {
     return 0;
 }
 
+#if !USE_DEFAULT_BACKGROUND
 static int GetBackground(const char* chart_path, const char* img_path) {
     char buffer[1 << 8];
     CompletePath(buffer, chart_path, img_path);
@@ -65,6 +66,7 @@ static int GetBackground(const char* chart_path, const char* img_path) {
     }
     return 0;
 }
+#endif
 
 static SDL_Scancode AllocateKey(int size, int i) {
     int base = KEY_NUM / 2 - size / 2;
@@ -101,21 +103,44 @@ static void GetNotes(cJSON* notes, int bpm) {
         cJSON* note = cJSON_GetArrayItem(notes, i);
         cJSON* type = cJSON_GetObjectItem(note, "type");
         cJSON* lane = cJSON_GetObjectItem(note, "lane");
-        cJSON* move = cJSON_GetObjectItem(note, "move");
-        cJSON* start = cJSON_GetObjectItem(move, "start");
-        cJSON* start_x = cJSON_GetObjectItem(start, "x");
-        cJSON* start_y = cJSON_GetObjectItem(start, "y");
-        cJSON* end = cJSON_GetObjectItem(move, "end");
-        cJSON* end_x = cJSON_GetObjectItem(end, "x");
-        cJSON* end_y = cJSON_GetObjectItem(end, "y");
         /* TODO: more note */
-        cJSON* time = cJSON_GetObjectItem(note, "time");
-        LaneAddNote(&game_scene->lanes[lane->valueint],
-            type->valueint,
-            start_x->valueint, start_y->valueint,
-            time->valueint - 60000u / bpm,
-            time->valueint
-        );
+        cJSON* move = cJSON_GetObjectItem(note, "move");
+        switch (type->valueint) {
+        case SINGLE: {
+            cJSON* start = cJSON_GetArrayItem(move, 0);
+            cJSON* start_x = cJSON_GetObjectItem(start, "x");
+            cJSON* start_y = cJSON_GetObjectItem(start, "y");
+            cJSON* reach_time = cJSON_GetObjectItem(start, "reach_time");
+            LaneAddNote(&game_scene->lanes[lane->valueint],
+                type->valueint,
+                start_x->valueint, start_y->valueint,
+                reach_time->valueint - 60000u / bpm,
+                reach_time->valueint
+            );
+            break;
+        }
+        case LONG: {
+            for (int i = 0; i < 2; i++) {
+                cJSON* start = cJSON_GetArrayItem(move, i);
+                cJSON* start_x = cJSON_GetObjectItem(start, "x");
+                cJSON* start_y = cJSON_GetObjectItem(start, "y");
+                cJSON* reach_time = cJSON_GetObjectItem(start, "reach_time");
+                LaneAddNote(&game_scene->lanes[lane->valueint],
+                    type->valueint,
+                    start_x->valueint, start_y->valueint,
+                    reach_time->valueint - 60000u / bpm,
+                    reach_time->valueint
+                );
+            }
+            NoteLink(
+                NoteListBack(&game_scene->lanes[lane->valueint].note_list) - 2,
+                NoteListBack(&game_scene->lanes[lane->valueint].note_list) - 1
+            );
+            break;
+        }
+        default:
+            break;
+        }
     }
 }
 
@@ -211,7 +236,11 @@ GameScene* CreateGameScene(const char* chart_path) {
         return game_scene;
     }
     game_scene->chart_path = chart_path;
+
+#if !USE_DEFAULT_BACKGROUND
     game_scene->background = NULL;
+#endif
+
     game_scene->music = NULL;
     game_scene->lanes = NULL;
 
@@ -227,11 +256,13 @@ GameScene* CreateGameScene(const char* chart_path) {
         return game_scene;
     }
 
+#if !USE_DEFAULT_BACKGROUND
     cJSON* background = cJSON_GetObjectItem(chart, "background");
     if (GetBackground(chart_path, background->valuestring) < 0) {
         cJSON_Delete(file);
         return game_scene;
     }
+#endif
 
     cJSON* lane_size = cJSON_GetObjectItem(chart, "lane_size");
     cJSON* hit_points = cJSON_GetObjectItem(chart, "hit_points");
@@ -256,7 +287,11 @@ GameScene* CreateGameScene(const char* chart_path) {
 
 void DestroyGameScene() {
     if (game_scene != NULL) {
+
+#if !USE_DEFAULT_BACKGROUND
         if (game_scene->background != NULL) SDL_DestroyTexture(game_scene->background);
+#endif
+
         if (game_scene->music != NULL) Mix_FreeMusic(game_scene->music);
         FreeEventList(&game_scene->event_list);
         if (game_scene->lanes != NULL) free(game_scene->lanes);
@@ -281,6 +316,7 @@ void GameSceneStart() {
 
 static void SaveScore() {
     if (game_scene->score > game_scene->history_score) {
+        game_scene->history_score = game_scene->score;
         char buffer[1 << 8];
         CompletePath(buffer, game_scene->chart_path, "score.txt");
         FILE* fp = fopen(buffer, "w+");
@@ -396,10 +432,16 @@ static void GameSceneDrawHitText() {
 }
 
 void GameSceneDraw() {
+#if USE_DEFAULT_BACKGROUND
+    DrawDefaultBackgroundPure();
+#else
     SDL_RenderCopy(app.ren, game_scene->background, NULL, NULL);
+#endif
+
 #ifdef DEV
     GameSceneDrawFPS();
 #endif /* dev */
+
     GameSceneDrawScore();
     GameSceneDrawHitText();
     for (size_t i = 0; i < game_scene->lane_size; i++) {

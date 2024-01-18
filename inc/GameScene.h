@@ -13,7 +13,10 @@ struct GameScene {
     const char* chart_path;
 
     /* image and audio */
+#if !USE_DEFAULT_BACKGROUND
     SDL_Texture* background;
+#endif
+
     Mix_Music* music;
 
     /* event */

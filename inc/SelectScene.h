@@ -33,14 +33,14 @@ void ChartListPushBack(ChartList* list,
 void ChartListRefresh(ChartList* list);
 
 struct SelectScene {
+
+#if !USE_DEFAULT_BACKGROUND
     SDL_Texture* background;
+#endif
 
     /* list */
     ChartList chart_list;
     SDL_Texture* preview;
-    SDL_Texture* title;
-    SDL_Texture* artist;
-    SDL_Texture* list[CHART_LIST_NAME_MAX_SIZE];
 };
 typedef struct SelectScene SelectScene;
 

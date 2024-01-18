@@ -150,41 +150,40 @@ SelectScene* CreateSelectScene() {
         app.is_error = 1;
         return select_scene;
     }
-    select_scene->background = NULL;
-    select_scene->preview = NULL;
-    select_scene->title = NULL;
-    select_scene->artist = NULL;
 
-    for (size_t i = 0; i < CHART_LIST_NAME_MAX_SIZE; i++) select_scene->list[i] = NULL;
+#if !USE_DEFAULT_BACKGROUND
+    select_scene->background = NULL;
+#endif
+
+    select_scene->preview = NULL;
+
     InitChartList(&select_scene->chart_list, SAVES_PATH);
     if (app.is_error) {
         fprintf(stderr, "[SelectScene]Failed to init chart list\n");
     }
 
+#if !USE_DEFAULT_BACKGROUND
     select_scene->background = IMG_LoadTexture(app.ren, SELECT_SCENE_BACKGROUND);
     if (select_scene->background == NULL) {
         fprintf(stderr, "[SelectScene]Failed to load background: %s\n", IMG_GetError());
         app.is_error = 1;
     }
+#endif
+
     return select_scene;
 }
 
 void DestroySelectScene() {
     if (select_scene != NULL) {
+
+#if !USE_DEFAULT_BACKGROUND
         if (select_scene->background != NULL) {
             SDL_DestroyTexture(select_scene->background);
         }
+#endif
+
         if (select_scene->preview != NULL) {
             SDL_DestroyTexture(select_scene->preview);
-        }
-        if (select_scene->background != NULL) {
-            SDL_DestroyTexture(select_scene->preview);
-        }
-        if (select_scene->artist != NULL) {
-            SDL_DestroyTexture(select_scene->artist);
-        }
-        for (size_t i = 0; i < CHART_LIST_NAME_MAX_SIZE; i++) {
-            if (select_scene->list[i] != NULL) SDL_DestroyTexture(select_scene->list[i]);
         }
         FreeChartList(&select_scene->chart_list);
         free(select_scene);
@@ -204,26 +203,12 @@ static void SelectSceneHandleKey() {
     else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
         select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
         SDL_DestroyTexture(select_scene->preview);
-        SDL_DestroyTexture(select_scene->title);
-        SDL_DestroyTexture(select_scene->artist);
-        SDL_DestroyTexture(select_scene->list[CHART_LIST_NAME_MAX_SIZE - 1]);
-        for (size_t i = CHART_LIST_NAME_MAX_SIZE - 1; i > 0; i--) {
-            select_scene->list[i] = select_scene->list[i - 1];
-        }
-        select_scene->list[0] = NULL;
-        select_scene->preview = select_scene->title = select_scene->artist = NULL;
+        select_scene->preview = NULL;
     }
     else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
         select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
         SDL_DestroyTexture(select_scene->preview);
-        SDL_DestroyTexture(select_scene->title);
-        SDL_DestroyTexture(select_scene->artist);
-        SDL_DestroyTexture(select_scene->list[0]);
-        for (size_t i = 0; i < CHART_LIST_NAME_MAX_SIZE - 1; i++) {
-            select_scene->list[i] = select_scene->list[i + 1];
-        }
-        select_scene->list[CHART_LIST_NAME_MAX_SIZE - 1] = NULL;
-        select_scene->preview = select_scene->title = select_scene->artist = NULL;
+        select_scene->preview = NULL;
     }
     else if (app.key_status[SDL_SCANCODE_R]) {
         ChartListRefresh(&select_scene->chart_list);
@@ -251,47 +236,39 @@ static void SelectSceneDrawInfo() {
         SDL_RenderCopy(app.ren, select_scene->preview, NULL, &preview_rect);
 
     /* Draw title */
-    if (select_scene->title == NULL) {
-        SDL_Surface* sur = TTF_RenderText_Blended(app.font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, default_colors[0]);
-        select_scene->title = SDL_CreateTextureFromSurface(app.ren, sur);
-        SDL_FreeSurface(sur);
-    }
     len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title);
     rect.y = preview_rect.y + preview_rect.h + LETTER_HEIGHT;
     rect.w = len * LETTER_WIDTH;
     rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
-    SDL_RenderCopy(app.ren, select_scene->title, NULL, &rect);
+    DrawText(rect, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, default_colors[0]);
 
     /* Draw artist */
-    if (select_scene->artist == NULL) {
-        SDL_Surface* sur = TTF_RenderText_Blended(app.font, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, default_colors[0]);
-        select_scene->artist = SDL_CreateTextureFromSurface(app.ren, sur);
-        SDL_FreeSurface(sur);
-    }
     len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist);
     rect.y += LETTER_HEIGHT;
     rect.w = len * LETTER_WIDTH;
     rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
-    SDL_RenderCopy(app.ren, select_scene->artist, NULL, &rect);
+    DrawText(rect, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, default_colors[0]);
 }
 
 static void SelectSceneDrawList() {
     static int len;
     static SDL_Rect rect = { .h = LETTER_HEIGHT };
 
-    for (size_t i = 0, cur = (select_scene->chart_list.cur_chart - CHART_LIST_NAME_MAX_SIZE >> 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
+    for (size_t i = 0,
+
+        cur =
+        (select_scene->chart_list.cur_chart - CHART_LIST_NAME_MAX_SIZE / 2 + select_scene->chart_list.size)
+        % select_scene->chart_list.size;
+
         i < CHART_LIST_NAME_MAX_SIZE;
+
         i++, cur = (cur + 1) % select_scene->chart_list.size) {
-        if (select_scene->list[i] == NULL) {
-            SDL_Surface* sur = TTF_RenderText_Blended(app.font, select_scene->chart_list.charts[cur].title, default_colors[0]);
-            select_scene->list[i] = SDL_CreateTextureFromSurface(app.ren, sur);
-            SDL_FreeSurface(sur);
-        }
+
         len = strlen(select_scene->chart_list.charts[cur].title);
         rect.y = LETTER_HEIGHT * i * 2 + LETTER_HEIGHT;
         rect.w = len * LETTER_WIDTH;
         rect.x = 100;
-        SDL_RenderCopy(app.ren, select_scene->list[i], NULL, &rect);
+        DrawText(rect, select_scene->chart_list.charts[cur].title, default_colors[0]);
         if (i == (CHART_LIST_NAME_MAX_SIZE - 1) / 2) {
             DrawCursor(rect);
         }
@@ -300,7 +277,12 @@ static void SelectSceneDrawList() {
 
 void SelectSceneDraw() {
     /* Draw background */
+#if USE_DEFAULT_BACKGROUND
+    DrawDefaultBackgroundPure();
+#else
     SDL_RenderCopy(app.ren, select_scene->background, NULL, NULL);
+#endif
+
     /* Draw Info */
     SelectSceneDrawInfo();
     /* Draw list */

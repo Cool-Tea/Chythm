@@ -13,17 +13,30 @@ struct Assets {
     /* fonts */
 
     /* images */
+#if USE_DEFAULT_BACKGROUND
     SDL_Texture* backgrounds[2];
+#endif
+
     SDL_Texture* hit_points[2];
+
+#if !NOTE_ONLY_EFFECT
     SDL_Texture* notes[NOTE_TYPE_NUM];
+#endif
+
 };
 typedef struct Assets Assets;
 
 extern Assets assets;
 
+#if USE_DEFAULT_BACKGROUND
 static void GetBackgroundImg();
 static void GetHitPointImg();
+#endif
+
+#if !NOTE_ONLY_EFFECT
 static void GetNoteImg();
+#endif
+
 void InitAssets();
 void FreeAssets();
 
@@ -31,8 +44,5 @@ void DrawDefaultBackground();
 void DrawDefaultBackgroundPure();
 void DrawText(SDL_Rect rect, const char* text, SDL_Color color);
 void DrawCursor(SDL_Rect rect);
-void DrawHitPoint(int x, int y, bool is_down);
-void DrawSingleNote(int x, int y, int dire_x, int dire_y);
-void DrawLongNote(int head_x, int head_y, int tail_x, int tail_y, SDL_Color color);
 
 #endif

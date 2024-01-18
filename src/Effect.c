@@ -2,7 +2,7 @@
 
 static void InitNameParticle(Particle* particle, const char* name, size_t i) {
     char buf[1 << 8];
-    sprintf(buf, "%s%s_0%lu.png", PARTICLE_IMG_DIR_PATH, name, i + 1);
+    sprintf(buf, "%s%s_%.2lu.png", PARTICLE_IMG_DIR_PATH, name, i + 1);
     particle->par_img = IMG_LoadTexture(app.ren, buf);
     if (particle->par_img == NULL) {
         fprintf(stderr, "[Particle]Failed to load particle image (%s): %s\n", buf, IMG_GetError());
@@ -35,7 +35,7 @@ void InitParticle(Particle* particle, EffectType type, size_t i) {
         break;
     }
     case STAR: {
-        particle->lasting_frames = 2;
+        particle->lasting_frames = 3;
         InitNameParticle(particle, "star", i);
         break;
     }
@@ -61,11 +61,14 @@ void ParticleUpdate(Particle* particle) {
     }
 }
 
-void ParticleDraw(Particle* particle, int x, int y, int r) {
+void ParticleDraw(Particle* particle, int x, int y, int r, double angle) {
     static SDL_Rect rect;
     rect.x = x - r, rect.y = y - r;
     rect.h = rect.w = r << 1;
-    SDL_RenderCopy(app.ren, particle->par_img, NULL, &rect);
+    if (angle == 0.0)
+        SDL_RenderCopy(app.ren, particle->par_img, NULL, &rect);
+    else
+        SDL_RenderCopyEx(app.ren, particle->par_img, NULL, &rect, angle, NULL, SDL_FLIP_NONE);
 }
 
 bool isParticleEnd(Particle* particle) {
@@ -107,7 +110,7 @@ void InitEffect(Effect* effect, EffectType type, bool repeat_enale) {
         break;
     }
     case STAR: {
-        effect->par_size = 8;
+        effect->par_size = 9;
         break;
     }
     default:
@@ -137,9 +140,9 @@ void EffectUpdate(Effect* effect) {
     }
 }
 
-void EffectDraw(Effect* effect, int x, int y, int r) {
+void EffectDraw(Effect* effect, int x, int y, int r, double angle) {
     if (effect->is_active)
-        ParticleDraw(&effect->particles[effect->cur_par], x, y, r);
+        ParticleDraw(&effect->particles[effect->cur_par], x, y, r, angle);
 }
 
 bool isEffectEnd(Effect* effect) {

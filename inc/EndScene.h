@@ -6,7 +6,9 @@
 
 struct EndScene {
     /* image */
+#if !USE_DEFAULT_BACKGROUND
     SDL_Texture* background;
+#endif
 
     /* rating */
     const char* rating;

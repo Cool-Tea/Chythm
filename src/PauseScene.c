@@ -9,12 +9,16 @@ PauseScene* CreatePauseScene() {
         app.is_error = 1;
         return pause_scene;
     }
+
+#if !USE_DEFAULT_BACKGROUND
     pause_scene->background = IMG_LoadTexture(app.ren, PAUSE_SCENE_BACKGROUND);
     if (pause_scene->background == NULL) {
         fprintf(stderr, "[PauseScene]Failed to load background: %s\n", IMG_GetError());
         app.is_error = 1;
         return pause_scene;
     }
+#endif
+
     InitButton(&pause_scene->buttons[0], SCREEN_WIDTH / 2 - 3 * LETTER_WIDTH, 200, "Resume", Resume);
     InitButton(&pause_scene->buttons[1], SCREEN_WIDTH / 2 - 6 * LETTER_WIDTH, 200 + 2 * LETTER_HEIGHT, "Back To Menu", BackToMenu);
     InitButton(&pause_scene->buttons[2], SCREEN_WIDTH / 2 - 2 * LETTER_WIDTH, 200 + 4 * LETTER_HEIGHT, "Quit", Quit);
@@ -24,9 +28,13 @@ PauseScene* CreatePauseScene() {
 
 void DestroyPauseScene() {
     if (pause_scene != NULL) {
+
+#if !USE_DEFAULT_BACKGROUND
         if (pause_scene->background != NULL) {
             SDL_DestroyTexture(pause_scene->background);
         }
+#endif
+
         for (size_t i = 0; i < PAUSE_SCENE_BUTTON_SIZE; i++) {
             FreeButton(&pause_scene->buttons[i]);
         }
@@ -59,7 +67,12 @@ void PauseSceneUpdate(SDL_Event* event) {
 }
 
 void PauseSceneDraw() {
+#if USE_DEFAULT_BACKGROUND
+    DrawDefaultBackgroundPure();
+#else
     SDL_RenderCopy(app.ren, pause_scene->background, NULL, NULL);
+#endif
+
     for (size_t i = 0; i < PAUSE_SCENE_BUTTON_SIZE; i++) {
         ButtonDraw(&pause_scene->buttons[i]);
     }
