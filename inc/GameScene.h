@@ -17,7 +17,7 @@ struct GameScene {
     SDL_Texture* background;
 #endif
 
-    Mix_Music* music;
+    Mix_Music* audio;
 
     /* event */
     EventList event_list;
@@ -59,11 +59,11 @@ void GameScenePause();
 void GameSceneResume();
 
 static int GameSceneCheckEnd();
-static void GameSceneHandleKey();
+void GameSceneHandleKey(SDL_Event* event);
 static void GameSceneHandleEvent();
-void GameSceneUpdate(SDL_Event* event);
+void GameSceneUpdate();
 
-static void GameSceneDrawFPS();
+static void GameSceneDrawTime();
 static void GameSceneDrawScore();
 static void GameSceneDrawHitText();
 void GameSceneDraw();

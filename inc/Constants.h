@@ -6,6 +6,8 @@
 /* Common */
 #define GAME_TITLE "Chythm"
 
+#define AUTO_RESOLUTION 0
+
 #define SCREEN_WIDTH 1920
 #define SCREEN_HEIGHT 1080
 
@@ -16,12 +18,10 @@
 
 #define SAVES_PATH "../saves/"
 
-#define USE_DEFAULT_BACKGROUND 1 // if is ture, all the scene will use default background
+#define USE_DEFAULT_BACKGROUND 0 // if is ture, all the scene will use default background
 
-#if USE_DEFAULT_BACKGROUND
 #define DEFAULT_BACKGROUND "../assets/images/Chythm.png"
 #define DEFAULT_BACKGROUND_PURE "../assets/images/pure.png"
-#endif
 
 #define BGM_PATH
 #define FONT_PATH "../assets/fonts/font.TTF"

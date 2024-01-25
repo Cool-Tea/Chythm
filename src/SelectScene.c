@@ -65,6 +65,7 @@ void ChartListPushBack(ChartList* list,
         app.is_error = 1;
     }
     else strcpy(list->charts[list->size].chart_path, path);
+
     len = strlen(title);
     list->charts[list->size].title = malloc(len + 1);
     if (list->charts[list->size].title == NULL) {
@@ -72,6 +73,7 @@ void ChartListPushBack(ChartList* list,
         app.is_error = 1;
     }
     else strcpy(list->charts[list->size].title, title);
+
     len = strlen(artist);
     list->charts[list->size].artist = malloc(len + 1);
     if (list->charts[list->size].artist == NULL) {
@@ -79,6 +81,7 @@ void ChartListPushBack(ChartList* list,
         app.is_error = 1;
     }
     else strcpy(list->charts[list->size].artist, artist);
+
     len = strlen(preview);
     list->charts[list->size].preview = malloc(len + 1);
     if (list->charts[list->size].preview == NULL) {
@@ -86,6 +89,7 @@ void ChartListPushBack(ChartList* list,
         app.is_error = 1;
     }
     else strcpy(list->charts[list->size].preview, preview);
+
     if (!app.is_error) list->size++;
 }
 
@@ -98,7 +102,8 @@ void ChartListRefresh(ChartList* list) {
     }
     struct dirent* chart;
     char buffer[1 << 8];
-    while ((chart = readdir(saves)) != NULL && chart->d_name[0] != '.') {
+    while ((chart = readdir(saves)) != NULL) {
+        if (chart->d_name[0] == '.') continue;
         strcpy(buffer, list->saves_path);
         strcat(buffer, chart->d_name);
         strcat(buffer, "/chart.json");
@@ -191,39 +196,41 @@ void DestroySelectScene() {
     }
 }
 
-static void SelectSceneHandleKey() {
-    if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
-        CreateGameScene(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
-        app.cur_scene = GAME;
-        GameSceneStart();
-    }
-    else if (app.key_status[SDL_SCANCODE_ESCAPE]) {
-        app.cur_scene = MENU;
-    }
-    else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
-        select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
-        SDL_DestroyTexture(select_scene->preview);
-        select_scene->preview = NULL;
-    }
-    else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
-        select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
-        SDL_DestroyTexture(select_scene->preview);
-        select_scene->preview = NULL;
-    }
-    else if (app.key_status[SDL_SCANCODE_R]) {
-        ChartListRefresh(&select_scene->chart_list);
+void SelectSceneHandleKey(SDL_Event* event) {
+    if (event->type == SDL_KEYDOWN) {
+        if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
+            CreateGameScene(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
+            app.cur_scene = GAME;
+            GameSceneStart();
+        }
+        else if (app.key_status[SDL_SCANCODE_ESCAPE]) {
+            app.cur_scene = MENU;
+        }
+        else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
+            select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
+            SDL_DestroyTexture(select_scene->preview);
+            select_scene->preview = NULL;
+        }
+        else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
+            select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
+            SDL_DestroyTexture(select_scene->preview);
+            select_scene->preview = NULL;
+        }
+        else if (app.key_status[SDL_SCANCODE_R]) {
+            ChartListRefresh(&select_scene->chart_list);
+        }
     }
 }
 
-void SelectSceneUpdate(SDL_Event* event) {
-    if (event->type == SDL_KEYDOWN)
-        SelectSceneHandleKey();
+void SelectSceneUpdate() {
 }
 
-static void SelectSceneDrawInfo() {
-    static SDL_Rect rect = { .h = LETTER_HEIGHT };
-    static int len;
-    /* Draw preview */
+static void SelectSceneDrawPreview(SDL_Rect rect) {
+#if AUTO_RESOLUTION
+    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
+    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
+#endif
+
     if (select_scene->preview == NULL) {
         char buffer[1 << 8] = { 0 };
         strcat(buffer, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
@@ -233,7 +240,15 @@ static void SelectSceneDrawInfo() {
     if (select_scene->preview == NULL)
         fprintf(stderr, "[SelectScene]Failed to load preview: %s\n", IMG_GetError());
     else
-        SDL_RenderCopy(app.ren, select_scene->preview, NULL, &preview_rect);
+        SDL_RenderCopy(app.ren, select_scene->preview, NULL, &rect);
+}
+
+static void SelectSceneDrawInfo() {
+    static SDL_Rect rect = { .h = LETTER_HEIGHT };
+    static int len;
+
+    /* Draw preview */
+    SelectSceneDrawPreview(preview_rect);
 
     /* Draw title */
     len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title);

@@ -1,0 +1,68 @@
+{
+    "info": {
+        "title": "Hard",
+        "artist": "Official",
+        "preview": "preview.jpg"
+    },
+    "chart": {
+        "audio": "audio.mp3",
+        "bpm": 180,
+        "background": "background.jpg",
+        "lane_size": 4,
+        "hit_points": [
+            {
+                "lane": 0,
+                "position": {
+                    "x": 400,
+                    "y": 600
+                }
+            },
+            {
+                "lane": 1,
+                "position": {
+                    "x": 800,
+                    "y": 600
+                }
+            },
+            {
+                "lane": 2,
+                "position": {
+                    "x": 1200,
+                    "y": 600
+                }
+            },
+            {
+                "lane": 3,
+                "position": {
+                    "x": 1600,
+                    "y": 600
+                }
+            }
+        ],
+        "notes": [],
+        "events": [
+            {
+                "object": 0,
+                "type": 16,
+                "time": 0,
+                "lasting_time": 1500,
+                "data": {
+                    "x": 790,
+                    "y": 0,
+                    "text": "Welcome to Chythm"
+                }
+            },
+            {
+                "object": 0,
+                "type": 16,
+                "time": 2000,
+                "lasting_time": 4000,
+                "data": {
+                    "x": 610,
+                    "y": 0,
+                    "text": "F, G, H, J is the key for hit point"
+                }
+            }
+        ]
+    }
+}

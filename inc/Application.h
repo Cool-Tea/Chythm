@@ -11,6 +11,7 @@ void InitApplication();
 void DestroyApplication();
 void ApplicationStart();
 void ApplicationStop();
+void ApplicationHandleKey();
 void ApplicationUpdate();
 void ApplicationDraw();
 void ApplicationTick();

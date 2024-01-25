@@ -45,8 +45,8 @@ static cJSON* OpenJson(const char* chart_path) {
 static int GetAudio(const char* chart_path, const char* audio_path) {
     char buffer[1 << 8];
     CompletePath(buffer, chart_path, audio_path);
-    game_scene->music = Mix_LoadMUS(buffer);
-    if (game_scene->music == NULL) {
+    game_scene->audio = Mix_LoadMUS(buffer);
+    if (game_scene->audio == NULL) {
         fprintf(stderr, "[GameScene]Failed to load audio: %s - %s\n", buffer, Mix_GetError());
         app.is_error = 1;
         return -1;
@@ -114,7 +114,7 @@ static void GetNotes(cJSON* notes, int bpm) {
             LaneAddNote(&game_scene->lanes[lane->valueint],
                 type->valueint,
                 start_x->valueint, start_y->valueint,
-                reach_time->valueint - 60000u / bpm,
+                reach_time->valueint < 60000 / bpm ? 0 : reach_time->valueint - 60000 / bpm,
                 reach_time->valueint
             );
             break;
@@ -128,7 +128,7 @@ static void GetNotes(cJSON* notes, int bpm) {
                 LaneAddNote(&game_scene->lanes[lane->valueint],
                     type->valueint,
                     start_x->valueint, start_y->valueint,
-                    reach_time->valueint - 60000u / bpm,
+                    reach_time->valueint < 60000 / bpm ? 0 : reach_time->valueint - 60000 / bpm,
                     reach_time->valueint
                 );
             }
@@ -241,7 +241,7 @@ GameScene* CreateGameScene(const char* chart_path) {
     game_scene->background = NULL;
 #endif
 
-    game_scene->music = NULL;
+    game_scene->audio = NULL;
     game_scene->lanes = NULL;
 
     cJSON* file = OpenJson(chart_path);
@@ -292,7 +292,7 @@ void DestroyGameScene() {
         if (game_scene->background != NULL) SDL_DestroyTexture(game_scene->background);
 #endif
 
-        if (game_scene->music != NULL) Mix_FreeMusic(game_scene->music);
+        if (game_scene->audio != NULL) Mix_FreeMusic(game_scene->audio);
         FreeEventList(&game_scene->event_list);
         if (game_scene->lanes != NULL) free(game_scene->lanes);
         free(game_scene);
@@ -311,7 +311,7 @@ void GameSceneStart() {
     game_scene->combo = 0;
     app.timer.base_time = app.timer.real_time = SDL_GetTicks();
     app.timer.relative_time = 0;
-    Mix_PlayMusic(game_scene->music, 0);
+    Mix_PlayMusic(game_scene->audio, 0);
 }
 
 static void SaveScore() {
@@ -363,10 +363,16 @@ static int GameSceneCheckEnd() {
     return 0;
 }
 
-static void GameSceneHandleKey() {
-    if (app.key_status[SDL_SCANCODE_ESCAPE]) {
-        GameScenePause();
-        app.cur_scene = PAUSE;
+void GameSceneHandleKey(SDL_Event* event) {
+    if (event->type == SDL_KEYDOWN) {
+        if (app.key_status[SDL_SCANCODE_ESCAPE]) {
+            GameScenePause();
+            app.cur_scene = PAUSE;
+            return;
+        }
+    }
+    for (size_t i = 0; i < game_scene->lane_size; i++) {
+        LaneHandleKey(&game_scene->lanes[i], event);
     }
 }
 
@@ -375,21 +381,19 @@ static void GameSceneHandleEvent() {
     EventListUpdate(&game_scene->event_list);
 }
 
-void GameSceneUpdate(SDL_Event* event) {
+void GameSceneUpdate() {
     if (GameSceneCheckEnd() < 0) return;
-    if (event->type == SDL_KEYDOWN)
-        GameSceneHandleKey();
     for (size_t i = 0; i < game_scene->lane_size; i++) {
-        LaneUpdate(&game_scene->lanes[i], event);
+        LaneUpdate(&game_scene->lanes[i]);
     }
     GameSceneHandleEvent();
 }
 
-static void GameSceneDrawFPS() {
+static void GameSceneDrawTime() {
     static int len;
     static char buf[1 << 4];
     static SDL_Rect rect = { .h = 20, .y = 800, .x = 0 };
-    len = sprintf(buf, "time: %us", app.timer.relative_time / 1000);
+    len = sprintf(buf, "time: %.3lfs", Mix_GetMusicPosition(game_scene->audio));
     rect.w = 10 * len;
     DrawText(rect, buf, default_colors[0]);
 }
@@ -439,7 +443,7 @@ void GameSceneDraw() {
 #endif
 
 #ifdef DEV
-    GameSceneDrawFPS();
+    GameSceneDrawTime();
 #endif /* dev */
 
     GameSceneDrawScore();

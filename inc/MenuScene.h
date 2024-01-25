@@ -20,8 +20,8 @@ extern MenuScene* menu_scene;
 
 MenuScene* CreateMenuScene();
 void DestroyMenuScene();
-static void MenuSceneHandleKey();
-void MenuSceneUpdate(SDL_Event* event);
+void MenuSceneHandleKey(SDL_Event* event);
+void MenuSceneUpdate();
 void MenuSceneDraw();
 
 /* this is for the button */

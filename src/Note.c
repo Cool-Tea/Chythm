@@ -21,8 +21,20 @@ void NoteUpdate(Note* note, int target_x, int target_y) {
 
 #if !NOTE_ONLY_EFFECT
 static void TypeNoteDraw(Note* note) {
-    static SDL_Rect rect = { .h = NOTE_RADIUS << 1, .w = NOTE_RADIUS << 1 };
+    static SDL_Rect rect
+#if !AUTO_RESOLUTION
+        = { .h = NOTE_RADIUS << 1, .w NOTE_RADIUS << 1 }
+#endif
+    ;
+
     rect.x = note->cur_x - NOTE_RADIUS, rect.y = note->cur_y - NOTE_RADIUS;
+
+#if AUTO_RESOLUTION
+    rect.h = NOTE_RADIUS << 1, rect.w = NOTE_RADIUS << 1;
+    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
+    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
+#endif
+
     double angle =
         SDL_atan2(note->cur_x - note->update_x, note->cur_y - note->update_y)
         * 180.0 / PI;
@@ -47,8 +59,15 @@ void NoteDraw(Note* note) {
     case LONG: {
         lineRGBA(
             app.ren,
+
+#if AUTO_RESOLUTION
+            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
+            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
+#else
             note->cur_x, note->cur_y,
             note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
+#endif
+
             default_colors[0].r, default_colors[0].g, default_colors[0].b, default_colors[0].a
         );
         break;
@@ -109,17 +128,17 @@ void NoteListEmplaceBack(NoteList* note_list,
     note_list->size++;
     if (note_list->size >= note_list->capacity) {
         note_list->capacity <<= 1;
-        note_list->notes = realloc(note_list->notes, note_list->capacity * sizeof(Note));
+        note_list->head = note_list->tail = note_list->notes = realloc(note_list->notes, note_list->capacity * sizeof(Note));
     }
 }
 
 void NoteListUpdate(NoteList* note_list, int target_x, int target_y) {
     NoteListFor(note_list) {
         if (ptr->reach_time > app.timer.relative_time) break;
-        else if (ptr->reach_time + 150 <= app.timer.relative_time) continue;
+        else if (ptr->reach_time + 100 <= app.timer.relative_time) continue;
         ptr->update_enable = 0;
     }
-    while (note_list->head < note_list->tail && note_list->head->reach_time + 150 <= app.timer.relative_time) {
+    while (note_list->head < note_list->tail && note_list->head->reach_time + 100 <= app.timer.relative_time) {
         switch (note_list->head->type) {
         case SINGLE: {
             if (note_list->head->is_hit == 0) {

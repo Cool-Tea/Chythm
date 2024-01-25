@@ -144,7 +144,6 @@ void EventListDraw(EventList* event_list) {
             TextEventDraw(ptr);
             break;
         }
-        case MOVE:
         default:
             break;
         }

@@ -20,8 +20,8 @@ extern PauseScene* pause_scene;
 
 PauseScene* CreatePauseScene();
 void DestroyPauseScene();
-static void PauseSceneHandleKey();
-void PauseSceneUpdate(SDL_Event* event);
+void PauseSceneHandleKey(SDL_Event* event);
+void PauseSceneUpdate();
 void PauseSceneDraw();
 
 /* this is for the button */

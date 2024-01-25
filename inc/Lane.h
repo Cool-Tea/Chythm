@@ -50,14 +50,14 @@ void LaneAddNote(Lane* lane,
 static int isBeyondHit(const HitPoint* hit_point, const Note* note);
 static int isPerfectHit(const HitPoint* hit_point, const Note* note);
 static int isGoodHit(const HitPoint* hit_point, const Note* note);
-static void LaneHandleKey(Lane* lane);
+void LaneHandleKey(Lane* lane, SDL_Event* event);
 
 static void LaneHandleEventMove(HitPoint* hit_point, const Event* event);
 static void LaneHandleEventMoveTo(HitPoint* hit_point, const Event* event);
 static void LaneHandleEventStop(HitPoint* hit_point);
 static void LaneHandleEvent(Lane* lane);
 
-void LaneUpdate(Lane* lane, SDL_Event* event);
+void LaneUpdate(Lane* lane);
 void LaneDraw(Lane* lane);
 
 #endif

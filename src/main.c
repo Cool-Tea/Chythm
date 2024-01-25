@@ -14,6 +14,7 @@ int main() {
     }
     ApplicationStart();
     while (app.is_running) {
+        ApplicationHandleKey();
         ApplicationUpdate();
         ApplicationDraw();
         ApplicationTick();

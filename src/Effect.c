@@ -65,6 +65,12 @@ void ParticleDraw(Particle* particle, int x, int y, int r, double angle) {
     static SDL_Rect rect;
     rect.x = x - r, rect.y = y - r;
     rect.h = rect.w = r << 1;
+
+#if AUTO_RESOLUTION
+    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
+    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
+#endif
+
     if (angle == 0.0)
         SDL_RenderCopy(app.ren, particle->par_img, NULL, &rect);
     else

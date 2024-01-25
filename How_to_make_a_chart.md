@@ -4,7 +4,7 @@
 
 ```
 chart \
-    chart.json 谱面及其信息的储存文件
+    chart.json 谱面及其信息的储存文件（固定名称chart.json）
     preview.png / preview.jpg 谱面的预览图片，支持JPG与PNG
     background.png / background.jpg 谱面的背景图片，支持JPG与PNG
     audio.mp3 谱面的音乐，只支持mp3

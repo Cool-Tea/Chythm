@@ -17,6 +17,9 @@ typedef struct Timer Timer;
 
 struct Application {
     /* SDL related */
+    struct ZoomRate {
+        double w, h;
+    } zoom_rate; // automatically change resolution
     SDL_Window* win;
     SDL_Renderer* ren;
     TTF_Font* font;

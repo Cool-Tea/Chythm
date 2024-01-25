@@ -3,7 +3,6 @@
 
 #include <dirent.h>
 #include <SDL_ttf.h>
-#include "Constants.h"
 #include "GameScene.h"
 
 struct ChartInfo {
@@ -22,6 +21,7 @@ struct ChartList {
     ChartInfo* charts;
 };
 typedef struct ChartList ChartList;
+
 void InitChartList(ChartList* list, const char* saves_path);
 void FreeChartList(ChartList* list);
 void ChartListPushBack(ChartList* list,
@@ -48,8 +48,9 @@ extern SelectScene* select_scene;
 
 SelectScene* CreateSelectScene();
 void DestroySelectScene();
-static void SelectSceneHandleKey();
-void SelectSceneUpdate(SDL_Event* event);
+void SelectSceneHandleKey(SDL_Event* event);
+void SelectSceneUpdate();
+static void SelectSceneDrawPreview(SDL_Rect rect);
 static void SelectSceneDrawInfo();
 static void SelectSceneDrawList();
 void SelectSceneDraw();

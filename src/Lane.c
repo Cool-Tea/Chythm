@@ -50,11 +50,22 @@ void HitPointUpdate(HitPoint* hit_point) {
 }
 
 void HitPointDraw(HitPoint* hit_point) {
-    static SDL_Rect rect = { .h = HIT_POINT_RADIUS << 1, .w = HIT_POINT_RADIUS << 1 };
+    static SDL_Rect rect
+#if !AUTO_RESOLUTION
+        = { .h = HIT_POINT_RADIUS << 1, .w = HIT_POINT_RADIUS << 1 }
+#endif
+    ;
 
     EffectDraw(&hit_point->down_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 20, 0.0);
 
     rect.x = hit_point->cur_x - HIT_POINT_RADIUS, rect.y = hit_point->cur_y - HIT_POINT_RADIUS;
+
+#if AUTO_RESOLUTION
+    rect.h = HIT_POINT_RADIUS << 1, rect.w = HIT_POINT_RADIUS << 1;
+    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
+    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
+#endif
+
     SDL_RenderCopy(app.ren, assets.hit_points[hit_point->is_down], NULL, &rect);
 
     EffectDraw(&hit_point->hit_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 40, 0.0);
@@ -101,89 +112,91 @@ static int isGoodHit(const HitPoint* hit_point, const Note* note) {
         (NOTE_RADIUS << 1);
 }
 
-static void LaneHandleKey(Lane* lane) {
-    if (app.key_status[lane->hit_point.key]) {
-        lane->hit_point.is_down = 1;
-        lane->hit_point.down_effect.is_active = 1;
-        NoteListFor(&lane->note_list) {
-            if (isBeyondHit(&lane->hit_point, ptr)) break;
-            if (!ptr->is_missed && isPerfectHit(&lane->hit_point, ptr)) {
-                lane->hit_point.hit_effect.is_active = 1;
-                update_data.hit_status = 0;
-                ptr->is_hit = 1;
-                (*update_data.combo)++;
-                switch (ptr->type) {
-                case SINGLE: {
-                    *update_data.score += PERFECT_HIT_SCORE;
-                    *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                        COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
-                    break;
+void LaneHandleKey(Lane* lane, SDL_Event* event) {
+    if (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP) {
+        if (app.key_status[lane->hit_point.key]) {
+            lane->hit_point.is_down = 1;
+            lane->hit_point.down_effect.is_active = 1;
+            NoteListFor(&lane->note_list) {
+                if (isBeyondHit(&lane->hit_point, ptr)) break;
+                if (!ptr->is_missed && !ptr->is_hit && isPerfectHit(&lane->hit_point, ptr)) {
+                    lane->hit_point.hit_effect.is_active = 1;
+                    update_data.hit_status = 0;
+                    ptr->is_hit = 1;
+                    (*update_data.combo)++;
+                    switch (ptr->type) {
+                    case SINGLE: {
+                        *update_data.score += PERFECT_HIT_SCORE;
+                        *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+                            COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+                        break;
+                    }
+                    case LONG: {
+                        *update_data.score += LONG_HIT_SCORE;
+                        break;
+                    }
+                    default:
+                        break;
+                    }
                 }
-                case LONG: {
-                    *update_data.score += LONG_HIT_SCORE;
-                    break;
+                else if (!ptr->is_missed && !ptr->is_hit && isGoodHit(&lane->hit_point, ptr)) {
+                    lane->hit_point.hit_effect.is_active = 1;
+                    update_data.hit_status = 1;
+                    ptr->is_hit = 1;
+                    (*update_data.combo)++;
+                    switch (ptr->type) {
+                    case SINGLE: {
+                        *update_data.score += GOOD_HIT_SCORE;
+                        *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+                            COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+                        break;
+                    }
+                    case LONG: {
+                        *update_data.score += LONG_HIT_SCORE;
+                        break;
+                    }
+                    default:
+                        break;
+                    }
                 }
-                default:
-                    break;
-                }
-            }
-            else if (!ptr->is_missed && isGoodHit(&lane->hit_point, ptr)) {
-                lane->hit_point.hit_effect.is_active = 1;
-                update_data.hit_status = 1;
-                ptr->is_hit = 1;
-                (*update_data.combo)++;
-                switch (ptr->type) {
-                case SINGLE: {
-                    *update_data.score += GOOD_HIT_SCORE;
-                    *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                        COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
-                    break;
-                }
-                case LONG: {
-                    *update_data.score += LONG_HIT_SCORE;
-                    break;
-                }
-                default:
-                    break;
-                }
-            }
-            else {
-                switch (ptr->type) {
-                case SINGLE: {
-                    lane->hit_point.hit_effect.is_active = 0;
-                    update_data.hit_status = 2;
-                    ptr->is_missed = 1;
-                    *update_data.combo = 0;
-                    break;
-                }
-                case LONG: {
-                    if (ptr->linked_notes[0]->reach_time >= app.timer.relative_time) {
+                else {
+                    switch (ptr->type) {
+                    case SINGLE: {
                         lane->hit_point.hit_effect.is_active = 0;
                         update_data.hit_status = 2;
                         ptr->is_missed = 1;
                         *update_data.combo = 0;
+                        break;
                     }
-                    break;
-                }
-                default:
-                    break;
+                    case LONG: {
+                        if (ptr->linked_notes[0]->reach_time >= app.timer.relative_time) {
+                            lane->hit_point.hit_effect.is_active = 0;
+                            update_data.hit_status = 2;
+                            ptr->is_missed = 1;
+                            *update_data.combo = 0;
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                    }
                 }
             }
         }
-    }
-    else {
-        lane->hit_point.is_down = 0;
-        lane->hit_point.down_effect.is_active = 0;
-        /* TODO: better check */
-        NoteListFor(&lane->note_list) {
-            if (ptr->type != LONG ||
-                ptr->is_hit == 0) break;
-            ptr->is_missed = 1;
-            ptr->is_hit = 0;
-            ptr->linked_notes[0]->is_missed = 1;
-            ptr->is_hit = 0;
-            update_data.hit_status = 2;
-            *update_data.combo = 0;
+        else {
+            lane->hit_point.is_down = 0;
+            lane->hit_point.down_effect.is_active = 0;
+            /* TODO: better check */
+            NoteListFor(&lane->note_list) {
+                if (ptr->type != LONG ||
+                    ptr->is_hit == 0) break;
+                ptr->is_missed = 1;
+                ptr->is_hit = 0;
+                ptr->linked_notes[0]->is_missed = 1;
+                ptr->is_hit = 0;
+                update_data.hit_status = 2;
+                *update_data.combo = 0;
+            }
         }
     }
 }
@@ -242,9 +255,7 @@ static void LaneHandleEvent(Lane* lane) {
     EventListUpdate(&lane->event_list);
 }
 
-void LaneUpdate(Lane* lane, SDL_Event* event) {
-    if (event->type == SDL_KEYDOWN || event->type == SDL_KEYUP)
-        LaneHandleKey(lane);
+void LaneUpdate(Lane* lane) {
     LaneHandleEvent(lane);
     NoteListUpdate(&lane->note_list, lane->hit_point.cur_x, lane->hit_point.cur_y);
     HitPointUpdate(&lane->hit_point);

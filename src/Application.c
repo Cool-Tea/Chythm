@@ -6,11 +6,28 @@ void InitApplication() {
     app.font = NULL;
 
     /* SDL related */
+#if AUTO_RESOLUTION
+    SDL_DisplayMode dm;
+    if (SDL_GetCurrentDisplayMode(0, &dm) < 0) {
+        fprintf(stderr, "[Application]Failed to get current resolution: %s\n", SDL_GetError());
+        app.is_error = 1;
+        return;
+    }
+    app.zoom_rate.w = (double)dm.w / SCREEN_WIDTH;
+    app.zoom_rate.h = (double)dm.h / SCREEN_HEIGHT;
+#endif
+
     app.win = SDL_CreateWindow(
         GAME_TITLE,
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+
+#if AUTO_RESOLUTION
+        SCREEN_WIDTH * app.zoom_rate.w, SCREEN_HEIGHT * app.zoom_rate.h,
+#else
         SCREEN_WIDTH, SCREEN_HEIGHT,
-        SDL_WINDOW_OPENGL /*| SDL_WINDOW_FULLSCREEN_DESKTOP*/
+#endif
+
+        SDL_WINDOW_OPENGL /* TODO: | SDL_WINDOW_FULLSCREEN_DESKTOP*/
     );
     if (app.win == NULL) {
         fprintf(stderr, "[Application]Failed to create window: %s\n", SDL_GetError());
@@ -79,35 +96,61 @@ void ApplicationStop() {
     Mix_HaltMusic();
 }
 
-void ApplicationUpdate() {
+void ApplicationHandleKey() {
     SDL_Event e;
-    SDL_PollEvent(&e);
-    do {
+    while (SDL_PollEvent(&e)) {
         switch (app.cur_scene) {
         case MENU: {
-            MenuSceneUpdate(&e);
+            MenuSceneHandleKey(&e);
             break;
         }
         case SELECT: {
-            SelectSceneUpdate(&e);
+            SelectSceneHandleKey(&e);
             break;
         }
         case GAME: {
-            GameSceneUpdate(&e);
+            GameSceneHandleKey(&e);
             break;
         }
         case PAUSE: {
-            PauseSceneUpdate(&e);
+            PauseSceneHandleKey(&e);
             break;
         }
         case END: {
-            EndSceneUpdate(&e);
+            EndSceneHandleKey(&e);
             break;
         }
         default:
             break;
         }
-    } while (SDL_PollEvent(&e));
+    }
+}
+
+void ApplicationUpdate() {
+    switch (app.cur_scene) {
+    case MENU: {
+        MenuSceneUpdate();
+        break;
+    }
+    case SELECT: {
+        SelectSceneUpdate();
+        break;
+    }
+    case GAME: {
+        GameSceneUpdate();
+        break;
+    }
+    case PAUSE: {
+        PauseSceneUpdate();
+        break;
+    }
+    case END: {
+        EndSceneUpdate();
+        break;
+    }
+    default:
+        break;
+    }
 }
 
 void ApplicationDraw() {
@@ -139,9 +182,20 @@ void ApplicationDraw() {
 
 #ifdef DEV
     static char fps[1 << 4];
-    static SDL_Rect rect = { .h = 20, .x = 1800, .y = 0 };
+    static SDL_Rect rect
+#if !AUTO_RESOLUTION
+        = { .h = 20, .x = 1800, .y = 0 };
+#endif
+    ;
     int len = sprintf(fps, "fps: %u", 1000u / app.timer.delta_time);
     rect.w = 10 * len;
+
+#if AUTO_RESOLUTION
+    rect.h = 20, rect.x = 1800, rect.y = 0;
+    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
+    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
+#endif
+
     DrawText(rect, fps, default_colors[0]);
 #endif /* dev */
 

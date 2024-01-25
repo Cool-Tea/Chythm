@@ -42,25 +42,25 @@ void DestroyMenuScene() {
     }
 }
 
-static void MenuSceneHandleKey() {
-    if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
-        ButtonFunc(&menu_scene->buttons[menu_scene->cur_button]);
-    }
-    else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
-        menu_scene->buttons[menu_scene->cur_button].is_on = 0;
-        menu_scene->cur_button = (menu_scene->cur_button - 1 + MENU_SCENE_BUTTON_SIZE) % MENU_SCENE_BUTTON_SIZE;
-        menu_scene->buttons[menu_scene->cur_button].is_on = 1;
-    }
-    else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
-        menu_scene->buttons[menu_scene->cur_button].is_on = 0;
-        menu_scene->cur_button = (menu_scene->cur_button + 1) % MENU_SCENE_BUTTON_SIZE;
-        menu_scene->buttons[menu_scene->cur_button].is_on = 1;
+void MenuSceneHandleKey(SDL_Event* event) {
+    if (event->type == SDL_KEYDOWN) {
+        if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
+            ButtonFunc(&menu_scene->buttons[menu_scene->cur_button]);
+        }
+        else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
+            menu_scene->buttons[menu_scene->cur_button].is_on = 0;
+            menu_scene->cur_button = (menu_scene->cur_button - 1 + MENU_SCENE_BUTTON_SIZE) % MENU_SCENE_BUTTON_SIZE;
+            menu_scene->buttons[menu_scene->cur_button].is_on = 1;
+        }
+        else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
+            menu_scene->buttons[menu_scene->cur_button].is_on = 0;
+            menu_scene->cur_button = (menu_scene->cur_button + 1) % MENU_SCENE_BUTTON_SIZE;
+            menu_scene->buttons[menu_scene->cur_button].is_on = 1;
+        }
     }
 }
 
-void MenuSceneUpdate(SDL_Event* event) {
-    if (event->type == SDL_KEYDOWN)
-        MenuSceneHandleKey();
+void MenuSceneUpdate() {
 }
 
 void MenuSceneDraw() {
