@@ -34,7 +34,8 @@ enum SceneType {
     SELECT,
     GAME,
     PAUSE,
-    END
+    END,
+    LOAD
 };
 typedef enum SceneType SceneType;
 
@@ -48,7 +49,8 @@ enum EffectType {
     CIRCLE,
     MAGIC,
     MUZZLE,
-    STAR
+    STAR,
+    TWIRL
 };
 typedef enum EffectType EffectType;
 
@@ -162,5 +164,10 @@ extern const SDL_Rect preview_rect;
 #define RATING_C_PERCENTAGE 0.5
 
 extern const char* end_scene_ratings[];
+
+/* Load Scene */
+#if !USE_DEFAULT_BACKGROUND
+#define LOAD_SCENE_BACKGROUND DEFAULT_BACKGROUND
+#endif
 
 #endif

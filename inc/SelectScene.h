@@ -2,7 +2,6 @@
 #define _SELECT_SCENE_H_
 
 #include <dirent.h>
-#include <SDL_ttf.h>
 #include "GameScene.h"
 
 struct ChartInfo {
@@ -50,9 +49,6 @@ SelectScene* CreateSelectScene();
 void DestroySelectScene();
 void SelectSceneHandleKey(SDL_Event* event);
 void SelectSceneUpdate();
-static void SelectSceneDrawPreview(SDL_Rect rect);
-static void SelectSceneDrawInfo();
-static void SelectSceneDrawList();
 void SelectSceneDraw();
 
 #endif

@@ -27,7 +27,7 @@ chart \
         "background": "background.png", // example: pure.png
         "lane_size": 4, // 判定点数量（在本游戏中lane与hit_point的数量是一一对应的）
         "notes": [], // 音符信息
-        "hit_points": [], // 判定点信息
+        "lanes": [], // 判定点信息
         "events": [] // 事件信息
     }
 }
@@ -49,20 +49,21 @@ chart \
 - background：谱面背景图片文件，支持JPG与PNG
 - lane_size：谱面的判定点个数（在本游戏中，lane与hit_point是一一对应的）
 
-## Hit Point
+## Lanes
 
 以下是一个一般的hit_point信息：
 
 ```json
 {
     ...
-    "hit_points": [
+    "lanes": [
         {
             "lane": 0,
             "position": {
                 "x": 400,
                 "y": 600
-            }
+            },
+            "note_size": 10
         },
         ...
     ]
@@ -75,6 +76,7 @@ chart \
 - position：判定点初始位置信息
 - x：判定点的x坐标
 - y：判定点的y坐标
+- note_size：判定点的总判定音符数量，**必须大于等于判定点的实际音符数量**，否则UB
 
 ## Note
 

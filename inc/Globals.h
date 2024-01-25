@@ -30,11 +30,15 @@ struct Application {
     /* app status */
     bool is_running;
     bool is_error;
+    bool is_loaded;
     SceneType cur_scene;
 
     /* key status */
-    const Uint8* key_status; // SDL built in keyboard status
+    // const Uint8* key_status; // SDL built in keyboard status
     //bool key_status[SDL_NUM_SCANCODES];
+
+    /* thread */
+    SDL_mutex* mutex;
 };
 typedef struct Application Application;
 

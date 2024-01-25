@@ -1,4 +1,4 @@
-#include "../inc/MenuScene.h"
+#include "MenuScene.h"
 
 MenuScene* menu_scene = NULL;
 
@@ -42,21 +42,35 @@ void DestroyMenuScene() {
     }
 }
 
+static void MenuSceneHandleKeyDown(SDL_Scancode key) {
+    switch (key) {
+    case SDL_SCANCODE_E:
+    case SDL_SCANCODE_KP_ENTER: {
+        ButtonFunc(&menu_scene->buttons[menu_scene->cur_button]);
+        break;
+    }
+    case SDL_SCANCODE_W:
+    case SDL_SCANCODE_UP: {
+        menu_scene->buttons[menu_scene->cur_button].is_on = 0;
+        menu_scene->cur_button = (menu_scene->cur_button - 1 + MENU_SCENE_BUTTON_SIZE) % MENU_SCENE_BUTTON_SIZE;
+        menu_scene->buttons[menu_scene->cur_button].is_on = 1;
+        break;
+    }
+    case SDL_SCANCODE_S:
+    case SDL_SCANCODE_DOWN: {
+        menu_scene->buttons[menu_scene->cur_button].is_on = 0;
+        menu_scene->cur_button = (menu_scene->cur_button + 1) % MENU_SCENE_BUTTON_SIZE;
+        menu_scene->buttons[menu_scene->cur_button].is_on = 1;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 void MenuSceneHandleKey(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
-        if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
-            ButtonFunc(&menu_scene->buttons[menu_scene->cur_button]);
-        }
-        else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
-            menu_scene->buttons[menu_scene->cur_button].is_on = 0;
-            menu_scene->cur_button = (menu_scene->cur_button - 1 + MENU_SCENE_BUTTON_SIZE) % MENU_SCENE_BUTTON_SIZE;
-            menu_scene->buttons[menu_scene->cur_button].is_on = 1;
-        }
-        else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
-            menu_scene->buttons[menu_scene->cur_button].is_on = 0;
-            menu_scene->cur_button = (menu_scene->cur_button + 1) % MENU_SCENE_BUTTON_SIZE;
-            menu_scene->buttons[menu_scene->cur_button].is_on = 1;
-        }
+        MenuSceneHandleKeyDown(event->key.keysym.scancode);
     }
 }
 

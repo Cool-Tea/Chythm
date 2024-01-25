@@ -1,4 +1,4 @@
-#include "../inc/PauseScene.h"
+#include "PauseScene.h"
 
 PauseScene* pause_scene = NULL;
 
@@ -43,22 +43,35 @@ void DestroyPauseScene() {
     }
 }
 
+static void PauseSceneHandleKeyDown(SDL_Scancode key) {
+    switch (key) {
+    case SDL_SCANCODE_E:
+    case SDL_SCANCODE_KP_ENTER: {
+        ButtonFunc(&pause_scene->buttons[pause_scene->cur_button]);
+        break;
+    }
+    case SDL_SCANCODE_W:
+    case SDL_SCANCODE_UP: {
+        pause_scene->buttons[pause_scene->cur_button].is_on = 0;
+        pause_scene->cur_button = (pause_scene->cur_button - 1 + PAUSE_SCENE_BUTTON_SIZE) % PAUSE_SCENE_BUTTON_SIZE;
+        pause_scene->buttons[pause_scene->cur_button].is_on = 1;
+        break;
+    }
+    case SDL_SCANCODE_S:
+    case SDL_SCANCODE_DOWN: {
+        pause_scene->buttons[pause_scene->cur_button].is_on = 0;
+        pause_scene->cur_button = (pause_scene->cur_button + 1) % PAUSE_SCENE_BUTTON_SIZE;
+        pause_scene->buttons[pause_scene->cur_button].is_on = 1;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 void PauseSceneHandleKey(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
-        if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
-            ButtonFunc(&pause_scene->buttons[pause_scene->cur_button]);
-            return;
-        }
-        if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
-            pause_scene->buttons[pause_scene->cur_button].is_on = 0;
-            pause_scene->cur_button = (pause_scene->cur_button - 1 + PAUSE_SCENE_BUTTON_SIZE) % PAUSE_SCENE_BUTTON_SIZE;
-            pause_scene->buttons[pause_scene->cur_button].is_on = 1;
-        }
-        if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
-            pause_scene->buttons[pause_scene->cur_button].is_on = 0;
-            pause_scene->cur_button = (pause_scene->cur_button + 1) % PAUSE_SCENE_BUTTON_SIZE;
-            pause_scene->buttons[pause_scene->cur_button].is_on = 1;
-        }
+        PauseSceneHandleKeyDown(event->key.keysym.scancode);
     }
 }
 

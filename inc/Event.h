@@ -2,8 +2,6 @@
 #define _EVENT_H_
 
 #include <stdarg.h>
-#include "Constants.h"
-#include "Globals.h"
 #include "Drawer.h"
 
 struct Event {

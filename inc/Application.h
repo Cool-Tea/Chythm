@@ -6,6 +6,7 @@
 #include "GameScene.h"
 #include "PauseScene.h"
 #include "EndScene.h"
+#include "LoadScene.h"
 
 void InitApplication();
 void DestroyApplication();

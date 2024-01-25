@@ -1,4 +1,4 @@
-#include "../inc/Constants.h"
+#include "Constants.h"
 
 /* Common */
 const SDL_Color default_colors[] = {

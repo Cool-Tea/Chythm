@@ -6,40 +6,61 @@
     },
     "chart": {
         "audio": "audio.mp3",
-        "bpm": 180,
+        "bpm": 60,
         "background": "background.jpg",
         "lane_size": 4,
-        "hit_points": [
+        "lanes": [
             {
                 "lane": 0,
                 "position": {
                     "x": 400,
                     "y": 600
-                }
+                },
+                "note_size": 1
             },
             {
                 "lane": 1,
                 "position": {
                     "x": 800,
                     "y": 600
-                }
+                },
+                "note_size": 0
             },
             {
                 "lane": 2,
                 "position": {
                     "x": 1200,
                     "y": 600
-                }
+                },
+                "note_size": 0
             },
             {
                 "lane": 3,
                 "position": {
                     "x": 1600,
                     "y": 600
-                }
+                },
+                "note_size": 0
             }
         ],
-        "notes": [],
+        "notes": [
+            {
+                "type": 1,
+                "lane": 0,
+                "move": [
+                    {
+                        "x": 400,
+                        "y": -40,
+                        "reach_time": 2000
+                    },
+                    {
+                        "x": 400,
+                        "y": -40,
+                        "reach_time": 2500
+                    }
+                ]
+            }
+        ],
         "events": [
             {
                 "object": 0,

@@ -1,7 +1,6 @@
 #ifndef _MENU_SCENE_H_
 #define _MENU_SCENE_H_
 
-#include <SDL_image.h>
 #include "Button.h"
 
 struct MenuScene {

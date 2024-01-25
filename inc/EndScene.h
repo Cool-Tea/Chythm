@@ -24,6 +24,7 @@ extern EndScene* end_scene;
 EndScene* CreateEndScene();
 void DestroyEndScene();
 void EndSceneRate();
+static void EndSceneHandleKeyDown(SDL_Scancode key);
 void EndSceneHandleKey(SDL_Event* event);
 void EndSceneUpdate();
 static void EndSceneDrawRating();

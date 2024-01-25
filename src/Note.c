@@ -1,4 +1,4 @@
-#include "../inc/Note.h"
+#include "Note.h"
 
 void NoteLink(Note* lnote, Note* rnote) {
     lnote->linked_notes[lnote->linked_notes[0] != NULL] = rnote;
@@ -77,9 +77,9 @@ void NoteDraw(Note* note) {
     }
 }
 
-void InitNoteList(NoteList* note_list) {
+void InitNoteList(NoteList* note_list, size_t note_size) {
     note_list->size = 0;
-    note_list->capacity = NOTE_LIST_INIT_CAPACITY;
+    note_list->capacity = note_size ? note_size : NOTE_LIST_INIT_CAPACITY;
     note_list->notes = malloc(note_list->capacity * sizeof(Note));
     if (note_list->notes == NULL) {
         fprintf(stderr, "[NoteList]Failed to malloc note list\n");
@@ -100,6 +100,10 @@ void NoteListEmplaceBack(NoteList* note_list,
     int start_x, int start_y,
     Uint32 update_time, Uint32 reach_time
 ) {
+    if (note_list->size >= note_list->capacity) {
+        note_list->capacity <<= 1;
+        note_list->head = note_list->tail = note_list->notes = realloc(note_list->notes, note_list->capacity * sizeof(Note));
+    }
     note_list->notes[note_list->size] = (Note){
         .type = type,
         .linked_notes = { NULL, NULL },
@@ -126,10 +130,20 @@ void NoteListEmplaceBack(NoteList* note_list,
         break;
     }
     note_list->size++;
-    if (note_list->size >= note_list->capacity) {
-        note_list->capacity <<= 1;
-        note_list->head = note_list->tail = note_list->notes = realloc(note_list->notes, note_list->capacity * sizeof(Note));
-    }
+}
+
+static void NoteListPop(NoteList* note_list) {
+    note_list->head->effect.is_active = 0;
+    note_list->head++;
+}
+
+static void NoteListPush(NoteList* note_list) {
+    note_list->tail->effect.is_active = 1;
+    note_list->tail++;
+}
+
+static bool isNoteListTailEnd(NoteList* note_list) {
+    return note_list->tail - note_list->notes >= note_list->size;
 }
 
 void NoteListUpdate(NoteList* note_list, int target_x, int target_y) {
@@ -177,18 +191,4 @@ void NoteListDraw(NoteList* note_list) {
     NoteListFor(note_list) {
         NoteDraw(ptr);
     }
-}
-
-static void NoteListPop(NoteList* note_list) {
-    note_list->head->effect.is_active = 0;
-    note_list->head++;
-}
-
-static void NoteListPush(NoteList* note_list) {
-    note_list->tail->effect.is_active = 1;
-    note_list->tail++;
-}
-
-static bool isNoteListTailEnd(NoteList* note_list) {
-    return note_list->tail - note_list->notes >= note_list->size;
 }

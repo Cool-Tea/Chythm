@@ -1,4 +1,4 @@
-#include "../inc/Application.h"
+#include "Application.h"
 
 void InitApplication() {
     app.win = NULL;
@@ -50,10 +50,11 @@ void InitApplication() {
     }
 
     /* Scene related */
-    CreateMenuScene(app.ren);
-    CreateSelectScene(app.ren);
-    CreatePauseScene(app.ren);
-    CreateEndScene(app.ren);
+    CreateMenuScene();
+    CreateSelectScene();
+    CreatePauseScene();
+    CreateEndScene();
+    CreateLoadScene();
 
     app.timer.real_time = SDL_GetTicks();
     app.timer.delta_time = 1;
@@ -61,13 +62,24 @@ void InitApplication() {
     app.timer.relative_time = 0;
 
     /* keyboard status */
-    app.key_status = SDL_GetKeyboardState(NULL);
+    // app.key_status = SDL_GetKeyboardState(NULL);
 
     /* assets */
     InitAssets();
+
+    /* thread */
+    app.mutex = SDL_CreateMutex();
+    if (app.mutex == NULL) {
+        fprintf(stderr, "[Application]Failed to create mutex: %s\n", SDL_GetError());
+        app.is_error = 1;
+        return;
+    }
 }
 
 void DestroyApplication() {
+    if (app.mutex != NULL) {
+        SDL_DestroyMutex(app.mutex);
+    }
     FreeAssets();
 
     DestroyEndScene();
@@ -75,6 +87,7 @@ void DestroyApplication() {
     DestroyGameScene();
     DestroySelectScene();
     DestroyMenuScene();
+    DestroyLoadScene();
 
     if (app.font != NULL) {
         TTF_CloseFont(app.font);
@@ -148,39 +161,16 @@ void ApplicationUpdate() {
         EndSceneUpdate();
         break;
     }
+    case LOAD: {
+        LoadSceneUpdate();
+        break;
+    }
     default:
         break;
     }
 }
 
-void ApplicationDraw() {
-    SDL_RenderClear(app.ren);
-    switch (app.cur_scene) {
-    case MENU: {
-        MenuSceneDraw(app.ren, app.font);
-        break;
-    }
-    case SELECT: {
-        SelectSceneDraw(app.ren, app.font);
-        break;
-    }
-    case GAME: {
-        GameSceneDraw(app.ren, app.font);
-        break;
-    }
-    case PAUSE: {
-        PauseSceneDraw(app.ren, app.font);
-        break;
-    }
-    case END: {
-        EndSceneDraw(app.ren, app.font);
-        break;
-    }
-    default:
-        break;
-    }
-
-#ifdef DEV
+static void ApplicationDrawFPS() {
     static char fps[1 << 4];
     static SDL_Rect rect
 #if !AUTO_RESOLUTION
@@ -197,9 +187,49 @@ void ApplicationDraw() {
 #endif
 
     DrawText(rect, fps, default_colors[0]);
+}
+
+void ApplicationDraw() {
+    if (app.cur_scene == LOAD) SDL_LockMutex(app.mutex);
+    SDL_RenderClear(app.ren);
+    if (app.cur_scene == LOAD) SDL_UnlockMutex(app.mutex);
+
+    switch (app.cur_scene) {
+    case MENU: {
+        MenuSceneDraw();
+        break;
+    }
+    case SELECT: {
+        SelectSceneDraw();
+        break;
+    }
+    case GAME: {
+        GameSceneDraw();
+        break;
+    }
+    case PAUSE: {
+        PauseSceneDraw();
+        break;
+    }
+    case END: {
+        EndSceneDraw();
+        break;
+    }
+    case LOAD: {
+        LoadSceneDraw();
+        break;
+    }
+    default:
+        break;
+    }
+
+#ifdef DEV
+    ApplicationDrawFPS();
 #endif /* dev */
 
+    if (app.cur_scene == LOAD) SDL_LockMutex(app.mutex);
     SDL_RenderPresent(app.ren);
+    if (app.cur_scene == LOAD) SDL_UnlockMutex(app.mutex);
 }
 
 void ApplicationTick() {

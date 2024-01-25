@@ -4,6 +4,17 @@
         "sdl2_gfxprimitives.h": "c",
         "gamescene.h": "c",
         "sdl_mixer.h": "c",
-        "constants.h": "c"
+        "constants.h": "c",
+        "menuscene.h": "c",
+        "button.h": "c",
+        "globals.h": "c",
+        "drawer.h": "c",
+        "selectscene.h": "c",
+        "lane.h": "c",
+        "note.h": "c",
+        "effect.h": "c",
+        "event.h": "c",
+        "pausescene.h": "c",
+        "endscene.h": "c"
     }
 }

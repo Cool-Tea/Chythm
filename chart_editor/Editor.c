@@ -13,7 +13,7 @@ int main(int argc, char** args) {
     while (app.is_running) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) app.is_running = 0;
-            else if (e.type == SDL_KEYDOWN) ApplicationHandleKey(&e);
+            ApplicationHandleKey(&e);
         }
         ApplicationDraw();
         ApplicationTick();
@@ -25,7 +25,7 @@ int main(int argc, char** args) {
 }
 
 void InitEditor(char* audio_path) {
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
         fprintf(stderr, "[Editor]Failed to init SDL: %s\n", SDL_GetError());
         app.is_error = 1;
         return;
@@ -110,6 +110,11 @@ void InitApplication(char* audio_path) {
     app.json = cJSON_CreateObject();
     app.notes = cJSON_AddArrayToObject(app.json, "notes");
     app.cur_mode = SINGLE;
+    for (int i = 0; i < 4; i++) {
+        app.lane_is_down[i] = 0;
+        app.lane_note_size[i] = 0;
+        app.lane_time[i] = 0;
+    }
 }
 
 void FreeApplication() {
@@ -138,89 +143,161 @@ void ApplicationStart() {
     Mix_PlayMusic(app.audio, 0);
 }
 
-void AddNote(cJSON* notes, int type, int lane) {
+static void AddSingle(cJSON* notes, Uint32 reach_time, int lane) {
+    app.lane_note_size[lane]++;
     cJSON* note = cJSON_CreateObject();
-    cJSON_AddNumberToObject(note, "type", type);
+    cJSON_AddNumberToObject(note, "type", SINGLE);
     cJSON_AddNumberToObject(note, "lane", lane);
     cJSON* moves = cJSON_AddArrayToObject(note, "move");
-    switch (type) {
-    case 0: {
+    cJSON* move = cJSON_CreateObject();
+    cJSON_AddNumberToObject(move, "x", note_x[lane]);
+    cJSON_AddNumberToObject(move, "y", -40);
+    cJSON_AddNumberToObject(move, "reach_time", reach_time);
+    cJSON_AddItemToArray(moves, move);
+    cJSON_AddItemToArray(notes, note);
+}
+
+static void AddLong(cJSON* notes, Uint32 reach_time, Uint32 lasting_time, int lane) {
+    app.lane_note_size[lane] += 2;
+    cJSON* note = cJSON_CreateObject();
+    cJSON_AddNumberToObject(note, "type", LONG);
+    cJSON_AddNumberToObject(note, "lane", lane);
+    cJSON* moves = cJSON_AddArrayToObject(note, "move");
+    for (int i = 0; i < 2; i++, reach_time += lasting_time) {
         cJSON* move = cJSON_CreateObject();
         cJSON_AddNumberToObject(move, "x", note_x[lane]);
         cJSON_AddNumberToObject(move, "y", -40);
-        Uint32 time = Mix_GetMusicPosition(app.audio) * 1000;
-        cJSON_AddNumberToObject(move, "reach_time", time);
+        cJSON_AddNumberToObject(move, "reach_time", reach_time);
         cJSON_AddItemToArray(moves, move);
-        break;
-    }
-    default:
-        break;
     }
     cJSON_AddItemToArray(notes, note);
 }
 
+static int KeyToLane(SDL_Scancode key) {
+    switch (key) {
+    case SDL_SCANCODE_F: return 0;
+    case SDL_SCANCODE_G: return 1;
+    case SDL_SCANCODE_H: return 2;
+    case SDL_SCANCODE_J: return 3;
+    default:
+        break;
+    }
+    return -1;
+}
+
 void JsonHandleKey(SDL_Event* event) {
-    if (app.key_state[SDL_SCANCODE_1]) {
-        app.cur_mode = SINGLE;
+    if (event->type == SDL_KEYDOWN) {
+        switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_1: {
+            app.cur_mode = SINGLE;
+            break;
+        }
+        case SDL_SCANCODE_2: {
+            app.cur_mode = LONG;
+            break;
+        }
+        case SDL_SCANCODE_P: {
+            char* str = cJSON_Print(app.json);
+            printf("%s\n", str);
+            cJSON_free(str);
+            for (int i = 0; i < 4; i++) {
+                printf("Lane %d: %lu notes\n", i, app.lane_note_size[i]);
+            }
+            break;
+        }
+        case SDL_SCANCODE_O: {
+            char* str = cJSON_Print(app.json);
+            FILE* fp = fopen("notes.json", "w");
+            fprintf(fp, "%s\n", str);
+            cJSON_free(str);
+            fclose(fp);
+            for (int i = 0; i < 4; i++) {
+                printf("Lane %d: %lu notes\n", i, app.lane_note_size[i]);
+            }
+            break;
+        }
+        case SDL_SCANCODE_F:
+        case SDL_SCANCODE_G:
+        case SDL_SCANCODE_H:
+        case SDL_SCANCODE_J: {
+            if (!app.lane_is_down[KeyToLane(event->key.keysym.scancode)]) {
+                //printf("key: %s down\n", SDL_GetKeyName(event->key.keysym.sym));
+                app.lane_time[KeyToLane(event->key.keysym.scancode)] = Mix_GetMusicPosition(app.audio) * 1000.0;
+                app.lane_is_down[KeyToLane(event->key.keysym.scancode)] = 1;
+            }
+            break;
+        }
+        default:
+            break;
+        }
     }
-    else if (app.key_state[SDL_SCANCODE_2]) {
-        app.cur_mode = LONG;
-    }
-    else if (app.key_state[SDL_SCANCODE_P]) {
-        char* str = cJSON_Print(app.json);
-        printf("%s\n", str);
-        cJSON_free(str);
-    }
-    else if (app.key_state[SDL_SCANCODE_O]) {
-        char* str = cJSON_Print(app.json);
-        FILE* fp = fopen("notes.json", "w");
-        fprintf(fp, "%s\n", str);
-        cJSON_free(str);
-        fclose(fp);
-    }
-    else if (app.key_state[SDL_SCANCODE_F]) {
-        AddNote(app.notes, SINGLE, 0);
-    }
-    else if (app.key_state[SDL_SCANCODE_G]) {
-        AddNote(app.notes, SINGLE, 1);
-    }
-    else if (app.key_state[SDL_SCANCODE_H]) {
-        AddNote(app.notes, SINGLE, 2);
-    }
-    else if (app.key_state[SDL_SCANCODE_J]) {
-        AddNote(app.notes, SINGLE, 3);
+    else if (event->type == SDL_KEYUP) {
+        switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_F:
+        case SDL_SCANCODE_G:
+        case SDL_SCANCODE_H:
+        case SDL_SCANCODE_J: {
+            if (app.lane_is_down[KeyToLane(event->key.keysym.scancode)]) {
+                //printf("key: %s up\n", SDL_GetKeyName(event->key.keysym.sym));
+                Uint32 time = Mix_GetMusicPosition(app.audio) * 1000.0;
+                time -= app.lane_time[KeyToLane(event->key.keysym.scancode)];
+                if (time >= 300) {
+                    AddLong(app.notes, app.lane_time[KeyToLane(event->key.keysym.scancode)], time, KeyToLane(event->key.keysym.scancode));
+                }
+                else {
+                    AddSingle(app.notes, app.lane_time[KeyToLane(event->key.keysym.scancode)], KeyToLane(event->key.keysym.scancode));
+                }
+                app.lane_is_down[KeyToLane(event->key.keysym.scancode)] = 0;
+            }
+            break;
+        }
+        default:
+            break;
+        }
     }
 }
 
 void ApplicationHandleKey(SDL_Event* event) {
-    if (app.key_state[SDL_SCANCODE_ESCAPE] || app.key_state[SDL_SCANCODE_Q]) {
-        app.is_running = 0;
-    }
-    // else if (app.key_state[SDL_SCANCODE_SPACE]) {
-    //     if (Mix_PausedMusic()) {
-    //         Mix_ResumeMusic();
-    //         SDL_Log("Paused -> Resume");
-    //     }
-    //     else {
-    //         Mix_PauseMusic();
-    //         SDL_Log("Playing -> Paused");
-    //     }
-    // }
-    else if (app.key_state[SDL_SCANCODE_Z]) {
-        Mix_PauseMusic();
-    }
-    else if (app.key_state[SDL_SCANCODE_X]) {
-        Mix_ResumeMusic();
-    }
-    else if (app.key_state[SDL_SCANCODE_C]) {
-        Mix_HaltMusic();
-        Mix_PlayMusic(app.audio, 0);
-    }
-    else if (app.key_state[SDL_SCANCODE_LEFT]) {
-        Mix_SetMusicPosition(Mix_GetMusicPosition(app.audio) - STEP_INTERVAL);
-    }
-    else if (app.key_state[SDL_SCANCODE_RIGHT]) {
-        Mix_SetMusicPosition(Mix_GetMusicPosition(app.audio) + STEP_INTERVAL);
+    if (event->type == SDL_KEYDOWN) {
+        switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_ESCAPE:
+        case SDL_SCANCODE_Q: {
+            app.is_running = 0;
+            break;
+        }
+        case SDL_SCANCODE_SPACE: {
+            if (Mix_PausedMusic()) {
+                Mix_ResumeMusic();
+            }
+            else {
+                Mix_PauseMusic();
+            }
+            break;
+        }
+        case SDL_SCANCODE_Z: {
+            Mix_PauseMusic();
+            break;
+        }
+        case SDL_SCANCODE_X: {
+            Mix_ResumeMusic();
+            break;
+        }
+        case SDL_SCANCODE_C: {
+            Mix_HaltMusic();
+            Mix_PlayMusic(app.audio, 0);
+            break;
+        }
+        case SDL_SCANCODE_LEFT: {
+            Mix_SetMusicPosition(Mix_GetMusicPosition(app.audio) - STEP_INTERVAL);
+            break;
+        }
+        case SDL_SCANCODE_RIGHT: {
+            Mix_SetMusicPosition(Mix_GetMusicPosition(app.audio) + STEP_INTERVAL);
+            break;
+        }
+        default:
+            break;
+        }
     }
     JsonHandleKey(event);
 }

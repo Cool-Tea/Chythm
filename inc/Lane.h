@@ -1,7 +1,6 @@
 #ifndef _LANE_H_
 #define _LANE_H_
 
-#include "Constants.h"
 #include "Note.h"
 #include "Event.h"
 
@@ -25,8 +24,6 @@ struct HitPoint {
 typedef struct HitPoint HitPoint;
 void InitHitPoint(HitPoint* hit_point, int x, int y, SDL_Scancode key);
 void FreeHitPoint(HitPoint* hit_point);
-static void HitPointUpdateSpeed(HitPoint* hit_point);
-static void HitPointUpdateDest(HitPoint* hit_point);
 void HitPointUpdate(HitPoint* hit_point);
 void HitPointDraw(HitPoint* hit_point);
 
@@ -39,24 +36,14 @@ struct Lane {
 };
 typedef struct Lane Lane;
 
-void InitLane(Lane* lane);
+void InitLane(Lane* lane, int x, int y, SDL_Scancode key, size_t note_size);
 void FreeLane(Lane* lane);
 void LaneAddNote(Lane* lane,
     NoteType type,
     int start_x, int start_y,
     Uint32 update_time, Uint32 reach_time
 );
-
-static int isBeyondHit(const HitPoint* hit_point, const Note* note);
-static int isPerfectHit(const HitPoint* hit_point, const Note* note);
-static int isGoodHit(const HitPoint* hit_point, const Note* note);
 void LaneHandleKey(Lane* lane, SDL_Event* event);
-
-static void LaneHandleEventMove(HitPoint* hit_point, const Event* event);
-static void LaneHandleEventMoveTo(HitPoint* hit_point, const Event* event);
-static void LaneHandleEventStop(HitPoint* hit_point);
-static void LaneHandleEvent(Lane* lane);
-
 void LaneUpdate(Lane* lane);
 void LaneDraw(Lane* lane);
 

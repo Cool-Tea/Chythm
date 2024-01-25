@@ -15,7 +15,9 @@ aux_source_directory(src DIR_SRCS)
 
 add_executable(Demo ${DIR_SRCS})
 
+include_directories(inc)
 include_directories(${SDL2_INCLUDE_DIRS})
+
 target_link_libraries(Demo 
     ${SDL2_LIBRARIES} 
     ${SDL2_image_LIBRARIES} 

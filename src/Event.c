@@ -1,4 +1,4 @@
-#include "../inc/Event.h"
+#include "Event.h"
 
 static void InitTextEvent(Event* event, va_list* args) {
     int x = va_arg(*args, int);

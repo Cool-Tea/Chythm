@@ -1,4 +1,4 @@
-#include "../inc/Drawer.h"
+#include "Drawer.h"
 
 Assets assets;
 
@@ -100,9 +100,11 @@ void DrawText(SDL_Rect rect, const char* text, SDL_Color color) {
 #endif
 
     SDL_Surface* sur = TTF_RenderText_Blended(app.font, text, color);
+    if (app.cur_scene == LOAD) SDL_LockMutex(app.mutex);
     SDL_Texture* texture = SDL_CreateTextureFromSurface(app.ren, sur);
     SDL_RenderCopy(app.ren, texture, NULL, &rect);
     SDL_DestroyTexture(texture);
+    if (app.cur_scene == LOAD) SDL_UnlockMutex(app.mutex);
     SDL_FreeSurface(sur);
 }
 

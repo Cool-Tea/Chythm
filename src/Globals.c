@@ -1,4 +1,4 @@
-#include "../inc/Globals.h"
+#include "Globals.h"
 
 Application app = {
     .zoom_rate = { 1.0, 1.0 },
@@ -7,5 +7,7 @@ Application app = {
     .font = NULL,
     .is_running = 1,
     .is_error = 0,
-    .key_status = NULL
+    .is_loaded = 0,
+    // .key_status = NULL
+    .mutex = NULL
 };

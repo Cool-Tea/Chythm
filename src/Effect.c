@@ -1,9 +1,11 @@
-#include "../inc/Effect.h"
+#include "Effect.h"
 
 static void InitNameParticle(Particle* particle, const char* name, size_t i) {
     char buf[1 << 8];
     sprintf(buf, "%s%s_%.2lu.png", PARTICLE_IMG_DIR_PATH, name, i + 1);
+    if (app.cur_scene == LOAD) SDL_LockMutex(app.mutex);
     particle->par_img = IMG_LoadTexture(app.ren, buf);
+    if (app.cur_scene == LOAD) SDL_UnlockMutex(app.mutex);
     if (particle->par_img == NULL) {
         fprintf(stderr, "[Particle]Failed to load particle image (%s): %s\n", buf, IMG_GetError());
         app.is_error = 1;
@@ -39,6 +41,11 @@ void InitParticle(Particle* particle, EffectType type, size_t i) {
         InitNameParticle(particle, "star", i);
         break;
     }
+    case TWIRL: {
+        particle->lasting_frames = 5;
+        InitNameParticle(particle, "twirl", i);
+        break;
+    }
     default:
         break;
     }
@@ -71,10 +78,12 @@ void ParticleDraw(Particle* particle, int x, int y, int r, double angle) {
     rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
 #endif
 
+    if (app.cur_scene == LOAD) SDL_LockMutex(app.mutex);
     if (angle == 0.0)
         SDL_RenderCopy(app.ren, particle->par_img, NULL, &rect);
     else
         SDL_RenderCopyEx(app.ren, particle->par_img, NULL, &rect, angle, NULL, SDL_FLIP_NONE);
+    if (app.cur_scene == LOAD) SDL_UnlockMutex(app.mutex);
 }
 
 bool isParticleEnd(Particle* particle) {
@@ -117,6 +126,10 @@ void InitEffect(Effect* effect, EffectType type, bool repeat_enale) {
     }
     case STAR: {
         effect->par_size = 9;
+        break;
+    }
+    case TWIRL: {
+        effect->par_size = 3;
         break;
     }
     default:

@@ -1,8 +1,9 @@
-#include "../inc/GameScene.h"
+#include "GameScene.h"
 
 GameScene* game_scene = NULL;
 UpdateData update_data = { NULL, NULL, -1 };
 
+/* chart_path sample: ../saves/test/ */
 static inline void CompletePath(char* buf, const char* path, const char* file) {
     strcpy(buf, path);
     strcat(buf, file);
@@ -58,7 +59,9 @@ static int GetAudio(const char* chart_path, const char* audio_path) {
 static int GetBackground(const char* chart_path, const char* img_path) {
     char buffer[1 << 8];
     CompletePath(buffer, chart_path, img_path);
+    SDL_LockMutex(app.mutex);
     game_scene->background = IMG_LoadTexture(app.ren, buffer);
+    SDL_UnlockMutex(app.mutex);
     if (game_scene->background == NULL) {
         fprintf(stderr, "[GameScene]Failed to load background: %s\n", IMG_GetError());
         app.is_error = 1;
@@ -73,7 +76,7 @@ static SDL_Scancode AllocateKey(int size, int i) {
     return default_keys[base + i];
 }
 
-static int GetLanes(cJSON* hit_points, int size) {
+static int GetLanes(cJSON* lanes, int size) {
     game_scene->lane_size = size;
     game_scene->lanes = malloc(game_scene->lane_size * sizeof(Lane));
     if (game_scene->lanes == NULL) {
@@ -81,26 +84,27 @@ static int GetLanes(cJSON* hit_points, int size) {
         app.is_error = 1;
         return -1;
     }
-    for (size_t i = 0; i < game_scene->lane_size; i++) {
-        InitLane(&game_scene->lanes[i]);
-    }
     for (int i = 0; i < game_scene->lane_size; i++) {
-        cJSON* hit_point = cJSON_GetArrayItem(hit_points, i);
-        if (hit_point == NULL) continue;
-        cJSON* lane = cJSON_GetObjectItem(hit_point, "lane");
-        cJSON* position = cJSON_GetObjectItem(hit_point, "position");
+        cJSON* lane = cJSON_GetArrayItem(lanes, i);
+        if (lane == NULL) continue;
+        cJSON* lane_index = cJSON_GetObjectItem(lane, "lane");
+        cJSON* position = cJSON_GetObjectItem(lane, "position");
         cJSON* x = cJSON_GetObjectItem(position, "x");
         cJSON* y = cJSON_GetObjectItem(position, "y");
-        InitHitPoint(&game_scene->lanes[lane->valueint].hit_point,
-            x->valueint, y->valueint, AllocateKey(game_scene->lane_size, lane->valueint));
+        cJSON* note_size = cJSON_GetObjectItem(lane, "note_size");
+        InitLane(&game_scene->lanes[lane_index->valueint],
+            x->valueint, y->valueint,
+            AllocateKey(game_scene->lane_size, lane_index->valueint),
+            note_size->valueint
+        );
     }
     return 0;
 }
 
 static void GetNotes(cJSON* notes, int bpm) {
     int note_size = cJSON_GetArraySize(notes);
-    for (int i = 0; i < note_size; i++) {
-        cJSON* note = cJSON_GetArrayItem(notes, i);
+    cJSON* note = NULL;
+    cJSON_ArrayForEach(note, notes) {
         cJSON* type = cJSON_GetObjectItem(note, "type");
         cJSON* lane = cJSON_GetObjectItem(note, "lane");
         /* TODO: more note */
@@ -265,8 +269,8 @@ GameScene* CreateGameScene(const char* chart_path) {
 #endif
 
     cJSON* lane_size = cJSON_GetObjectItem(chart, "lane_size");
-    cJSON* hit_points = cJSON_GetObjectItem(chart, "hit_points");
-    if (GetLanes(hit_points, lane_size->valueint) < 0) {
+    cJSON* lanes = cJSON_GetObjectItem(chart, "lanes");
+    if (GetLanes(lanes, lane_size->valueint) < 0) {
         cJSON_Delete(file);
         return game_scene;
     }
@@ -283,6 +287,15 @@ GameScene* CreateGameScene(const char* chart_path) {
     GetScore(chart_path);
     InitUpdateData();
     return game_scene;
+}
+
+int ThreadCreateGameScene(void* chart_path) {
+    const char* path = chart_path;
+    CreateGameScene(path);
+    SDL_LockMutex(app.mutex);
+    app.is_loaded = 1;
+    SDL_UnlockMutex(app.mutex);
+    return 0;
 }
 
 void DestroyGameScene() {
@@ -363,13 +376,21 @@ static int GameSceneCheckEnd() {
     return 0;
 }
 
+static void GameSceneHandleKeyDown(SDL_Scancode key) {
+    switch (key) {
+    case SDL_SCANCODE_ESCAPE: {
+        GameScenePause();
+        app.cur_scene = PAUSE;
+        return;
+    }
+    default:
+        break;
+    }
+}
+
 void GameSceneHandleKey(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
-        if (app.key_status[SDL_SCANCODE_ESCAPE]) {
-            GameScenePause();
-            app.cur_scene = PAUSE;
-            return;
-        }
+        GameSceneHandleKeyDown(event->key.keysym.scancode);
     }
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneHandleKey(&game_scene->lanes[i], event);

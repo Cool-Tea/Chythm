@@ -1,4 +1,4 @@
-#include "../inc/SelectScene.h"
+#include "SelectScene.h"
 
 SelectScene* select_scene = NULL;
 
@@ -196,29 +196,51 @@ void DestroySelectScene() {
     }
 }
 
+static void SelectSceneHandleKeyDown(SDL_Scancode key) {
+    switch (key) {
+    case SDL_SCANCODE_E:
+    case SDL_SCANCODE_KP_ENTER: {
+        app.is_loaded = 0;
+        app.cur_scene = LOAD;
+        SDL_Thread* th =
+            SDL_CreateThread(
+                ThreadCreateGameScene,
+                "CreateGameScene",
+                select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path
+            );
+        SDL_DetachThread(th);
+        break;
+    }
+    case SDL_SCANCODE_W:
+    case SDL_SCANCODE_UP: {
+        select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
+        SDL_DestroyTexture(select_scene->preview);
+        select_scene->preview = NULL;
+        break;
+    }
+    case SDL_SCANCODE_S:
+    case SDL_SCANCODE_DOWN: {
+        select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
+        SDL_DestroyTexture(select_scene->preview);
+        select_scene->preview = NULL;
+        break;
+    }
+    case SDL_SCANCODE_ESCAPE: {
+        app.cur_scene = MENU;
+        break;
+    }
+    case SDL_SCANCODE_R: {
+        ChartListRefresh(&select_scene->chart_list);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 void SelectSceneHandleKey(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
-        if (app.key_status[SDL_SCANCODE_E] || app.key_status[SDL_SCANCODE_KP_ENTER]) {
-            CreateGameScene(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].chart_path);
-            app.cur_scene = GAME;
-            GameSceneStart();
-        }
-        else if (app.key_status[SDL_SCANCODE_ESCAPE]) {
-            app.cur_scene = MENU;
-        }
-        else if (app.key_status[SDL_SCANCODE_W] || app.key_status[SDL_SCANCODE_UP]) {
-            select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart - 1 + select_scene->chart_list.size) % select_scene->chart_list.size;
-            SDL_DestroyTexture(select_scene->preview);
-            select_scene->preview = NULL;
-        }
-        else if (app.key_status[SDL_SCANCODE_S] || app.key_status[SDL_SCANCODE_DOWN]) {
-            select_scene->chart_list.cur_chart = (select_scene->chart_list.cur_chart + 1) % select_scene->chart_list.size;
-            SDL_DestroyTexture(select_scene->preview);
-            select_scene->preview = NULL;
-        }
-        else if (app.key_status[SDL_SCANCODE_R]) {
-            ChartListRefresh(&select_scene->chart_list);
-        }
+        SelectSceneHandleKeyDown(event->key.keysym.scancode);
     }
 }
 

@@ -27,6 +27,9 @@ typedef struct Application {
     cJSON* json;
     cJSON* notes;
     enum { SINGLE = 0, LONG } cur_mode;
+    Uint8 lane_is_down[4];
+    Uint32 lane_time[4];
+    size_t lane_note_size[4];
 } Application;
 
 Application app;

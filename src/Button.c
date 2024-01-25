@@ -1,4 +1,4 @@
-#include "../inc/Button.h"
+#include "Button.h"
 
 void InitButton(Button* button, int x, int y, const char* text, OnHit func) {
     size_t len = strlen(text);

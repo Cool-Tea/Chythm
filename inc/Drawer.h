@@ -2,10 +2,8 @@
 #define _DRAWER_H_
 
 #include <SDL_image.h>
-#include <SDL_ttf.h>
 #include <SDL2_gfxPrimitives.h>
 #include "Globals.h"
-#include "Constants.h"
 
 struct Assets {
     /* audio */
@@ -27,15 +25,6 @@ struct Assets {
 typedef struct Assets Assets;
 
 extern Assets assets;
-
-#if USE_DEFAULT_BACKGROUND
-static void GetBackgroundImg();
-static void GetHitPointImg();
-#endif
-
-#if !NOTE_ONLY_EFFECT
-static void GetNoteImg();
-#endif
 
 void InitAssets();
 void FreeAssets();
