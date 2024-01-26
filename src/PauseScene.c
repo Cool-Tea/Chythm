@@ -91,7 +91,6 @@ void PauseSceneDraw() {
 }
 
 static void Resume() {
-    GameSceneResume();
     app.cur_scene = GAME;
 }
 static void BackToMenu() {

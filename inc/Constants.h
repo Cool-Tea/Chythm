@@ -167,7 +167,7 @@ extern const char* end_scene_ratings[];
 
 /* Load Scene */
 #if !USE_DEFAULT_BACKGROUND
-#define LOAD_SCENE_BACKGROUND DEFAULT_BACKGROUND
+#define LOAD_SCENE_BACKGROUND "../assets/images/loading.png"
 #endif
 
 #endif

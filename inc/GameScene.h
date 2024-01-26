@@ -6,6 +6,9 @@
 #include "Lane.h"
 
 struct GameScene {
+    /* status */
+    bool is_started;
+
     /* file path*/
     const char* chart_path;
 

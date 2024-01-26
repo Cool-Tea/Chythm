@@ -153,8 +153,6 @@ void EndSceneDraw() {
 
 static void TryAgain() {
     GameSceneReset();
-    app.cur_scene = GAME;
-    GameSceneStart();
 }
 static void BackToSelect() {
     DestroyGameScene();

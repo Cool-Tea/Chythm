@@ -239,6 +239,7 @@ GameScene* CreateGameScene(const char* chart_path) {
         app.is_error = 1;
         return game_scene;
     }
+    game_scene->is_started = 0;
     game_scene->chart_path = chart_path;
 
 #if !USE_DEFAULT_BACKGROUND
@@ -307,6 +308,9 @@ void DestroyGameScene() {
 
         if (game_scene->audio != NULL) Mix_FreeMusic(game_scene->audio);
         FreeEventList(&game_scene->event_list);
+        for (size_t i = 0; i < game_scene->lane_size; i++) {
+            FreeLane(&game_scene->lanes[i]);
+        }
         if (game_scene->lanes != NULL) free(game_scene->lanes);
         free(game_scene);
         game_scene = NULL;
@@ -316,7 +320,15 @@ void DestroyGameScene() {
 void GameSceneReset() {
     const char* chart_path = game_scene->chart_path;
     DestroyGameScene();
-    CreateGameScene(chart_path);
+    app.is_loaded = 0;
+    app.cur_scene = LOAD;
+    SDL_Thread* th =
+        SDL_CreateThread(
+            ThreadCreateGameScene,
+            "CreateGameScene",
+            (void*)chart_path
+        );
+    SDL_DetachThread(th);
 }
 
 void GameSceneStart() {
@@ -341,6 +353,7 @@ static void SaveScore() {
 extern void EndSceneRate();
 void GameSceneEnd() {
     /* TODO: do something */
+    game_scene->is_started = 0;
     SaveScore();
     EndSceneRate();
     app.cur_scene = END;
@@ -357,6 +370,7 @@ static Uint32 GameSceneTimeMark() {
 }
 
 void GameScenePause() {
+    game_scene->is_started = 0;
     Mix_PauseMusic();
     GameSceneTimeMark();
 }
@@ -369,7 +383,7 @@ void GameSceneResume() {
 }
 
 static int GameSceneCheckEnd() {
-    if (Mix_PlayingMusic() == 0) {
+    if (Mix_PlayingMusic() == 0 && game_scene->is_started) {
         GameSceneEnd();
         return -1;
     }
@@ -381,7 +395,19 @@ static void GameSceneHandleKeyDown(SDL_Scancode key) {
     case SDL_SCANCODE_ESCAPE: {
         GameScenePause();
         app.cur_scene = PAUSE;
-        return;
+        break;
+    }
+    case SDL_SCANCODE_SPACE: {
+        if (!game_scene->is_started) {
+            game_scene->is_started = 1;
+            if (Mix_PausedMusic()) {
+                GameSceneResume();
+            }
+            else {
+                GameSceneStart();
+            }
+        }
+        break;
     }
     default:
         break;
@@ -392,6 +418,7 @@ void GameSceneHandleKey(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
         GameSceneHandleKeyDown(event->key.keysym.scancode);
     }
+    if (!game_scene->is_started) return;
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneHandleKey(&game_scene->lanes[i], event);
     }
@@ -403,6 +430,7 @@ static void GameSceneHandleEvent() {
 }
 
 void GameSceneUpdate() {
+    if (!game_scene->is_started) return;
     if (GameSceneCheckEnd() < 0) return;
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneUpdate(&game_scene->lanes[i]);
@@ -456,12 +484,29 @@ static void GameSceneDrawHitText() {
     }
 }
 
+static void GameSceneDrawPrompt() {
+    static int len;
+    static char* prompt = "Press <Space> to continue";
+    static SDL_Rect rect = { .h = LETTER_HEIGHT, .y = (SCREEN_HEIGHT - LETTER_HEIGHT) >> 1 };
+
+    len = strlen(prompt);
+    rect.w = len * LETTER_WIDTH;
+    rect.x = (SCREEN_WIDTH - rect.w) >> 1;
+
+    DrawText(rect, prompt, default_colors[0]);
+}
+
 void GameSceneDraw() {
 #if USE_DEFAULT_BACKGROUND
     DrawDefaultBackgroundPure();
 #else
     SDL_RenderCopy(app.ren, game_scene->background, NULL, NULL);
 #endif
+
+    if (!game_scene->is_started) {
+        GameSceneDrawPrompt();
+        return;
+    }
 
 #ifdef DEV
     GameSceneDrawTime();

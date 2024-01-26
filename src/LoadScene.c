@@ -40,7 +40,6 @@ void LoadSceneUpdate() {
     if (app.is_loaded) {
         app.cur_scene = GAME;
         SDL_UnlockMutex(app.mutex);
-        GameSceneStart();
         return;
     }
     SDL_UnlockMutex(app.mutex);
