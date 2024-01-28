@@ -147,9 +147,9 @@ static void AddSingle(cJSON* notes, Uint32 reach_time, int lane) {
     app.lane_note_size[lane]++;
     cJSON* note = cJSON_CreateObject();
     cJSON_AddNumberToObject(note, "type", SINGLE);
-    cJSON_AddNumberToObject(note, "lane", lane);
     cJSON* moves = cJSON_AddArrayToObject(note, "move");
     cJSON* move = cJSON_CreateObject();
+    cJSON_AddNumberToObject(move, "lane", lane);
     cJSON_AddNumberToObject(move, "x", note_x[lane]);
     cJSON_AddNumberToObject(move, "y", -40);
     cJSON_AddNumberToObject(move, "reach_time", reach_time);
@@ -161,10 +161,10 @@ static void AddLong(cJSON* notes, Uint32 reach_time, Uint32 lasting_time, int la
     app.lane_note_size[lane] += 2;
     cJSON* note = cJSON_CreateObject();
     cJSON_AddNumberToObject(note, "type", LONG);
-    cJSON_AddNumberToObject(note, "lane", lane);
     cJSON* moves = cJSON_AddArrayToObject(note, "move");
     for (int i = 0; i < 2; i++, reach_time += lasting_time) {
         cJSON* move = cJSON_CreateObject();
+        cJSON_AddNumberToObject(move, "lane", lane);
         cJSON_AddNumberToObject(move, "x", note_x[lane]);
         cJSON_AddNumberToObject(move, "y", -40);
         cJSON_AddNumberToObject(move, "reach_time", reach_time);

@@ -1,47 +1,29 @@
 #ifndef _LANE_H_
 #define _LANE_H_
 
+#include "List.h"
 #include "Note.h"
 #include "Event.h"
-
-struct HitPoint {
-    int cur_x, cur_y;
-    struct {
-        int x, y;
-        bool move_enable;
-    } speed; // this should not collided with dest
-    struct {
-        int update_x, update_y;
-        int reach_x, reach_y;
-        Uint32 update_time, reach_time;
-        bool move_enable;
-    } dest; // this should not collided with speed
-    SDL_Scancode key; // the key for this point
-    bool is_down;
-    Effect down_effect;
-    Effect hit_effect;
-};
-typedef struct HitPoint HitPoint;
-void InitHitPoint(HitPoint* hit_point, int x, int y, SDL_Scancode key);
-void FreeHitPoint(HitPoint* hit_point);
-void HitPointUpdate(HitPoint* hit_point);
-void HitPointDraw(HitPoint* hit_point);
+#include "HitPoint.h"
 
 struct Lane {
     HitPoint hit_point;
 
-    NoteList note_list;
+    List note_list;
 
-    EventList event_list;
+    List event_list;
 };
 typedef struct Lane Lane;
 
-void InitLane(Lane* lane, int x, int y, SDL_Scancode key, size_t note_size);
+void InitLane(Lane* lane, int x, int y, SDL_Scancode key);
 void FreeLane(Lane* lane);
-void LaneAddNote(Lane* lane,
+Node* LaneAddNote(Lane* lane,
     NoteType type,
     int start_x, int start_y,
     Uint32 update_time, Uint32 reach_time
+);
+Node* LaneAddEvent(Lane* lane,
+    Uint32 time, Uint32 lasting_time, EventType type, ...
 );
 void LaneHandleKey(Lane* lane, SDL_Event* event);
 void LaneUpdate(Lane* lane);

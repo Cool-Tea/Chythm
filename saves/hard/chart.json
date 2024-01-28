@@ -15,48 +15,79 @@
                 "position": {
                     "x": 400,
                     "y": 600
-                },
-                "note_size": 1
+                }
             },
             {
                 "lane": 1,
                 "position": {
                     "x": 800,
                     "y": 600
-                },
-                "note_size": 0
+                }
             },
             {
                 "lane": 2,
                 "position": {
                     "x": 1200,
                     "y": 600
-                },
-                "note_size": 0
+                }
             },
             {
                 "lane": 3,
                 "position": {
                     "x": 1600,
                     "y": 600
-                },
-                "note_size": 0
+                }
             }
         ],
         "notes": [
             {
                 "type": 1,
-                "lane": 0,
                 "move": [
                     {
+                        "lane": 0,
                         "x": 400,
                         "y": -40,
                         "reach_time": 2000
                     },
                     {
+                        "lane": 0,
                         "x": 400,
                         "y": -40,
+                        "reach_time": 2600
+                    }
+                ]
+            },
+            {
+                "type": 1,
+                "move": [
+                    {
+                        "lane": 1,
+                        "x": 800,
+                        "y": -40,
                         "reach_time": 2500
+                    },
+                    {
+                        "lane": 1,
+                        "x": 800,
+                        "y": -40,
+                        "reach_time": 5500
+                    }
+                ]
+            },
+            {
+                "type": 1,
+                "move": [
+                    {
+                        "lane": 2,
+                        "x": 1200,
+                        "y": -40,
+                        "reach_time": 5500
+                    },
+                    {
+                        "lane": 2,
+                        "x": 1200,
+                        "y": -40,
+                        "reach_time": 6500
                     }
                 ]
             }

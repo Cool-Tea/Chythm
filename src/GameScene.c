@@ -9,14 +9,14 @@ static inline void CompletePath(char* buf, const char* path, const char* file) {
     strcat(buf, file);
 }
 
-static cJSON* OpenJson(const char* chart_path) {
+static cJSON* OpenJson() {
     char* buffer = malloc(1 << 8);
     if (buffer == NULL) {
         fprintf(stderr, "[GameScene]Failed to malloc buffer\n");
         app.is_error = 1;
         return NULL;
     }
-    CompletePath(buffer, chart_path, "chart.json");
+    CompletePath(buffer, game_scene->chart_path, "chart.json");
     FILE* fp = fopen(buffer, "r");
     if (fp == NULL) {
         fprintf(stderr, "[GameScene]Failed to open chart: %s\n", buffer);
@@ -40,12 +40,16 @@ static cJSON* OpenJson(const char* chart_path) {
 
     cJSON* file = cJSON_Parse(buffer);
     free(buffer);
-    return file;
+    cJSON* chart = cJSON_DetachItemFromObject(file, "chart");
+    cJSON_Delete(file);
+    return chart;
 }
 
-static int GetAudio(const char* chart_path, const char* audio_path) {
+static int GetAudio() {
     char buffer[1 << 8];
-    CompletePath(buffer, chart_path, audio_path);
+    cJSON* audio = cJSON_DetachItemFromObject(game_scene->chart, "audio");
+    CompletePath(buffer, game_scene->chart_path, audio->valuestring);
+    cJSON_Delete(audio);
     game_scene->audio = Mix_LoadMUS(buffer);
     if (game_scene->audio == NULL) {
         fprintf(stderr, "[GameScene]Failed to load audio: %s - %s\n", buffer, Mix_GetError());
@@ -56,9 +60,11 @@ static int GetAudio(const char* chart_path, const char* audio_path) {
 }
 
 #if !USE_DEFAULT_BACKGROUND
-static int GetBackground(const char* chart_path, const char* img_path) {
+static int GetBackground() {
     char buffer[1 << 8];
-    CompletePath(buffer, chart_path, img_path);
+    cJSON* background = cJSON_DetachItemFromObject(game_scene->chart, "background");
+    CompletePath(buffer, game_scene->chart_path, background->valuestring);
+    cJSON_Delete(background);
     SDL_LockMutex(app.mutex);
     game_scene->background = IMG_LoadTexture(app.ren, buffer);
     SDL_UnlockMutex(app.mutex);
@@ -76,17 +82,20 @@ static SDL_Scancode AllocateKey(int size, int i) {
     return default_keys[base + i];
 }
 
-static int GetLanes(cJSON* lanes, int size) {
-    game_scene->lane_size = size;
+static int GetLanes() {
+    cJSON* size = cJSON_DetachItemFromObject(game_scene->chart, "lane_size");
+    cJSON* lanes = cJSON_DetachItemFromObject(game_scene->chart, "lanes");
+    game_scene->lane_size = size->valueint;
+    cJSON_Delete(size);
     game_scene->lanes = malloc(game_scene->lane_size * sizeof(Lane));
     if (game_scene->lanes == NULL) {
         fprintf(stderr, "[GameScene]Failed to malloc lanes\n");
         app.is_error = 1;
+        cJSON_Delete(lanes);
         return -1;
     }
-    for (int i = 0; i < game_scene->lane_size; i++) {
-        cJSON* lane = cJSON_GetArrayItem(lanes, i);
-        if (lane == NULL) continue;
+    cJSON* lane = NULL;
+    cJSON_ArrayForEach(lane, lanes) {
         cJSON* lane_index = cJSON_GetObjectItem(lane, "lane");
         cJSON* position = cJSON_GetObjectItem(lane, "position");
         cJSON* x = cJSON_GetObjectItem(position, "x");
@@ -94,68 +103,54 @@ static int GetLanes(cJSON* lanes, int size) {
         cJSON* note_size = cJSON_GetObjectItem(lane, "note_size");
         InitLane(&game_scene->lanes[lane_index->valueint],
             x->valueint, y->valueint,
-            AllocateKey(game_scene->lane_size, lane_index->valueint),
-            note_size->valueint
+            AllocateKey(game_scene->lane_size, lane_index->valueint)
         );
     }
+    cJSON_Delete(lanes);
     return 0;
 }
 
-static void GetNotes(cJSON* notes, int bpm) {
-    int note_size = cJSON_GetArraySize(notes);
-    cJSON* note = NULL;
-    cJSON_ArrayForEach(note, notes) {
+static void GetNotes() {
+    cJSON* bpm = cJSON_GetObjectItem(game_scene->chart, "bpm");
+    cJSON* notes = cJSON_GetObjectItem(game_scene->chart, "notes");
+    /* TODO: more note */
+    for (cJSON* note = notes ? notes->child : NULL; note != NULL; ) {
         cJSON* type = cJSON_GetObjectItem(note, "type");
-        cJSON* lane = cJSON_GetObjectItem(note, "lane");
-        /* TODO: more note */
         cJSON* move = cJSON_GetObjectItem(note, "move");
-        switch (type->valueint) {
-        case SINGLE: {
-            cJSON* start = cJSON_GetArrayItem(move, 0);
+        cJSON* start = NULL;
+        size_t tot = 0;
+        Node* nodes[3] = { NULL };
+        cJSON_ArrayForEach(start, move) {
+            cJSON* reach_time = cJSON_GetObjectItem(start, "reach_time");
+            // check if the note is within preload time
+            if (!tot && app.timer.relative_time + 60000 / bpm->valueint + GAME_SCENE_PRELOAD_OFFSET < reach_time->valueint) return;
+            cJSON* lane = cJSON_GetObjectItem(start, "lane");
             cJSON* start_x = cJSON_GetObjectItem(start, "x");
             cJSON* start_y = cJSON_GetObjectItem(start, "y");
-            cJSON* reach_time = cJSON_GetObjectItem(start, "reach_time");
-            LaneAddNote(&game_scene->lanes[lane->valueint],
+            nodes[tot] = LaneAddNote(&game_scene->lanes[lane->valueint],
                 type->valueint,
                 start_x->valueint, start_y->valueint,
-                reach_time->valueint < 60000 / bpm ? 0 : reach_time->valueint - 60000 / bpm,
+                reach_time->valueint < 60000 / bpm->valueint ? 0 : reach_time->valueint - 60000 / bpm->valueint,
                 reach_time->valueint
             );
-            break;
+            if (tot) NoteLink((Note*)nodes[tot - 1]->value, (Note*)nodes[tot]->value);
+            tot++;
         }
-        case LONG: {
-            for (int i = 0; i < 2; i++) {
-                cJSON* start = cJSON_GetArrayItem(move, i);
-                cJSON* start_x = cJSON_GetObjectItem(start, "x");
-                cJSON* start_y = cJSON_GetObjectItem(start, "y");
-                cJSON* reach_time = cJSON_GetObjectItem(start, "reach_time");
-                LaneAddNote(&game_scene->lanes[lane->valueint],
-                    type->valueint,
-                    start_x->valueint, start_y->valueint,
-                    reach_time->valueint < 60000 / bpm ? 0 : reach_time->valueint - 60000 / bpm,
-                    reach_time->valueint
-                );
-            }
-            NoteLink(
-                NoteListBack(&game_scene->lanes[lane->valueint].note_list) - 2,
-                NoteListBack(&game_scene->lanes[lane->valueint].note_list) - 1
-            );
-            break;
-        }
-        default:
-            break;
-        }
+        cJSON* next = note->next;
+        note = cJSON_DetachItemViaPointer(notes, note);
+        cJSON_Delete(note);
+        note = next;
     }
 }
 
-static void GetEvents(cJSON* events) {
-    InitEventList(&game_scene->event_list);
-    int event_size = cJSON_GetArraySize(events);
-    for (int i = 0; i < event_size; i++) {
-        cJSON* event = cJSON_GetArrayItem(events, i);
+static void GetEvents() {
+    cJSON* events = cJSON_GetObjectItem(game_scene->chart, "events");
+    for (cJSON* event = events ? events->child : NULL; event != NULL; ) {
+        cJSON* time = cJSON_GetObjectItem(event, "time");
+        // check if the event is within preload time
+        if (app.timer.relative_time + GAME_SCENE_PRELOAD_OFFSET < time->valueint) return;
         cJSON* object = cJSON_GetObjectItem(event, "object");
         cJSON* type = cJSON_GetObjectItem(event, "type");
-        cJSON* time = cJSON_GetObjectItem(event, "time");
         cJSON* lasting_time = cJSON_GetObjectItem(event, "lasting_time");
         cJSON* data = cJSON_GetObjectItem(event, "data");
         switch (object->valueint) {
@@ -169,8 +164,8 @@ static void GetEvents(cJSON* events) {
                 size_t len = strlen(text->valuestring);
                 char* txt = malloc(len + 1);
                 strcpy(txt, text->valuestring);
-                EventListEmplaceBack(&game_scene->event_list,
-                    time->valueint, lasting_time->valueint, TEXT, x->valueint, y->valueint, txt);
+                Event* new_event = CreateEvent(time->valueint, lasting_time->valueint, TEXT, x->valueint, y->valueint, txt);
+                ListEmplaceTail(&game_scene->event_list, new_event);
                 break;
             }
             default:
@@ -182,21 +177,13 @@ static void GetEvents(cJSON* events) {
             /* TODO: More Type*/
             cJSON* lane = cJSON_GetObjectItem(event, "lane");
             switch (type->valueint) {
-            case MOVE: {
-                cJSON* x = cJSON_GetObjectItem(data, "x");
-                cJSON* y = cJSON_GetObjectItem(data, "y");
-                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
-                    time->valueint, lasting_time->valueint, MOVE, x->valueint, y->valueint);
-                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
-                    time->valueint + lasting_time->valueint, 1000, STOP, NULL);
-                break;
-            }
+            case MOVE:
             case MOVETO: {
                 cJSON* x = cJSON_GetObjectItem(data, "x");
                 cJSON* y = cJSON_GetObjectItem(data, "y");
-                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
-                    time->valueint, lasting_time->valueint, MOVETO, x->valueint, y->valueint);
-                EventListEmplaceBack(&game_scene->lanes[lane->valueint].event_list,
+                LaneAddEvent(&game_scene->lanes[lane->valueint],
+                    time->valueint, lasting_time->valueint, type->valueint, x->valueint, y->valueint);
+                LaneAddEvent(&game_scene->lanes[lane->valueint],
                     time->valueint + lasting_time->valueint, 1000, STOP, NULL);
                 break;
             }
@@ -208,6 +195,10 @@ static void GetEvents(cJSON* events) {
         default:
             break;
         }
+        cJSON* next = event->next;
+        event = cJSON_DetachItemViaPointer(events, event);
+        cJSON_Delete(event);
+        event = next;
     }
 }
 
@@ -240,7 +231,12 @@ GameScene* CreateGameScene(const char* chart_path) {
         return game_scene;
     }
     game_scene->is_started = 0;
+    SDL_LockMutex(app.mutex);
+    app.timer.base_time = app.timer.real_time = SDL_GetTicks();
+    app.timer.relative_time = 0;
+    SDL_UnlockMutex(app.mutex);
     game_scene->chart_path = chart_path;
+    game_scene->chart = NULL;
 
 #if !USE_DEFAULT_BACKGROUND
     game_scene->background = NULL;
@@ -249,43 +245,29 @@ GameScene* CreateGameScene(const char* chart_path) {
     game_scene->audio = NULL;
     game_scene->lanes = NULL;
 
-    cJSON* file = OpenJson(chart_path);
-    if (file == NULL) {
+    game_scene->chart = OpenJson(game_scene->chart_path);
+    if (game_scene->chart == NULL) {
         return game_scene;
     }
-    cJSON* chart = cJSON_GetObjectItem(file, "chart");
 
-    cJSON* audio = cJSON_GetObjectItem(chart, "audio");
-    if (GetAudio(chart_path, audio->valuestring) < 0) {
-        cJSON_Delete(file);
+    if (GetAudio() < 0) {
         return game_scene;
     }
 
 #if !USE_DEFAULT_BACKGROUND
-    cJSON* background = cJSON_GetObjectItem(chart, "background");
-    if (GetBackground(chart_path, background->valuestring) < 0) {
-        cJSON_Delete(file);
+    if (GetBackground() < 0) {
         return game_scene;
     }
 #endif
 
-    cJSON* lane_size = cJSON_GetObjectItem(chart, "lane_size");
-    cJSON* lanes = cJSON_GetObjectItem(chart, "lanes");
-    if (GetLanes(lanes, lane_size->valueint) < 0) {
-        cJSON_Delete(file);
+    if (GetLanes() < 0) {
         return game_scene;
     }
-
-    cJSON* notes = cJSON_GetObjectItem(chart, "notes");
-    cJSON* bpm = cJSON_GetObjectItem(chart, "bpm");
-    GetNotes(notes, bpm->valueint);
-
-    cJSON* events = cJSON_GetObjectItem(chart, "events");
-    GetEvents(events);
-
-    cJSON_Delete(file);
-
-    GetScore(chart_path);
+    GetNotes();
+    InitList(&game_scene->event_list);
+    ListSetFreeMethod(&game_scene->event_list, (FreeFunc)DestroyEvent);
+    GetEvents();
+    GetScore(game_scene->chart_path);
     InitUpdateData();
     return game_scene;
 }
@@ -307,17 +289,18 @@ void DestroyGameScene() {
 #endif
 
         if (game_scene->audio != NULL) Mix_FreeMusic(game_scene->audio);
-        FreeEventList(&game_scene->event_list);
+        FreeList(&game_scene->event_list);
         for (size_t i = 0; i < game_scene->lane_size; i++) {
             FreeLane(&game_scene->lanes[i]);
         }
         if (game_scene->lanes != NULL) free(game_scene->lanes);
+        cJSON_Delete(game_scene->chart);
         free(game_scene);
         game_scene = NULL;
     }
 }
 
-void GameSceneReset() {
+void GameSceneReload() {
     const char* chart_path = game_scene->chart_path;
     DestroyGameScene();
     app.is_loaded = 0;
@@ -424,9 +407,18 @@ void GameSceneHandleKey(SDL_Event* event) {
     }
 }
 
-static void GameSceneHandleEvent() {
-    /* TODO: tackle event */
-    EventListUpdate(&game_scene->event_list);
+static void GameSceneUpdateEvent() {
+    Node* ptr = NULL;
+    ListForEach(ptr, &game_scene->event_list) {
+        Event* event = ptr->value;
+        if (app.timer.relative_time < event->time) break;
+        else if (app.timer.relative_time < event->time + event->lasting_time) {
+            EventUpdate(event);
+        }
+        else {
+            ListErase(&game_scene->event_list, ptr);
+        }
+    }
 }
 
 void GameSceneUpdate() {
@@ -435,7 +427,9 @@ void GameSceneUpdate() {
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneUpdate(&game_scene->lanes[i]);
     }
-    GameSceneHandleEvent();
+    GameSceneUpdateEvent();
+    GetNotes();
+    GetEvents();
 }
 
 static void GameSceneDrawTime() {
@@ -496,6 +490,14 @@ static void GameSceneDrawPrompt() {
     DrawText(rect, prompt, default_colors[0]);
 }
 
+static void GameSceneDrawEvent() {
+    Node* ptr = NULL;
+    ListForEach(ptr, &game_scene->event_list) {
+        Event* event = ptr->value;
+        EventDraw(event);
+    }
+}
+
 void GameSceneDraw() {
 #if USE_DEFAULT_BACKGROUND
     DrawDefaultBackgroundPure();
@@ -517,5 +519,5 @@ void GameSceneDraw() {
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneDraw(&game_scene->lanes[i]);
     }
-    EventListDraw(&game_scene->event_list);
+    GameSceneDrawEvent();
 }

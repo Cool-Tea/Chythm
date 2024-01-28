@@ -1,1 +1,1 @@
-HistoryBestScore = 343600
+HistoryBestScore = 366600

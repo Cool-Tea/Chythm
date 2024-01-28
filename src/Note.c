@@ -1,12 +1,53 @@
 #include "Note.h"
 
+Note* CreateNote(
+    NoteType type,
+    int update_x, int update_y,
+    Uint32 update_time, Uint32 reach_time
+) {
+    Note* note = malloc(sizeof(Note));
+    if (note == NULL) {
+        fprintf(stderr, "[Note]Failed to malloc note\n");
+        app.is_error = 1;
+        return note;
+    }
+    note->type = type;
+    note->linked_notes[0] = note->linked_notes[1] = NULL;
+    note->cur_x = note->update_x = update_x;
+    note->cur_y = note->update_y = update_y;
+    note->update_time = update_time;
+    note->reach_time = reach_time;
+    note->update_enable = 1;
+    note->is_hit = note->is_missed = 0;
+    switch (type) {
+    case SINGLE: {
+        InitEffect(&note->effect, MUZZLE, 1);
+        break;
+    }
+    case LONG: {
+        InitEffect(&note->effect, STAR, 1);
+        break;
+    }
+    default:
+        break;
+    }
+    note->effect.is_active = 1;
+    return note;
+}
+
+void DestroyNote(Note* note) {
+    if (note == NULL) return;
+    FreeEffect(&note->effect);
+    free(note);
+}
+
 void NoteLink(Note* lnote, Note* rnote) {
     lnote->linked_notes[lnote->linked_notes[0] != NULL] = rnote;
     rnote->linked_notes[rnote->linked_notes[0] != NULL] = lnote;
 }
 
 void NoteUpdate(Note* note, int target_x, int target_y) {
-    if (note->update_enable == 0) return;
+    if (!note->update_enable || app.timer.relative_time < note->update_time) return;
     note->cur_x =
         (target_x - note->update_x)
         * (signed)(app.timer.relative_time - note->update_time)
@@ -74,121 +115,5 @@ void NoteDraw(Note* note) {
     }
     default:
         break;
-    }
-}
-
-void InitNoteList(NoteList* note_list, size_t note_size) {
-    note_list->size = 0;
-    note_list->capacity = note_size ? note_size : NOTE_LIST_INIT_CAPACITY;
-    note_list->notes = malloc(note_list->capacity * sizeof(Note));
-    if (note_list->notes == NULL) {
-        fprintf(stderr, "[NoteList]Failed to malloc note list\n");
-        app.is_error = 1;
-    }
-    note_list->head = note_list->tail = note_list->notes;
-}
-
-void FreeNoteList(NoteList* note_list) {
-    for (size_t i = 0; i < note_list->size; i++) {
-        FreeEffect(&note_list->notes[i].effect);
-    }
-    free(note_list->notes);
-}
-
-void NoteListEmplaceBack(NoteList* note_list,
-    NoteType type,
-    int start_x, int start_y,
-    Uint32 update_time, Uint32 reach_time
-) {
-    if (note_list->size >= note_list->capacity) {
-        note_list->capacity <<= 1;
-        note_list->head = note_list->tail = note_list->notes = realloc(note_list->notes, note_list->capacity * sizeof(Note));
-    }
-    note_list->notes[note_list->size] = (Note){
-        .type = type,
-        .linked_notes = { NULL, NULL },
-        .cur_x = start_x,
-        .cur_y = start_y,
-        .update_enable = 1,
-        .update_x = start_x,
-        .update_y = start_y,
-        .update_time = update_time,
-        .reach_time = reach_time,
-        .is_missed = 0,
-        .is_hit = 0
-    };
-    switch (type) {
-    case SINGLE: {
-        InitEffect(&note_list->notes[note_list->size].effect, MUZZLE, 1);
-        break;
-    }
-    case LONG: {
-        InitEffect(&note_list->notes[note_list->size].effect, STAR, 1);
-        break;
-    }
-    default:
-        break;
-    }
-    note_list->size++;
-}
-
-static void NoteListPop(NoteList* note_list) {
-    note_list->head->effect.is_active = 0;
-    note_list->head++;
-}
-
-static void NoteListPush(NoteList* note_list) {
-    note_list->tail->effect.is_active = 1;
-    note_list->tail++;
-}
-
-static bool isNoteListTailEnd(NoteList* note_list) {
-    return note_list->tail - note_list->notes >= note_list->size;
-}
-
-void NoteListUpdate(NoteList* note_list, int target_x, int target_y) {
-    NoteListFor(note_list) {
-        if (ptr->reach_time > app.timer.relative_time) break;
-        else if (ptr->reach_time + 100 <= app.timer.relative_time) continue;
-        ptr->update_enable = 0;
-    }
-    while (note_list->head < note_list->tail && note_list->head->reach_time + 100 <= app.timer.relative_time) {
-        switch (note_list->head->type) {
-        case SINGLE: {
-            if (note_list->head->is_hit == 0) {
-                *update_data.combo = 0;
-                update_data.hit_status = 2;
-            }
-            NoteListPop(note_list);
-            break;
-        }
-        case LONG: {
-            if (note_list->head->is_hit == 0) {
-                *update_data.combo = 0;
-                update_data.hit_status = 2;
-            }
-            if (note_list->head->linked_notes[0]->reach_time <= app.timer.relative_time) {
-                NoteListPop(note_list);
-                NoteListPop(note_list);
-            }
-            else goto out; // jump out of this loop (out is exactly below this loop)
-            break;
-        }
-        default:
-            break;
-        }
-    }
-out:
-    while (!isNoteListTailEnd(note_list) && note_list->tail->update_time <= app.timer.relative_time) {
-        NoteListPush(note_list);
-    }
-    NoteListFor(note_list) {
-        NoteUpdate(ptr, target_x, target_y);
-    }
-}
-
-void NoteListDraw(NoteList* note_list) {
-    NoteListFor(note_list) {
-        NoteDraw(ptr);
     }
 }

@@ -11,36 +11,15 @@ struct Event {
     void* data;
 };
 typedef struct Event Event;
-static void InitTextEvent(Event* event, va_list* args);
-static void InitMoveEvent(Event* event, va_list* args);
-static void InitStopEvent(Event* event);
-static void InitMoveToEvent(Event* event, va_list* args);
-void FreeEvent(Event* event);
-void EventUpdate(Event* event);
-static void TextEventDraw(Event* event);
-void EventDraw(Event* event);
 
-/* A CPP-vector-like array, designed for this project */
-struct EventList {
-    size_t size;
-    size_t capacity;
-    Event* events; // array
-    Event* head; // pointer
-    Event* tail;
-};
-typedef struct EventList EventList;
-
-#define EventListFor(event_list) for (Event* ptr = (event_list)->head; ptr < (event_list)->tail; ptr++)
-
-void InitEventList(EventList* event_list);
-void FreeEventList(EventList* event_list);
-void EventListEmplaceBack(EventList* event_list,
+Event* CreateEvent(
     Uint32 time, Uint32 lasting_time, EventType type, ...
 );
-void EventListUpdate(EventList* event_list);
-void EventListDraw(EventList* event_list);
-static void EventListPop(EventList* event_list);
-static void EventListPush(EventList* event_list);
-static bool isEventListTailEnd(EventList* event_list);
+Event* CreateEventVA(
+    Uint32 time, Uint32 lasting_time, EventType type, va_list* args
+);
+void DestroyEvent(Event* event);
+void EventUpdate(Event* event);
+void EventDraw(Event* event);
 
 #endif

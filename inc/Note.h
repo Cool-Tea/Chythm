@@ -30,31 +30,14 @@ struct Note {
 };
 typedef struct Note Note;
 
+Note* CreateNote(
+    NoteType type,
+    int update_x, int update_y,
+    Uint32 update_time, Uint32 reach_time
+);
+void DestroyNote(Note* note);
 void NoteLink(Note* lnote, Note* rnote);
 void NoteUpdate(Note* note, int target_x, int target_y);
 void NoteDraw(Note* note);
-
-/* A CPP-vector-like array, designed specially for this project*/
-struct NoteList {
-    size_t size;
-    size_t capacity;
-    Note* notes;
-    Note* head;
-    Note* tail;
-};
-typedef struct NoteList NoteList;
-
-#define NoteListFor(note_list) for (Note* ptr = (note_list)->head; ptr < (note_list)->tail; ptr++)
-#define NoteListBack(note_list) ((note_list)->notes + (note_list)->size)
-
-void InitNoteList(NoteList* note_list, size_t note_size);
-void FreeNoteList(NoteList* note_list);
-void NoteListEmplaceBack(NoteList* note_list,
-    NoteType type,
-    int start_x, int start_y,
-    Uint32 update_time, Uint32 reach_time
-);
-void NoteListUpdate(NoteList* note_list, int target_x, int target_y);
-void NoteListDraw(NoteList* note_list);
 
 #endif

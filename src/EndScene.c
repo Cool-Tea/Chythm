@@ -152,7 +152,7 @@ void EndSceneDraw() {
 }
 
 static void TryAgain() {
-    GameSceneReset();
+    GameSceneReload();
 }
 static void BackToSelect() {
     DestroyGameScene();

@@ -105,6 +105,7 @@ typedef enum EventType EventType;
 extern const SDL_Scancode default_keys[];
 
 /* Game Scene */
+#define GAME_SCENE_PRELOAD_OFFSET 1000
 #define GAME_SCENE_TEXT_PERSISTENCE 2000
 #define GAME_SCENE_LETTER_HEIGHT 40
 #define GAME_SCENE_LETTER_WIDTH 20

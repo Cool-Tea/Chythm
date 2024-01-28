@@ -62,8 +62,7 @@ chart \
             "position": {
                 "x": 400,
                 "y": 600
-            },
-            "note_size": 10
+            }
         },
         ...
     ]
@@ -76,7 +75,6 @@ chart \
 - position：判定点初始位置信息
 - x：判定点的x坐标
 - y：判定点的y坐标
-- note_size：判定点的总判定音符数量，**必须大于等于判定点的实际音符数量**，否则UB
 
 ## Note
 
@@ -88,9 +86,9 @@ chart \
     "notes": [
         {
             "type": 0, // note的类型，目前有SINGLE与LONG
-            "lane": 0, // 判定点的编号，从0开始
             "move": [
                 {
+                    "lane": 0, // 判定点的编号，从0开始
                     "x": 400,
                     "y": -40,
                     "reach_time": 1000
@@ -104,8 +102,8 @@ chart \
 ```
 
 - type：note的类型，目前有`SINGLE(0)`、`LONG(1)`
-- lane：note对应的判定点
 - move：该note的移动信息
+- lane：note对应的判定点
 - x：note的初始x坐标
 - y：note的初始y坐标
 - reach_time：note到达判定点的时间
@@ -129,6 +127,7 @@ chart \
         {
             "object": 0, // event操作的对象，目前有GameScene与Lane
             "type": 16, // event类型
+            "lane": 0, // （可选）当object为Lane的时候需要此条
             "time": 2000, // event开始时间
             "lasting_time": 4000, // event持续时间
             "data": {
@@ -142,6 +141,7 @@ chart \
 
 - object：event操作的对象，目前有`游戏界面(0)`与`判定点(1)`
 - type：event的类型：`保留类型(0~15)`，`游戏界面(16~31)`：[`输出文本(16)`]，`判定点(32~47)`：[`给予速度(32)`, `移动到(33)`, `停止运动(34)`]
+- lane：event的作用判定点编号（从0开始）
 - time：event的开始时间
 - lasting_time：event的持续时间
 - data：包含用于event的数据

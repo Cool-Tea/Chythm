@@ -1,95 +1,39 @@
 #include "Lane.h"
 
-void InitHitPoint(HitPoint* hit_point, int x, int y, SDL_Scancode key) {
-    hit_point->is_down = 0;
-    hit_point->cur_x = x, hit_point->cur_y = y;
-
-    hit_point->key = key;
-    hit_point->speed.x = hit_point->speed.y = 0;
-    hit_point->speed.move_enable = 0;
-
-    hit_point->dest.update_x = x, hit_point->dest.update_y = y;
-    hit_point->dest.update_time = hit_point->dest.reach_time = 0;
-    hit_point->dest.move_enable = 0;
-
-    InitEffect(&hit_point->down_effect, CIRCLE, 1);
-    InitEffect(&hit_point->hit_effect, MAGIC, 0);
-}
-
-void FreeHitPoint(HitPoint* hit_point) {
-    FreeEffect(&hit_point->down_effect);
-}
-
-static void HitPointUpdateSpeed(HitPoint* hit_point) {
-    hit_point->cur_x += hit_point->speed.x;
-    hit_point->cur_y += hit_point->speed.y;
-}
-
-static void HitPointUpdateDest(HitPoint* hit_point) {
-    hit_point->cur_x =
-        (hit_point->dest.reach_x - hit_point->dest.update_x)
-        * (signed)(app.timer.relative_time - hit_point->dest.update_time)
-        / (signed)(hit_point->dest.reach_time - hit_point->dest.update_time)
-        + hit_point->dest.update_x;
-    hit_point->cur_y =
-        (hit_point->dest.reach_y - hit_point->dest.update_y)
-        * (signed)(app.timer.relative_time - hit_point->dest.update_time)
-        / (signed)(hit_point->dest.reach_time - hit_point->dest.update_time)
-        + hit_point->dest.update_y;
-}
-
-void HitPointUpdate(HitPoint* hit_point) {
-    if (hit_point->speed.move_enable) {
-        HitPointUpdateSpeed(hit_point);
-    }
-    if (hit_point->dest.move_enable) {
-        HitPointUpdateDest(hit_point);
-    }
-    EffectUpdate(&hit_point->down_effect);
-    EffectUpdate(&hit_point->hit_effect);
-}
-
-void HitPointDraw(HitPoint* hit_point) {
-    static SDL_Rect rect
-#if !AUTO_RESOLUTION
-        = { .h = HIT_POINT_RADIUS << 1, .w = HIT_POINT_RADIUS << 1 }
-#endif
-    ;
-
-    EffectDraw(&hit_point->down_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 20, 0.0);
-
-    rect.x = hit_point->cur_x - HIT_POINT_RADIUS, rect.y = hit_point->cur_y - HIT_POINT_RADIUS;
-
-#if AUTO_RESOLUTION
-    rect.h = HIT_POINT_RADIUS << 1, rect.w = HIT_POINT_RADIUS << 1;
-    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
-    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
-#endif
-
-    SDL_RenderCopy(app.ren, assets.hit_points[hit_point->is_down], NULL, &rect);
-
-    EffectDraw(&hit_point->hit_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 40, 0.0);
-}
-
-void InitLane(Lane* lane, int x, int y, SDL_Scancode key, size_t note_size) {
+void InitLane(Lane* lane, int x, int y, SDL_Scancode key) {
     InitHitPoint(&lane->hit_point, x, y, key);
-    InitNoteList(&lane->note_list, note_size);
-    InitEventList(&lane->event_list);
+    InitList(&lane->note_list);
+    ListSetFreeMethod(&lane->note_list, (FreeFunc)DestroyNote);
+    InitList(&lane->event_list);
+    ListSetFreeMethod(&lane->event_list, (FreeFunc)DestroyEvent);
     if (app.is_error) fprintf(stderr, "[Lane]Failed to init lane\n");
 }
 
 void FreeLane(Lane* lane) {
     FreeHitPoint(&lane->hit_point);
-    FreeNoteList(&lane->note_list);
-    FreeEventList(&lane->event_list);
+    FreeList(&lane->note_list);
+    FreeList(&lane->event_list);
 }
 
-void LaneAddNote(Lane* lane,
+Node* LaneAddNote(Lane* lane,
     NoteType type,
     int start_x, int start_y,
     Uint32 update_time, Uint32 reach_time
 ) {
-    NoteListEmplaceBack(&lane->note_list, type, start_x, start_y, update_time, reach_time);
+    Note* note = CreateNote(type, start_x, start_y, update_time, reach_time);
+    if (note == NULL) return NULL;
+    return ListEmplaceTail(&lane->note_list, note);
+}
+
+Node* LaneAddEvent(Lane* lane,
+    Uint32 time, Uint32 lasting_time, EventType type, ...
+) {
+    va_list args;
+    va_start(args, type);
+    Event* event = CreateEventVA(time, lasting_time, type, &args);
+    va_end(args);
+    if (event == NULL) return NULL;
+    return ListEmplaceTail(&lane->event_list, event);
 }
 
 static int isBeyondHit(const HitPoint* hit_point, const Note* note) {
@@ -117,15 +61,17 @@ static void LaneHandleKeyDown(Lane* lane, SDL_Scancode key) {
     if (key != lane->hit_point.key) return;
     lane->hit_point.is_down = 1;
     lane->hit_point.down_effect.is_active = 1;
-    NoteListFor(&lane->note_list) {
-        if (isBeyondHit(&lane->hit_point, ptr)) break;
-        if (ptr->is_missed) continue;
-        if (isPerfectHit(&lane->hit_point, ptr)) {
+    Node* ptr = NULL;
+    ListForEach(ptr, &lane->note_list) {
+        Note* note = ptr->value;
+        if (isBeyondHit(&lane->hit_point, note)) break;
+        if (note->is_missed) continue;
+        if (isPerfectHit(&lane->hit_point, note)) {
             lane->hit_point.hit_effect.is_active = 1;
             update_data.hit_status = 0;
-            ptr->is_hit = 1;
+            note->is_hit = 1;
             (*update_data.combo)++;
-            switch (ptr->type) {
+            switch (note->type) {
             case SINGLE: {
                 *update_data.score += PERFECT_HIT_SCORE;
                 *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
@@ -134,19 +80,19 @@ static void LaneHandleKeyDown(Lane* lane, SDL_Scancode key) {
             }
             case LONG: {
                 *update_data.score += LONG_HIT_SCORE;
-                ptr->linked_notes[0]->is_hit = 1;
+                note->linked_notes[0]->is_hit = 1;
                 break;
             }
             default:
                 break;
             }
         }
-        else if (isGoodHit(&lane->hit_point, ptr)) {
+        else if (isGoodHit(&lane->hit_point, note)) {
             lane->hit_point.hit_effect.is_active = 1;
             update_data.hit_status = 1;
-            ptr->is_hit = 1;
+            note->is_hit = 1;
             (*update_data.combo)++;
-            switch (ptr->type) {
+            switch (note->type) {
             case SINGLE: {
                 *update_data.score += GOOD_HIT_SCORE;
                 *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
@@ -155,17 +101,17 @@ static void LaneHandleKeyDown(Lane* lane, SDL_Scancode key) {
             }
             case LONG: {
                 *update_data.score += LONG_HIT_SCORE;
-                ptr->linked_notes[0]->is_hit = 1;
+                note->linked_notes[0]->is_hit = 1;
                 break;
             }
             default:
                 break;
             }
         }
-        else if (!ptr->is_hit) {
+        else if (!note->is_hit) {
             lane->hit_point.hit_effect.is_active = 0;
             update_data.hit_status = 2;
-            ptr->is_missed = 1;
+            note->is_missed = 1;
             *update_data.combo = 0;
         }
     }
@@ -176,12 +122,14 @@ static void LaneHandleKeyUp(Lane* lane, SDL_Scancode key) {
     lane->hit_point.is_down = 0;
     lane->hit_point.down_effect.is_active = 0;
     /* TODO: better check */
-    NoteListFor(&lane->note_list) {
-        if (ptr->type != LONG || ptr->is_missed || !ptr->is_hit) break;
-        ptr->is_missed = 1;
-        ptr->is_hit = 0;
-        ptr->linked_notes[0]->is_missed = 1;
-        ptr->linked_notes[0]->is_hit = 0;
+    Node* ptr = NULL;
+    ListForEach(ptr, &lane->note_list) {
+        Note* note = ptr->value;
+        if (note->type != LONG || note->is_missed || !note->is_hit) break;
+        note->is_missed = 1;
+        note->is_hit = 0;
+        note->linked_notes[0]->is_missed = 1;
+        note->linked_notes[0]->is_hit = 0;
         update_data.hit_status = 2;
         *update_data.combo = 0;
     }
@@ -197,12 +145,14 @@ void LaneHandleKey(Lane* lane, SDL_Event* event) {
 }
 
 static void LaneHandleEventMove(HitPoint* hit_point, const Event* event) {
+    if (!hit_point->speed.move_enable) return;
     hit_point->speed.x = *((int*)event->data);
     hit_point->speed.y = *((int*)event->data + 1);
     hit_point->speed.move_enable = 1;
 }
 
 static void LaneHandleEventMoveTo(HitPoint* hit_point, const Event* event) {
+    if (!hit_point->dest.move_enable) return;
     hit_point->dest.update_time = event->time;
     hit_point->dest.reach_time = event->time + event->lasting_time;
     hit_point->dest.update_x = hit_point->cur_x;
@@ -223,41 +173,99 @@ static void LaneHandleEventStop(HitPoint* hit_point) {
     hit_point->dest.move_enable = 0;
 }
 
-static void LaneHandleEvent(Lane* lane) {
-    /* TODO: event tackle */
-    EventListFor(&lane->event_list) {
-        switch (ptr->type) {
-        case MOVE: {
-            if (lane->hit_point.speed.move_enable == 0) {
-                LaneHandleEventMove(&lane->hit_point, ptr);
+static void LaneUpdateEvents(Lane* lane) {
+    Node* ptr = NULL;
+    ListForEach(ptr, &lane->event_list) {
+        Event* event = ptr->value;
+        if (app.timer.relative_time < event->time) break;
+        else if (app.timer.relative_time < event->time + event->lasting_time) {
+            switch (event->type) {
+            case MOVE: {
+                LaneHandleEventMove(&lane->hit_point, event);
+                break;
             }
-            break;
-        }
-        case MOVETO: {
-            if (lane->hit_point.dest.move_enable == 0) {
-                LaneHandleEventMoveTo(&lane->hit_point, ptr);
+            case MOVETO: {
+                LaneHandleEventMoveTo(&lane->hit_point, event);
+                break;
             }
-            break;
+            case STOP: {
+                LaneHandleEventStop(&lane->hit_point);
+                break;
+            }
+            default:
+                break;
+            }
+            EventUpdate(event);
         }
-        case STOP: {
-            LaneHandleEventStop(&lane->hit_point);
-            break;
-        }
-        default:
-            break;
+        else {
+            ListErase(&lane->event_list, ptr);
         }
     }
-    EventListUpdate(&lane->event_list);
+}
+
+static void LaneUpdateNotes(Lane* lane) {
+    if (isListEmpty(&lane->note_list)) return;
+    Node* ptr = NULL;
+    ListForEach(ptr, &lane->note_list) {
+        Note* note = ptr->value;
+        // check Long notes and set inactive notes between reach time and reach time plus 100
+        if (app.timer.relative_time < note->reach_time) break;
+        else if (app.timer.relative_time < note->reach_time + 100) note->update_enable = 0;
+        else {
+            // check whether the note should be destroyed
+            switch (note->type) {
+            case SINGLE: {
+                if (!note->is_hit) {
+                    *update_data.combo = 0;
+                    update_data.hit_status = 2;
+                }
+                ListErase(&lane->note_list, ptr);
+                break;
+            }
+            case LONG: {
+                if (!note->is_hit) {
+                    *update_data.combo = 0;
+                    update_data.hit_status = 2;
+                }
+                if (note->linked_notes[0]->reach_time + 100 < app.timer.relative_time) {
+                    note->linked_notes[0]->linked_notes[0] = note->linked_notes[0];
+                    ListErase(&lane->note_list, ptr);
+                }
+                break;
+            }
+            default:
+                break;
+            }
+        }
+    }
+    ListForEach(ptr, &lane->note_list) {
+        Note* note = ptr->value;
+        NoteUpdate(note, lane->hit_point.cur_x, lane->hit_point.cur_y);
+    }
 }
 
 void LaneUpdate(Lane* lane) {
-    LaneHandleEvent(lane);
-    NoteListUpdate(&lane->note_list, lane->hit_point.cur_x, lane->hit_point.cur_y);
+    LaneUpdateEvents(lane);
+    LaneUpdateNotes(lane);
     HitPointUpdate(&lane->hit_point);
 }
 
+static void LaneDrawNotes(Lane* lane) {
+    Node* ptr = NULL;
+    ListForEach(ptr, &lane->note_list) {
+        NoteDraw(ptr->value);
+    }
+}
+
+static void LaneDrawEvents(Lane* lane) {
+    Node* ptr = NULL;
+    ListForEach(ptr, &lane->event_list) {
+        EventDraw(ptr->value);
+    }
+}
+
 void LaneDraw(Lane* lane) {
-    NoteListDraw(&lane->note_list);
+    LaneDrawNotes(lane);
     HitPointDraw(&lane->hit_point);
-    EventListDraw(&lane->event_list);
+    LaneDrawEvents(lane);
 }
