@@ -105,6 +105,7 @@ static void TextEventDraw(Event* event) {
 }
 
 void EventDraw(Event* event) {
+    if (app.timer.relative_time < event->time) return;
     switch (event->type) {
     case TEXT: {
         TextEventDraw(event);

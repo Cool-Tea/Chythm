@@ -12,6 +12,12 @@
 // #define BACKGROUND "../assets/images/pure.png"
 #define FONT "../assets/fonts/font.TTF"
 #define STEP_INTERVAL 0.5 // second
+#define MAX_KEY_NUM 8
+
+typedef enum NoteType {
+    SINGLE = 0,
+    LONG
+} NoteType;
 
 typedef struct Application {
     SDL_Window* win;
@@ -26,23 +32,27 @@ typedef struct Application {
 
     cJSON* json;
     cJSON* notes;
-    enum { SINGLE = 0, LONG } cur_mode;
-    Uint8 lane_is_down[4];
-    Uint32 lane_time[4];
-    size_t lane_note_size[4];
+    size_t lane_size;
+    size_t* notes_size;
+    Uint8* down_states;
+    Uint32* times;
 } Application;
 
 Application app;
-const char* mode_text[2] = {
-    "Single", "Long"
-};
-const int note_x[4] = {
-    400, 800, 1200, 1600
+const SDL_Scancode default_keys[MAX_KEY_NUM] = {
+    SDL_SCANCODE_S,
+    SDL_SCANCODE_D,
+    SDL_SCANCODE_F,
+    SDL_SCANCODE_G,
+    SDL_SCANCODE_H,
+    SDL_SCANCODE_J,
+    SDL_SCANCODE_K,
+    SDL_SCANCODE_L
 };
 
-void InitEditor(char* audio_path);
+void InitEditor(size_t lane_size, char* audio_path);
 void QuitEditor();
-void InitApplication(char* audio_path);
+void InitApplication(size_t lane_size, char* audio_path);
 void FreeApplication();
 void ApplicationStart();
 void AddNote(cJSON* notes, int type, int lane);

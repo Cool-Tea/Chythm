@@ -174,8 +174,8 @@ static void LaneHandleEventStop(HitPoint* hit_point) {
 }
 
 static void LaneUpdateEvents(Lane* lane) {
-    Node* ptr = NULL;
-    ListForEach(ptr, &lane->event_list) {
+    for (Node* ptr = lane->event_list.head, *next = NULL; ptr != NULL; ptr = next) {
+        next = ptr->next;
         Event* event = ptr->value;
         if (app.timer.relative_time < event->time) break;
         else if (app.timer.relative_time < event->time + event->lasting_time) {
@@ -205,8 +205,8 @@ static void LaneUpdateEvents(Lane* lane) {
 
 static void LaneUpdateNotes(Lane* lane) {
     if (isListEmpty(&lane->note_list)) return;
-    Node* ptr = NULL;
-    ListForEach(ptr, &lane->note_list) {
+    for (Node* ptr = lane->note_list.head, *next = NULL; ptr != NULL; ptr = next) {
+        next = ptr->next;
         Note* note = ptr->value;
         // check Long notes and set inactive notes between reach time and reach time plus 100
         if (app.timer.relative_time < note->reach_time) break;
@@ -238,6 +238,7 @@ static void LaneUpdateNotes(Lane* lane) {
             }
         }
     }
+    Node* ptr = NULL;
     ListForEach(ptr, &lane->note_list) {
         Note* note = ptr->value;
         NoteUpdate(note, lane->hit_point.cur_x, lane->hit_point.cur_y);

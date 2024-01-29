@@ -112,6 +112,10 @@ void ApplicationStop() {
 void ApplicationHandleKey() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
+        if (e.type == SDL_QUIT) {
+            app.is_running = 0;
+            return;
+        }
         switch (app.cur_scene) {
         case MENU: {
             MenuSceneHandleKey(&e);

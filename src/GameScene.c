@@ -78,7 +78,7 @@ static int GetBackground() {
 #endif
 
 static SDL_Scancode AllocateKey(int size, int i) {
-    int base = KEY_NUM / 2 - size / 2;
+    int base = (KEY_NUM - size) >> 1;
     return default_keys[base + i];
 }
 
@@ -114,12 +114,13 @@ static void GetNotes() {
     cJSON* bpm = cJSON_GetObjectItem(game_scene->chart, "bpm");
     cJSON* notes = cJSON_GetObjectItem(game_scene->chart, "notes");
     /* TODO: more note */
-    for (cJSON* note = notes ? notes->child : NULL; note != NULL; ) {
+    for (cJSON* note = notes ? notes->child : NULL, * next = NULL; note != NULL; note = next) {
+        next = note->next;
         cJSON* type = cJSON_GetObjectItem(note, "type");
         cJSON* move = cJSON_GetObjectItem(note, "move");
         cJSON* start = NULL;
         size_t tot = 0;
-        Node* nodes[3] = { NULL };
+        Node* nodes[4] = { NULL };
         cJSON_ArrayForEach(start, move) {
             cJSON* reach_time = cJSON_GetObjectItem(start, "reach_time");
             // check if the note is within preload time
@@ -136,16 +137,15 @@ static void GetNotes() {
             if (tot) NoteLink((Note*)nodes[tot - 1]->value, (Note*)nodes[tot]->value);
             tot++;
         }
-        cJSON* next = note->next;
         note = cJSON_DetachItemViaPointer(notes, note);
         cJSON_Delete(note);
-        note = next;
     }
 }
 
 static void GetEvents() {
     cJSON* events = cJSON_GetObjectItem(game_scene->chart, "events");
-    for (cJSON* event = events ? events->child : NULL; event != NULL; ) {
+    for (cJSON* event = events ? events->child : NULL, * next; event != NULL; event = next) {
+        next = event->next;
         cJSON* time = cJSON_GetObjectItem(event, "time");
         // check if the event is within preload time
         if (app.timer.relative_time + GAME_SCENE_PRELOAD_OFFSET < time->valueint) return;
@@ -195,10 +195,8 @@ static void GetEvents() {
         default:
             break;
         }
-        cJSON* next = event->next;
         event = cJSON_DetachItemViaPointer(events, event);
         cJSON_Delete(event);
-        event = next;
     }
 }
 
@@ -407,9 +405,9 @@ void GameSceneHandleKey(SDL_Event* event) {
     }
 }
 
-static void GameSceneUpdateEvent() {
-    Node* ptr = NULL;
-    ListForEach(ptr, &game_scene->event_list) {
+static void GameSceneUpdateEvents() {
+    for (Node* ptr = game_scene->event_list.head, *next = NULL; ptr != NULL; ptr = next) {
+        next = ptr->next;
         Event* event = ptr->value;
         if (app.timer.relative_time < event->time) break;
         else if (app.timer.relative_time < event->time + event->lasting_time) {
@@ -427,7 +425,7 @@ void GameSceneUpdate() {
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneUpdate(&game_scene->lanes[i]);
     }
-    GameSceneUpdateEvent();
+    GameSceneUpdateEvents();
     GetNotes();
     GetEvents();
 }
@@ -493,8 +491,7 @@ static void GameSceneDrawPrompt() {
 static void GameSceneDrawEvent() {
     Node* ptr = NULL;
     ListForEach(ptr, &game_scene->event_list) {
-        Event* event = ptr->value;
-        EventDraw(event);
+        EventDraw(ptr->value);
     }
 }
 

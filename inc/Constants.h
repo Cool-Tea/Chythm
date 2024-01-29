@@ -50,7 +50,8 @@ enum EffectType {
     MAGIC,
     MUZZLE,
     STAR,
-    TWIRL
+    TWIRL,
+    SPARK
 };
 typedef enum EffectType EffectType;
 
@@ -68,6 +69,7 @@ typedef enum EffectType EffectType;
 enum NoteType {
     SINGLE = 0,
     LONG = 1,
+    MULTI = 2,
 
     NOTE_TYPE_NUM
 };

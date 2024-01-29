@@ -46,6 +46,11 @@ void InitParticle(Particle* particle, EffectType type, size_t i) {
         InitNameParticle(particle, "twirl", i);
         break;
     }
+    case SPARK: {
+        particle->lasting_frames = 3;
+        InitNameParticle(particle, "spark", i);
+        break;
+    }
     default:
         break;
     }
@@ -130,6 +135,10 @@ void InitEffect(Effect* effect, EffectType type, bool repeat_enale) {
     }
     case TWIRL: {
         effect->par_size = 3;
+        break;
+    }
+    case SPARK: {
+        effect->par_size = 5;
         break;
     }
     default:

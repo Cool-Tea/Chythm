@@ -28,6 +28,10 @@ Note* CreateNote(
         InitEffect(&note->effect, STAR, 1);
         break;
     }
+    case MULTI: {
+        InitEffect(&note->effect, SPARK, 1);
+        break;
+    }
     default:
         break;
     }
@@ -85,6 +89,7 @@ static void TypeNoteDraw(Note* note) {
 #endif
 
 void NoteDraw(Note* note) {
+    if (app.timer.relative_time < note->update_time) return;
     double angle =
         SDL_atan2(note->cur_x - note->update_x, note->cur_y - note->update_y)
         * 180.0 / PI;

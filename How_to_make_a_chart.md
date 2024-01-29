@@ -20,10 +20,10 @@ chart \
         "artist": "Who make this chart",
         "preview": "preview.png" // example: cat.jpg
     },
-    "chart":{
+    "chart": {
         "audio": "audio.mp3", // example: never_gonna_give_you_up.mp3
         "bpm": 60, // the bpm of the chart
-        "offset": , // this function is under developing
+        "offset": , // this function is under development
         "background": "background.png", // example: pure.png
         "lane_size": 4, // 判定点数量（在本游戏中lane与hit_point的数量是一一对应的）
         "notes": [], // 音符信息
@@ -69,7 +69,7 @@ chart \
 }
 ```
 
-**hit_points中的数量一定要和lane_size相同！！！**
+**lanes中的数量一定要和lane_size相同！！！**
 
 - lane：判定点编号
 - position：判定点初始位置信息

@@ -1,12 +1,12 @@
 #include "Editor.h"
 
 int main(int argc, char** args) {
-    if (argc != 2) {
-        fprintf(stderr, "[Editor]1 parameter needed, but there is %d\n", argc - 1);
+    if (argc != 3) {
+        fprintf(stderr, "[Editor]2 parameter needed, but there is %d\n", argc - 1);
         return 0;
     }
 
-    InitEditor(args[1]);
+    InitEditor(atoi(args[1]), args[2]);
     if (app.is_error) return 0;
     ApplicationStart();
     SDL_Event e;
@@ -24,7 +24,7 @@ int main(int argc, char** args) {
     return 0;
 }
 
-void InitEditor(char* audio_path) {
+void InitEditor(size_t lane_size, char* audio_path) {
     if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0) {
         fprintf(stderr, "[Editor]Failed to init SDL: %s\n", SDL_GetError());
         app.is_error = 1;
@@ -45,7 +45,7 @@ void InitEditor(char* audio_path) {
         app.is_error = 1;
         return;
     }
-    InitApplication(audio_path);
+    InitApplication(lane_size, audio_path);
 }
 
 void QuitEditor() {
@@ -56,7 +56,7 @@ void QuitEditor() {
     SDL_Quit();
 }
 
-void InitApplication(char* audio_path) {
+void InitApplication(size_t lane_size, char* audio_path) {
     app.win = NULL;
     app.ren = NULL;
     app.audio = NULL;
@@ -109,15 +109,21 @@ void InitApplication(char* audio_path) {
 
     app.json = cJSON_CreateObject();
     app.notes = cJSON_AddArrayToObject(app.json, "notes");
-    app.cur_mode = SINGLE;
-    for (int i = 0; i < 4; i++) {
-        app.lane_is_down[i] = 0;
-        app.lane_note_size[i] = 0;
-        app.lane_time[i] = 0;
+    app.lane_size = lane_size;
+    app.notes_size = calloc(app.lane_size, sizeof(size_t));
+    app.down_states = calloc(app.lane_size, sizeof(Uint8));
+    app.times = calloc(app.lane_size, sizeof(Uint32));
+    if (!app.notes_size || !app.down_states || !app.times) {
+        fprintf(stderr, "[Editor]Failed to calloc notes/downs/times\n");
+        app.is_error = 1;
+        return;
     }
 }
 
 void FreeApplication() {
+    if (app.times) free(app.times);
+    if (app.down_states) free(app.down_states);
+    if (app.notes_size) free(app.notes_size);
     if (app.json) {
         cJSON_Delete(app.json);
     }
@@ -143,14 +149,18 @@ void ApplicationStart() {
     Mix_PlayMusic(app.audio, 0);
 }
 
+static inline int PosX(int index) {
+    return 1920u * (index + 1) / (app.lane_size + 1);
+}
+
 static void AddSingle(cJSON* notes, Uint32 reach_time, int lane) {
-    app.lane_note_size[lane]++;
+    app.notes_size[lane]++;
     cJSON* note = cJSON_CreateObject();
     cJSON_AddNumberToObject(note, "type", SINGLE);
     cJSON* moves = cJSON_AddArrayToObject(note, "move");
     cJSON* move = cJSON_CreateObject();
     cJSON_AddNumberToObject(move, "lane", lane);
-    cJSON_AddNumberToObject(move, "x", note_x[lane]);
+    cJSON_AddNumberToObject(move, "x", PosX(lane));
     cJSON_AddNumberToObject(move, "y", -40);
     cJSON_AddNumberToObject(move, "reach_time", reach_time);
     cJSON_AddItemToArray(moves, move);
@@ -158,14 +168,14 @@ static void AddSingle(cJSON* notes, Uint32 reach_time, int lane) {
 }
 
 static void AddLong(cJSON* notes, Uint32 reach_time, Uint32 lasting_time, int lane) {
-    app.lane_note_size[lane] += 2;
+    app.notes_size[lane] += 2;
     cJSON* note = cJSON_CreateObject();
     cJSON_AddNumberToObject(note, "type", LONG);
     cJSON* moves = cJSON_AddArrayToObject(note, "move");
     for (int i = 0; i < 2; i++, reach_time += lasting_time) {
         cJSON* move = cJSON_CreateObject();
         cJSON_AddNumberToObject(move, "lane", lane);
-        cJSON_AddNumberToObject(move, "x", note_x[lane]);
+        cJSON_AddNumberToObject(move, "x", PosX(lane));
         cJSON_AddNumberToObject(move, "y", -40);
         cJSON_AddNumberToObject(move, "reach_time", reach_time);
         cJSON_AddItemToArray(moves, move);
@@ -174,34 +184,30 @@ static void AddLong(cJSON* notes, Uint32 reach_time, Uint32 lasting_time, int la
 }
 
 static int KeyToLane(SDL_Scancode key) {
+    int index = -1;
     switch (key) {
-    case SDL_SCANCODE_F: return 0;
-    case SDL_SCANCODE_G: return 1;
-    case SDL_SCANCODE_H: return 2;
-    case SDL_SCANCODE_J: return 3;
-    default:
-        break;
+    case SDL_SCANCODE_S: index = 0; break;
+    case SDL_SCANCODE_D: index = 1; break;
+    case SDL_SCANCODE_F: index = 2; break;
+    case SDL_SCANCODE_G: index = 3; break;
+    case SDL_SCANCODE_H: index = 4; break;
+    case SDL_SCANCODE_J: index = 5; break;
+    case SDL_SCANCODE_K: index = 6; break;
+    case SDL_SCANCODE_L: index = 7; break;
+    default: return -1;
     }
-    return -1;
+    return index - ((MAX_KEY_NUM - app.lane_size) >> 1);
 }
 
 void JsonHandleKey(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
         switch (event->key.keysym.scancode) {
-        case SDL_SCANCODE_1: {
-            app.cur_mode = SINGLE;
-            break;
-        }
-        case SDL_SCANCODE_2: {
-            app.cur_mode = LONG;
-            break;
-        }
         case SDL_SCANCODE_P: {
             char* str = cJSON_Print(app.json);
             printf("%s\n", str);
             cJSON_free(str);
-            for (int i = 0; i < 4; i++) {
-                printf("Lane %d: %lu notes\n", i, app.lane_note_size[i]);
+            for (size_t i = 0; i < app.lane_size; i++) {
+                printf("Lane %lu: %lu notes\n", i, app.notes_size[i]);
             }
             break;
         }
@@ -211,19 +217,25 @@ void JsonHandleKey(SDL_Event* event) {
             fprintf(fp, "%s\n", str);
             cJSON_free(str);
             fclose(fp);
-            for (int i = 0; i < 4; i++) {
-                printf("Lane %d: %lu notes\n", i, app.lane_note_size[i]);
+            for (size_t i = 0; i < app.lane_size; i++) {
+                printf("Lane %lu: %lu notes\n", i, app.notes_size[i]);
             }
             break;
         }
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_D:
         case SDL_SCANCODE_F:
         case SDL_SCANCODE_G:
         case SDL_SCANCODE_H:
-        case SDL_SCANCODE_J: {
-            if (!app.lane_is_down[KeyToLane(event->key.keysym.scancode)]) {
+        case SDL_SCANCODE_J:
+        case SDL_SCANCODE_K:
+        case SDL_SCANCODE_L: {
+            int lane = KeyToLane(event->key.keysym.scancode);
+            if (0 <= lane && lane < app.lane_size &&
+                !app.down_states[lane]) {
                 //printf("key: %s down\n", SDL_GetKeyName(event->key.keysym.sym));
-                app.lane_time[KeyToLane(event->key.keysym.scancode)] = Mix_GetMusicPosition(app.audio) * 1000.0;
-                app.lane_is_down[KeyToLane(event->key.keysym.scancode)] = 1;
+                app.times[lane] = Mix_GetMusicPosition(app.audio) * 1000.0;
+                app.down_states[lane] = 1;
             }
             break;
         }
@@ -233,21 +245,26 @@ void JsonHandleKey(SDL_Event* event) {
     }
     else if (event->type == SDL_KEYUP) {
         switch (event->key.keysym.scancode) {
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_D:
         case SDL_SCANCODE_F:
         case SDL_SCANCODE_G:
         case SDL_SCANCODE_H:
-        case SDL_SCANCODE_J: {
-            if (app.lane_is_down[KeyToLane(event->key.keysym.scancode)]) {
+        case SDL_SCANCODE_J:
+        case SDL_SCANCODE_K:
+        case SDL_SCANCODE_L: {
+            int lane = KeyToLane(event->key.keysym.scancode);
+            if (app.down_states[lane]) {
                 //printf("key: %s up\n", SDL_GetKeyName(event->key.keysym.sym));
                 Uint32 time = Mix_GetMusicPosition(app.audio) * 1000.0;
-                time -= app.lane_time[KeyToLane(event->key.keysym.scancode)];
+                time -= app.times[lane];
                 if (time >= 300) {
-                    AddLong(app.notes, app.lane_time[KeyToLane(event->key.keysym.scancode)], time, KeyToLane(event->key.keysym.scancode));
+                    AddLong(app.notes, app.times[lane], time, lane);
                 }
                 else {
-                    AddSingle(app.notes, app.lane_time[KeyToLane(event->key.keysym.scancode)], KeyToLane(event->key.keysym.scancode));
+                    AddSingle(app.notes, app.times[lane], lane);
                 }
-                app.lane_is_down[KeyToLane(event->key.keysym.scancode)] = 0;
+                app.down_states[lane] = 0;
             }
             break;
         }
@@ -321,9 +338,6 @@ void ApplicationDraw() {
 
     len = sprintf(buf, "%.3lfs", Mix_GetMusicPosition(app.audio));
     DrawText(0, 0, 25 * len, 50, buf);
-
-    len = sprintf(buf, "Mode: %s", mode_text[app.cur_mode]);
-    DrawText(0, 50, len * 25, 50, buf);
 
     SDL_RenderPresent(app.ren);
 }
