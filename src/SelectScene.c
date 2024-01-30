@@ -202,6 +202,7 @@ static void SelectSceneHandleKeyDown(SDL_Scancode key) {
     case SDL_SCANCODE_KP_ENTER: {
         app.is_loaded = 0;
         app.cur_scene = LOAD;
+        app.timer.relative_time = 0;
         SDL_Thread* th =
             SDL_CreateThread(
                 ThreadCreateGameScene,

@@ -18,7 +18,7 @@ Note* CreateNote(
     note->update_time = update_time;
     note->reach_time = reach_time;
     note->update_enable = 1;
-    note->is_hit = note->is_missed = 0;
+    note->status = 0;
     switch (type) {
     case SINGLE: {
         InitEffect(&note->effect, MUZZLE, 1);
@@ -46,8 +46,15 @@ void DestroyNote(Note* note) {
 }
 
 void NoteLink(Note* lnote, Note* rnote) {
+    if (!lnote || !rnote) return;
     lnote->linked_notes[lnote->linked_notes[0] != NULL] = rnote;
     rnote->linked_notes[rnote->linked_notes[0] != NULL] = lnote;
+}
+
+void NoteUnlink(Note* lnote, Note* rnote) {
+    if (!lnote || !rnote) return;
+    lnote->linked_notes[lnote->linked_notes[0] != rnote] = NULL;
+    rnote->linked_notes[rnote->linked_notes[0] != lnote] = NULL;
 }
 
 void NoteUpdate(Note* note, int target_x, int target_y) {
@@ -103,19 +110,52 @@ void NoteDraw(Note* note) {
     /* TODO: draw different note */
     switch (note->type) {
     case LONG: {
-        lineRGBA(
-            app.ren,
+        if (note->linked_notes[0])
+            lineRGBA(
+                app.ren,
 
 #if AUTO_RESOLUTION
-            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
-            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
+                note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
+                note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
 #else
-            note->cur_x, note->cur_y,
-            note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
+                note->cur_x, note->cur_y,
+                note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
 #endif
 
-            default_colors[0].r, default_colors[0].g, default_colors[0].b, default_colors[0].a
-        );
+                default_colors[0].r, default_colors[0].g, default_colors[0].b, default_colors[0].a
+            );
+        break;
+    }
+    case MULTI: {
+        if (note->linked_notes[0])
+            lineRGBA(
+                app.ren,
+
+#if AUTO_RESOLUTION
+                note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
+                note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
+#else
+                note->cur_x, note->cur_y,
+                note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
+#endif
+
+                default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
+            );
+
+        if (note->linked_notes[1])
+            lineRGBA(
+                app.ren,
+
+#if AUTO_RESOLUTION
+                note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
+                note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
+#else
+                note->cur_x, note->cur_y,
+                note->linked_notes[1]->cur_x, note->linked_notes[1]->cur_y,
+#endif
+
+                default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
+            );
         break;
     }
     default:

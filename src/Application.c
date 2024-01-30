@@ -243,6 +243,6 @@ void ApplicationTick() {
     }
     app.timer.delta_time = SDL_GetTicks() - app.timer.real_time;
     app.timer.real_time += app.timer.delta_time;
-    if (app.cur_scene == GAME)
+    if (app.cur_scene == GAME && game_scene->status == 1)
         app.timer.relative_time = app.timer.real_time - app.timer.base_time;
 }

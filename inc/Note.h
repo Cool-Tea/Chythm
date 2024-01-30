@@ -24,8 +24,7 @@ struct Note {
     Uint32 update_time; // when the note starts to be updated
     Uint32 reach_time; // when the note reached the hit point
     bool update_enable; // whether update is enabled
-    bool is_missed; // whether the note is missed or not
-    bool is_hit; // whether the note is hit or not
+    Uint8 status; // 0: not hit 1: perfect 2: good 3: miss
     Effect effect; // the effect note pocessed
 };
 typedef struct Note Note;
@@ -37,6 +36,7 @@ Note* CreateNote(
 );
 void DestroyNote(Note* note);
 void NoteLink(Note* lnote, Note* rnote);
+void NoteUnlink(Note* lnote, Note* rnote);
 void NoteUpdate(Note* note, int target_x, int target_y);
 void NoteDraw(Note* note);
 

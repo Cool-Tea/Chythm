@@ -228,11 +228,7 @@ GameScene* CreateGameScene(const char* chart_path) {
         app.is_error = 1;
         return game_scene;
     }
-    game_scene->is_started = 0;
-    SDL_LockMutex(app.mutex);
-    app.timer.base_time = app.timer.real_time = SDL_GetTicks();
-    app.timer.relative_time = 0;
-    SDL_UnlockMutex(app.mutex);
+    game_scene->status = 0;
     game_scene->chart_path = chart_path;
     game_scene->chart = NULL;
 
@@ -313,10 +309,11 @@ void GameSceneReload() {
 }
 
 void GameSceneStart() {
+    game_scene->status = 1;
     game_scene->score = 0;
     game_scene->combo = 0;
     app.timer.base_time = app.timer.real_time = SDL_GetTicks();
-    app.timer.relative_time = 0;
+    app.timer.relative_time = 1;
     Mix_PlayMusic(game_scene->audio, 0);
 }
 
@@ -334,7 +331,8 @@ static void SaveScore() {
 extern void EndSceneRate();
 void GameSceneEnd() {
     /* TODO: do something */
-    game_scene->is_started = 0;
+    game_scene->status = 0;
+    Mix_HaltMusic();
     SaveScore();
     EndSceneRate();
     app.cur_scene = END;
@@ -351,24 +349,17 @@ static Uint32 GameSceneTimeMark() {
 }
 
 void GameScenePause() {
-    game_scene->is_started = 0;
+    game_scene->status = 2;
     Mix_PauseMusic();
     GameSceneTimeMark();
 }
 
 void GameSceneResume() {
+    game_scene->status = 1;
     app.timer.base_time += SDL_GetTicks() - GameSceneTimeMark();
     app.timer.real_time = SDL_GetTicks();
     app.timer.relative_time = app.timer.real_time - app.timer.base_time;
     Mix_ResumeMusic();
-}
-
-static int GameSceneCheckEnd() {
-    if (Mix_PlayingMusic() == 0 && game_scene->is_started) {
-        GameSceneEnd();
-        return -1;
-    }
-    return 0;
 }
 
 static void GameSceneHandleKeyDown(SDL_Scancode key) {
@@ -379,9 +370,8 @@ static void GameSceneHandleKeyDown(SDL_Scancode key) {
         break;
     }
     case SDL_SCANCODE_SPACE: {
-        if (!game_scene->is_started) {
-            game_scene->is_started = 1;
-            if (Mix_PausedMusic()) {
+        if (!game_scene->status) {
+            if (game_scene->status == 2) {
                 GameSceneResume();
             }
             else {
@@ -399,7 +389,7 @@ void GameSceneHandleKey(SDL_Event* event) {
     if (event->type == SDL_KEYDOWN) {
         GameSceneHandleKeyDown(event->key.keysym.scancode);
     }
-    if (!game_scene->is_started) return;
+    if (game_scene->status != 1) return;
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneHandleKey(&game_scene->lanes[i], event);
     }
@@ -420,8 +410,11 @@ static void GameSceneUpdateEvents() {
 }
 
 void GameSceneUpdate() {
-    if (!game_scene->is_started) return;
-    if (GameSceneCheckEnd() < 0) return;
+    if (game_scene->status != 1) return;
+    else if (!Mix_PlayingMusic() && app.timer.relative_time) {
+        GameSceneEnd();
+        return;
+    }
     for (size_t i = 0; i < game_scene->lane_size; i++) {
         LaneUpdate(&game_scene->lanes[i]);
     }
@@ -502,7 +495,7 @@ void GameSceneDraw() {
     SDL_RenderCopy(app.ren, game_scene->background, NULL, NULL);
 #endif
 
-    if (!game_scene->is_started) {
+    if (game_scene->status != 1) {
         GameSceneDrawPrompt();
         return;
     }

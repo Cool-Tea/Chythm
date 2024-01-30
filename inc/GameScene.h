@@ -7,7 +7,7 @@
 
 struct GameScene {
     /* status */
-    bool is_started;
+    Uint8 status; // 0: not started 1: started 2: paused
 
     /* file path*/
     const char* chart_path;
