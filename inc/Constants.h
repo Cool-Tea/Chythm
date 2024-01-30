@@ -63,8 +63,7 @@ typedef enum EffectType EffectType;
 #define LONG_NOTE_IMG "../assets/images/sprites/long_note.png"
 #endif
 
-#define NOTE_LIST_INIT_CAPACITY 1 << 4
-#define NOTE_RADIUS 30
+#define NOTE_RADIUS 60
 
 enum NoteType {
     SINGLE = 0,
@@ -76,14 +75,15 @@ enum NoteType {
 typedef enum NoteType NoteType;
 
 /* Event */
-#define EVENT_LIST_INIT_CAPACITY 1 << 3
-
 enum EventType {
     /* Reserved */
     NONE = 0x00, // do nothing
 
     /* Game Scene */
     TEXT = 0x10, // show text on the screen
+    BPM, // change bpm
+    EFFECT, // show effect on the screen
+    BACKGROUND, // change background
 
     /* Lane */
     MOVE = 0x20, // move hit point for some miliseconds
@@ -112,11 +112,6 @@ extern const SDL_Scancode default_keys[];
 #define GAME_SCENE_LETTER_HEIGHT 40
 #define GAME_SCENE_LETTER_WIDTH 20
 
-enum ObjectType {
-    GAME_SCENE = 0,
-    LANE = 1
-};
-typedef enum ObjectType ObjectType;
 extern const char* game_scene_texts[];
 
 /* Button && Cursor */

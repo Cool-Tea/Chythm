@@ -2,6 +2,7 @@
 #define _EVENT_H_
 
 #include <stdarg.h>
+#include "Effect.h"
 #include "Drawer.h"
 
 struct Event {
@@ -9,6 +10,7 @@ struct Event {
     Uint32 lasting_time;
     EventType type;
     void* data;
+    void (*free)(void*);
 };
 typedef struct Event Event;
 

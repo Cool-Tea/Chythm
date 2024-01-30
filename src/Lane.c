@@ -40,122 +40,134 @@ static int isBeyondHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         >=
-        (NOTE_RADIUS << 2);
+        (NOTE_RADIUS << 1);
 }
 
 static int isPerfectHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         <=
-        (NOTE_RADIUS);
+        (NOTE_RADIUS >> 1);
 }
 
 static int isGoodHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         <=
-        (NOTE_RADIUS << 1);
+        (NOTE_RADIUS);
+}
+
+static void LaneSingleNoteJudge(Lane* lane, Note* note) {
+    switch (note->status) {
+    case 1: {
+        *update_data.score += PERFECT_HIT_SCORE;
+        (*update_data.combo)++;
+        lane->hit_point.hit_effect.is_active = 1;
+        update_data.hit_status = 0;
+        *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+            COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+        break;
+    }
+    case 2: {
+        *update_data.score += GOOD_HIT_SCORE;
+        (*update_data.combo)++;
+        lane->hit_point.hit_effect.is_active = 1;
+        update_data.hit_status = 1;
+        *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+            COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+        break;
+    }
+    case 3: {
+        *update_data.combo = 0;
+        lane->hit_point.hit_effect.is_active = 0;
+        update_data.hit_status = 2;
+        break;
+    }
+    default: break;
+    }
+}
+
+static void LaneLongNoteJudge(Lane* lane, Note* note) {
+    switch (note->status) {
+    case 1: {
+        lane->hit_point.hit_effect.is_active = 1;
+        lane->hit_point.hit_effect.repeat_enable = 1;
+        update_data.hit_status = 0;
+        (*update_data.combo)++;
+        *update_data.score += LONG_HIT_SCORE;
+        note->linked_notes[0]->status = 1;
+        break;
+    }
+    case 2: {
+        lane->hit_point.hit_effect.is_active = 1;
+        lane->hit_point.hit_effect.repeat_enable = 1;
+        update_data.hit_status = 1;
+        (*update_data.combo)++;
+        *update_data.score += LONG_HIT_SCORE;
+        note->linked_notes[0]->status = 1;
+        break;
+    }
+    case 3: {
+        lane->hit_point.hit_effect.is_active = 0;
+        lane->hit_point.hit_effect.repeat_enable = 0;
+        update_data.hit_status = 2;
+        *update_data.combo = 0;
+        note->linked_notes[0]->status = 3;
+        break;
+    }
+    default: break;
+    }
+}
+
+static void LaneMultiNoteJudge(Lane* lane, Note* note) {
+    switch (note->status) {
+    case 1: {
+        if ((note->linked_notes[0] && note->linked_notes[0]->status == 3) ||
+            (note->linked_notes[1] && note->linked_notes[1]->status == 3)) break;;
+        *update_data.score += PERFECT_HIT_SCORE;
+        (*update_data.combo)++;
+        lane->hit_point.hit_effect.is_active = 1;
+        lane->hit_point.hit_effect.repeat_enable = 1;
+        update_data.hit_status = 0;
+        *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+            COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+        break;
+    }
+    case 2: {
+        if ((note->linked_notes[0] && note->linked_notes[0]->status == 3) ||
+            (note->linked_notes[1] && note->linked_notes[1]->status == 3)) break;;
+        *update_data.score += PERFECT_HIT_SCORE;
+        (*update_data.combo)++;
+        lane->hit_point.hit_effect.is_active = 1;
+        lane->hit_point.hit_effect.repeat_enable = 1;
+        update_data.hit_status = 1;
+        *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
+            COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
+        break;
+    }
+    case 3: {
+        *update_data.combo = 0;
+        lane->hit_point.hit_effect.is_active = 0;
+        lane->hit_point.hit_effect.repeat_enable = 0;
+        update_data.hit_status = 2;
+        break;
+    }
+    default: break;
+    }
 }
 
 static void LaneNotesJudge(Lane* lane, Note* note) {
     switch (note->type) {
     case SINGLE: {
-        switch (note->status) {
-        case 1: {
-            *update_data.score += PERFECT_HIT_SCORE;
-            (*update_data.combo)++;
-            lane->hit_point.hit_effect.is_active = 1;
-            update_data.hit_status = 0;
-            *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
-            break;
-        }
-        case 2: {
-            *update_data.score += GOOD_HIT_SCORE;
-            (*update_data.combo)++;
-            lane->hit_point.hit_effect.is_active = 1;
-            update_data.hit_status = 1;
-            *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
-            break;
-        }
-        case 3: {
-            *update_data.combo = 0;
-            lane->hit_point.hit_effect.is_active = 0;
-            update_data.hit_status = 2;
-            break;
-        }
-        default: break;
-        }
+        LaneSingleNoteJudge(lane, note);
         break;
     }
     case LONG: {
-        switch (note->status) {
-        case 1: {
-            lane->hit_point.hit_effect.is_active = 1;
-            lane->hit_point.hit_effect.repeat_enable = 1;
-            update_data.hit_status = 0;
-            (*update_data.combo)++;
-            *update_data.score += LONG_HIT_SCORE;
-            note->linked_notes[0]->status = 1;
-            break;
-        }
-        case 2: {
-            lane->hit_point.hit_effect.is_active = 1;
-            lane->hit_point.hit_effect.repeat_enable = 1;
-            update_data.hit_status = 1;
-            (*update_data.combo)++;
-            *update_data.score += LONG_HIT_SCORE;
-            note->linked_notes[0]->status = 1;
-            break;
-        }
-        case 3: {
-            lane->hit_point.hit_effect.is_active = 0;
-            lane->hit_point.hit_effect.repeat_enable = 0;
-            update_data.hit_status = 2;
-            *update_data.combo = 0;
-            note->linked_notes[0]->status = 3;
-            break;
-        }
-        default: break;
-        }
+        LaneLongNoteJudge(lane, note);
         break;
     }
     case MULTI: {
-        switch (note->status) {
-        case 1: {
-            if ((note->linked_notes[0] && note->linked_notes[0]->status == 3) ||
-                (note->linked_notes[1] && note->linked_notes[1]->status == 3)) break;;
-            *update_data.score += PERFECT_HIT_SCORE;
-            (*update_data.combo)++;
-            lane->hit_point.hit_effect.is_active = 1;
-            lane->hit_point.hit_effect.repeat_enable = 1;
-            update_data.hit_status = 0;
-            *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
-            break;
-        }
-        case 2: {
-            if ((note->linked_notes[0] && note->linked_notes[0]->status == 3) ||
-                (note->linked_notes[1] && note->linked_notes[1]->status == 3)) break;;
-            *update_data.score += PERFECT_HIT_SCORE;
-            (*update_data.combo)++;
-            lane->hit_point.hit_effect.is_active = 1;
-            lane->hit_point.hit_effect.repeat_enable = 1;
-            update_data.hit_status = 1;
-            *update_data.score += *update_data.combo * COMBO_EXTRA_SCORE >= COMBO_MAX_SCORE ?
-                COMBO_MAX_SCORE : *update_data.combo * COMBO_EXTRA_SCORE;
-            break;
-        }
-        case 3: {
-            *update_data.combo = 0;
-            lane->hit_point.hit_effect.is_active = 0;
-            lane->hit_point.hit_effect.repeat_enable = 0;
-            update_data.hit_status = 2;
-            break;
-        }
-        default: break;
-        }
+        LaneMultiNoteJudge(lane, note);
         break;
     }
     default: break;
@@ -210,17 +222,16 @@ void LaneHandleKey(Lane* lane, SDL_Event* event) {
     }
 }
 
-static void LaneHandleEventMove(HitPoint* hit_point, const Event* event) {
-    if (!hit_point->speed.move_enable) return;
+static void LaneUpdateMoveEvent(HitPoint* hit_point, const Event* event) {
     hit_point->speed.x = *((int*)event->data);
     hit_point->speed.y = *((int*)event->data + 1);
     hit_point->speed.move_enable = 1;
 }
 
-static void LaneHandleEventMoveTo(HitPoint* hit_point, const Event* event) {
-    if (!hit_point->dest.move_enable) return;
+static void LaneUpdateMoveToEvent(HitPoint* hit_point, const Event* event) {
     hit_point->dest.update_time = event->time;
     hit_point->dest.reach_time = event->time + event->lasting_time;
+    /* This will generate momentum*/
     hit_point->dest.update_x = hit_point->cur_x;
     hit_point->dest.update_y = hit_point->cur_y;
     hit_point->dest.reach_x = *((int*)event->data);
@@ -228,7 +239,7 @@ static void LaneHandleEventMoveTo(HitPoint* hit_point, const Event* event) {
     hit_point->dest.move_enable = 1;
 }
 
-static void LaneHandleEventStop(HitPoint* hit_point) {
+static void LaneUpdateStopEvent(HitPoint* hit_point) {
     hit_point->speed.x = 0;
     hit_point->speed.y = 0;
     hit_point->dest.reach_x = hit_point->cur_x;
@@ -247,15 +258,17 @@ static void LaneUpdateEvents(Lane* lane) {
         else if (app.timer.relative_time < event->time + event->lasting_time) {
             switch (event->type) {
             case MOVE: {
-                LaneHandleEventMove(&lane->hit_point, event);
+                LaneUpdateMoveEvent(&lane->hit_point, event);
+                ListErase(&lane->event_list, ptr);
                 break;
             }
             case MOVETO: {
-                LaneHandleEventMoveTo(&lane->hit_point, event);
+                LaneUpdateMoveToEvent(&lane->hit_point, event);
                 break;
             }
             case STOP: {
-                LaneHandleEventStop(&lane->hit_point);
+                LaneUpdateStopEvent(&lane->hit_point);
+                ListErase(&lane->event_list, ptr);
                 break;
             }
             default:

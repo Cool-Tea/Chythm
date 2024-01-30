@@ -88,20 +88,67 @@ static void TypeNoteDraw(Note* note) {
 #endif
 
     double angle =
-        SDL_atan2(note->cur_x - note->update_x, note->cur_y - note->update_y)
+        SDL_atan2(note->update_x - note->cur_x, note->cur_y - note->update_y)
         * 180.0 / PI;
-    if (note->cur_x > note->update_x) angle = -angle;
     SDL_RenderCopyEx(app.ren, assets.notes[note->type], NULL, &rect, angle, NULL, SDL_FLIP_NONE);
 }
 #endif
 
+static void LongNoteDraw(Note* note) {
+    if (note->linked_notes[0])
+        lineRGBA(
+            app.ren,
+
+#if AUTO_RESOLUTION
+            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
+            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
+#else
+            note->cur_x, note->cur_y,
+            note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
+#endif
+
+            default_colors[0].r, default_colors[0].g, default_colors[0].b, default_colors[0].a
+        );
+}
+
+static void MultiNoteDraw(Note* note) {
+    if (note->linked_notes[0])
+        lineRGBA(
+            app.ren,
+
+#if AUTO_RESOLUTION
+            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
+            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
+#else
+            note->cur_x, note->cur_y,
+            note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
+#endif
+
+            default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
+        );
+
+    if (note->linked_notes[1])
+        lineRGBA(
+            app.ren,
+
+#if AUTO_RESOLUTION
+            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
+            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
+#else
+            note->cur_x, note->cur_y,
+            note->linked_notes[1]->cur_x, note->linked_notes[1]->cur_y,
+#endif
+
+            default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
+        );
+}
+
 void NoteDraw(Note* note) {
     if (app.timer.relative_time < note->update_time) return;
     double angle =
-        SDL_atan2(note->cur_x - note->update_x, note->cur_y - note->update_y)
+        SDL_atan2(note->update_x - note->cur_x, note->cur_y - note->update_y)
         * 180.0 / PI;
-    if (note->cur_x > note->update_x) angle = -angle;
-    EffectDraw(&note->effect, note->cur_x, note->cur_y, NOTE_RADIUS << 1, angle);
+    EffectDraw(&note->effect, note->cur_x, note->cur_y, NOTE_RADIUS, angle);
 
 #if !NOTE_ONLY_EFFECT
     TypeNoteDraw(note);
@@ -110,52 +157,11 @@ void NoteDraw(Note* note) {
     /* TODO: draw different note */
     switch (note->type) {
     case LONG: {
-        if (note->linked_notes[0])
-            lineRGBA(
-                app.ren,
-
-#if AUTO_RESOLUTION
-                note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
-                note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
-#else
-                note->cur_x, note->cur_y,
-                note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
-#endif
-
-                default_colors[0].r, default_colors[0].g, default_colors[0].b, default_colors[0].a
-            );
+        LongNoteDraw(note);
         break;
     }
     case MULTI: {
-        if (note->linked_notes[0])
-            lineRGBA(
-                app.ren,
-
-#if AUTO_RESOLUTION
-                note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
-                note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
-#else
-                note->cur_x, note->cur_y,
-                note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
-#endif
-
-                default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
-            );
-
-        if (note->linked_notes[1])
-            lineRGBA(
-                app.ren,
-
-#if AUTO_RESOLUTION
-                note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
-                note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
-#else
-                note->cur_x, note->cur_y,
-                note->linked_notes[1]->cur_x, note->linked_notes[1]->cur_y,
-#endif
-
-                default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
-            );
+        MultiNoteDraw(note);
         break;
     }
     default:

@@ -85,7 +85,7 @@ chart \
     ...
     "notes": [
         {
-            "type": 0, // note的类型，目前有SINGLE与LONG
+            "type": 0, // note的类型
             "move": [
                 {
                     "lane": 0, // 判定点的编号，从0开始
@@ -101,7 +101,7 @@ chart \
 }
 ```
 
-- type：note的类型，目前有`SINGLE(0)`、`LONG(1)`
+- type：note的类型，目前有`SINGLE(0)`、`LONG(1)`、`MULTI(2)`
 - move：该note的移动信息
 - lane：note对应的判定点
 - x：note的初始x坐标
@@ -116,6 +116,10 @@ chart \
 
 - move：有两条信息，**按先后顺序**对应该note的首尾
 
+### MULTI
+
+- move：可以有2~4条信息，**按先后顺序**前后连接
+
 ## Event
 
 以下是一个一般的事件Event信息：
@@ -125,11 +129,10 @@ chart \
     ...
     "events": [
         {
-            "object": 0, // event操作的对象，目前有GameScene与Lane
             "type": 16, // event类型
             "lane": 0, // （可选）当object为Lane的时候需要此条
             "time": 2000, // event开始时间
-            "lasting_time": 4000, // event持续时间
+            "lasting_time": 4000, // （可选）event持续时间
             "data": {
                 ... // event所需要的数据，由类型确定
             }
@@ -139,8 +142,7 @@ chart \
 }
 ```
 
-- object：event操作的对象，目前有`游戏界面(0)`与`判定点(1)`
-- type：event的类型：`保留类型(0~15)`，`游戏界面(16~31)`：[`输出文本(16)`]，`判定点(32~47)`：[`给予速度(32)`, `移动到(33)`, `停止运动(34)`]
+- type：event的类型：`保留类型(0~15)`，`游戏界面(16~31)`：[`输出文本(16)`, `改变bpm(17)`, `绘制特效(18)`, `改变背景(19)`]，`判定点(32~47)`：[`给予速度(32)`, `移动到(33)`, `停止运动(34)`]
 - lane：event的作用判定点编号（从0开始）
 - time：event的开始时间
 - lasting_time：event的持续时间
@@ -149,10 +151,12 @@ chart \
 ### TEXT(16)：输出文本
 
 - 功能：向游戏界面输出文本
-- data：
 
 ```json
 {
+    "type": 16, // event类型
+    "time": 2000, // event开始时间
+    "lasting_time": 4000, // text持续时间
     "data": {
         "x": 840, // 显示位置
         "y": 0,
@@ -161,13 +165,64 @@ chart \
 }
 ```
 
-### MOVE(32)：给予速度
+### BPM(17)：改变bpm
 
-- 功能：给予判定点速度
-- data：
+- 功能：改变谱面的bpm
 
 ```json
 {
+    "type": 17, // event类型
+    "time": 2000, // 触发时间
+    "data": {
+        "bpm": 60 // bpm的值
+    }
+}
+```
+
+### EFFECT(18)：绘制特效
+
+- 功能：在屏幕上绘制特效
+
+```json
+{
+    "type": 18, // event类型
+    "time": 5000, // 触发时间
+    "lasting_time": 2000, // 持续时间
+    "data": {
+        "x": 960, // 特效位置
+        "y": 400,
+        "radius": 60, // 特效大小
+        "angle": 60.0, // 特效顺时针旋转角度（角度制）
+        "type": 4, // 特效类型
+        "repeat": 1 // 特效是否重复播放，为0则特效只播放一次
+    }
+}
+```
+
+### BACKGROUND(19)：改变背景
+
+- 功能：改变谱面背景
+
+```json
+{
+    "type": 19, // eventleix
+    "time": 5000, // 触发时间
+    "data": {
+        "background": "background2.png" // 背景图片文件名（必须在chart文件夹下）
+    }
+}
+```
+
+### MOVE(32)：给予速度
+
+- 功能：给予判定点速度
+
+```json
+{
+    "type": 32, // event类型
+    "lane": 0, // 判定点编号
+    "time": 2000, // 运动开始时间
+    "lasting_time": 4000, // 运动时间
     "data": {
         "x": 0, // x方向速度
         "y": 4 // y方向速度
@@ -178,10 +233,13 @@ chart \
 ### MOVETO(33)：移动到
 
 - 功能：使判定点在lasting_time内移动到目标位置
-- data：
 
 ```json
 {
+    "type": 33, // event类型
+    "lane": 0, // 判定点编号
+    "time": 2000, // 运动开始时间
+    "lasting_time": 4000, // 运动时间
     "data": {
         "x": 1200, // 坐标信息
         "y": 200
@@ -194,4 +252,3 @@ chart \
 **此事件会自动添加，请不要在以上运动事件后添加该事件**
 
 - 功能：停止判定点的一切运动
-- data：NULL
