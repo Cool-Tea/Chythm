@@ -15,6 +15,7 @@
         "effect.h": "c",
         "event.h": "c",
         "pausescene.h": "c",
-        "endscene.h": "c"
+        "endscene.h": "c",
+        "list.h": "c"
     }
 }

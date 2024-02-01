@@ -49,6 +49,13 @@ void HitPointUpdate(HitPoint* hit_point) {
     EffectUpdate(&hit_point->hit_effect);
 }
 
+static void HitPointDrawPrompt(HitPoint* hit_point) {
+    static SDL_Rect rect = { .h = HIT_POINT_RADIUS, .w = HIT_POINT_RADIUS >> 1 };
+
+    rect.x = hit_point->cur_x - (rect.w >> 1), rect.y = hit_point->cur_y - (rect.h >> 1);
+    DrawText(rect, SDL_GetKeyName(SDL_GetKeyFromScancode(hit_point->key)), default_colors[0]);
+}
+
 void HitPointDraw(HitPoint* hit_point) {
     static SDL_Rect rect
 #if !AUTO_RESOLUTION
@@ -69,4 +76,6 @@ void HitPointDraw(HitPoint* hit_point) {
     SDL_RenderCopy(app.ren, assets.hit_points[hit_point->is_down], NULL, &rect);
 
     EffectDraw(&hit_point->hit_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 40, 0.0);
+
+    HitPointDrawPrompt(hit_point);
 }

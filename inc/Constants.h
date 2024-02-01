@@ -99,7 +99,7 @@ typedef enum EventType EventType;
 #define PERFECT_HIT_SCORE 500
 #define GOOD_HIT_SCORE 200
 #define LONG_HIT_SCORE 100 // for continuing long hit
-#define HIT_POINT_RADIUS 35
+#define HIT_POINT_RADIUS 40
 #define COMBO_EXTRA_SCORE 50
 #define COMBO_MAX_SCORE 400
 #define KEY_NUM 8
@@ -107,7 +107,7 @@ typedef enum EventType EventType;
 extern const SDL_Scancode default_keys[];
 
 /* Game Scene */
-#define GAME_SCENE_PRELOAD_OFFSET 1000
+#define GAME_SCENE_PRELOAD_OFFSET 1500
 #define GAME_SCENE_TEXT_PERSISTENCE 2000
 #define GAME_SCENE_LETTER_HEIGHT 40
 #define GAME_SCENE_LETTER_WIDTH 20

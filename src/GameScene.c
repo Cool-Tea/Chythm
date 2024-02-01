@@ -149,6 +149,13 @@ static void GetGameSceneEvents(cJSON* event, cJSON* time, cJSON* type, cJSON* da
         cJSON* x = cJSON_GetObjectItem(data, "x");
         cJSON* y = cJSON_GetObjectItem(data, "y");
         cJSON* text = cJSON_GetObjectItem(data, "text");
+        if (x->type == cJSON_NULL) {
+            int len = strlen(text->valuestring);
+            cJSON_SetNumberValue(x, ((SCREEN_WIDTH - len * GAME_SCENE_LETTER_WIDTH) >> 1));
+        }
+        if (y->type == cJSON_NULL) {
+            cJSON_SetNumberValue(y, 0);
+        }
         Event* new_event = CreateEvent(time->valueint, lasting_time->valueint,
             TEXT, x->valueint, y->valueint, text->valuestring);
         ListEmplaceTail(&game_scene->event_list, new_event);

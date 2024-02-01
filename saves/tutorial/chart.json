@@ -3061,124 +3061,412 @@
         ],
         "events": [
             {
-                "object": 0,
                 "type": 16,
                 "time": 500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 700,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "Welcome to Chythm!"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 2500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 600,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "G, H is the key for hit point"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 4500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 600,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "But in other charts, key might alter"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 6500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 500,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "In general, key distribution is central focused"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 8500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 700,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "This is Single note"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 10500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 700,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "It needs one hit"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 12500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 600,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "too early or too late hit will miss it"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 14500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 700,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "This is Long note"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 16500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 700,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "It needs continual strikes"
                 }
             },
             {
-                "object": 0,
+                "type": 17,
+                "time": 16500,
+                "data": {
+                    "bpm": 60
+                }
+            },
+            {
                 "type": 16,
                 "time": 18500,
                 "lasting_time": 2000,
                 "data": {
-                    "x": 600,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "Early or late hit and release will miss it"
                 }
             },
             {
-                "object": 0,
                 "type": 16,
                 "time": 20500,
                 "lasting_time": 4000,
                 "data": {
-                    "x": 800,
-                    "y": 100,
+                    "x": null,
+                    "y": null,
                     "text": "Try and enjoy"
+                }
+            },
+            {
+                "type": 19,
+                "time": 62500,
+                "data": {
+                    "background": "background2.png"
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 62500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 640,
+                    "y": 500
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 62500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 1280,
+                    "y": 700
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 63000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 640,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 63000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 1280,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 63500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 640,
+                    "y": 700
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 63500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 1280,
+                    "y": 500
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 64000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 640,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 64000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 1280,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 64500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 540,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 64500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 1380,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 65000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 740,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 65000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 1180,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 66000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 640,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 66000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 1280,
+                    "y": 600
+                }
+            },
+            {
+                "type": 18,
+                "time": 66000,
+                "lasting_time": 6000,
+                "data": {
+                    "x": 960,
+                    "y": 600,
+                    "radius": 60,
+                    "angle": 0.0,
+                    "type": 4,
+                    "repeat": 1
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 67000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 960,
+                    "y": 280
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 67000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 960,
+                    "y": 920
+                }
+            },
+            {
+                "type": 18,
+                "time": 67000,
+                "lasting_time": 5000,
+                "data": {
+                    "x": 840,
+                    "y": 600,
+                    "radius": 60,
+                    "angle": 0.0,
+                    "type": 4,
+                    "repeat": 1
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 68000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 1280,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 68000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 640,
+                    "y": 600
+                }
+            },
+            {
+                "type": 18,
+                "time": 68000,
+                "lasting_time": 4000,
+                "data": {
+                    "x": 960,
+                    "y": 480,
+                    "radius": 60,
+                    "angle": 0.0,
+                    "type": 4,
+                    "repeat": 1
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 69000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 960,
+                    "y": 920
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 69000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 960,
+                    "y": 280
+                }
+            },
+            {
+                "type": 18,
+                "time": 69000,
+                "lasting_time": 3000,
+                "data": {
+                    "x": 1080,
+                    "y": 600,
+                    "radius": 60,
+                    "angle": 0.0,
+                    "type": 4,
+                    "repeat": 1
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 70000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 640,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 70000,
+                "lasting_time": 1000,
+                "data": {
+                    "x": 1280,
+                    "y": 600
+                }
+            },
+            {
+                "type": 18,
+                "time": 70000,
+                "lasting_time": 2000,
+                "data": {
+                    "x": 960,
+                    "y": 720,
+                    "radius": 60,
+                    "angle": 0.0,
+                    "type": 4,
+                    "repeat": 1
                 }
             }
         ]

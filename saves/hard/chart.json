@@ -41,78 +41,173 @@
         ],
         "notes": [
             {
-                "type": 1,
+                "type": 0,
                 "move": [
                     {
                         "lane": 0,
-                        "x": 400,
-                        "y": -40,
-                        "reach_time": 2000
-                    },
-                    {
-                        "lane": 0,
-                        "x": 400,
-                        "y": -40,
-                        "reach_time": 2600
-                    }
-                ]
-            },
-            {
-                "type": 1,
-                "move": [
-                    {
-                        "lane": 1,
-                        "x": 800,
+                        "x": 500,
                         "y": -40,
                         "reach_time": 2500
-                    },
-                    {
-                        "lane": 1,
-                        "x": 800,
-                        "y": -40,
-                        "reach_time": 5500
                     }
                 ]
             },
             {
-                "type": 1,
+                "type": 0,
                 "move": [
                     {
-                        "lane": 2,
-                        "x": 1200,
+                        "lane": 1,
+                        "x": 700,
                         "y": -40,
-                        "reach_time": 5500
+                        "reach_time": 2500
+                    }
+                ]
+            },
+            {
+                "type": 2,
+                "move": [
+                    {
+                        "lane": 0,
+                        "x": 960,
+                        "y": -40,
+                        "reach_time": 3000
+                    },
+                    {
+                        "lane": 1,
+                        "x": 960,
+                        "y": -40,
+                        "reach_time": 3000
                     },
                     {
                         "lane": 2,
-                        "x": 1200,
+                        "x": 960,
                         "y": -40,
-                        "reach_time": 6500
+                        "reach_time": 3000
+                    }
+                ]
+            },
+            {
+                "type": 2,
+                "move": [
+                    {
+                        "lane": 0,
+                        "x": 960,
+                        "y": -40,
+                        "reach_time": 3500
+                    },
+                    {
+                        "lane": 1,
+                        "x": 960,
+                        "y": -40,
+                        "reach_time": 4000
+                    },
+                    {
+                        "lane": 2,
+                        "x": 960,
+                        "y": -40,
+                        "reach_time": 4500
                     }
                 ]
             }
         ],
         "events": [
             {
-                "object": 0,
-                "type": 16,
-                "time": 0,
-                "lasting_time": 1500,
+                "type": 33,
+                "lane": 0,
+                "time": 3000,
+                "lasting_time": 500,
                 "data": {
-                    "x": 790,
-                    "y": 0,
-                    "text": "Welcome to Chythm"
+                    "x": 400,
+                    "y": 500
                 }
             },
             {
-                "object": 0,
-                "type": 16,
-                "time": 2000,
-                "lasting_time": 4000,
+                "type": 33,
+                "lane": 1,
+                "time": 3000,
+                "lasting_time": 500,
                 "data": {
-                    "x": 610,
-                    "y": 0,
-                    "text": "F, G, H, J is the key for hit point"
+                    "x": 800,
+                    "y": 700
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 3500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 400,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 3500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 800,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 4000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 400,
+                    "y": 700
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 4000,
+                "lasting_time": 500,
+                "data": {
+                    "x": 800,
+                    "y": 500
+                }
+            },
+            {
+                "type": 33,
+                "lane": 0,
+                "time": 4500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 400,
+                    "y": 600
+                }
+            },
+            {
+                "type": 33,
+                "lane": 1,
+                "time": 4500,
+                "lasting_time": 500,
+                "data": {
+                    "x": 800,
+                    "y": 600
+                }
+            },
+            {
+                "type": 18,
+                "time": 5000,
+                "lasting_time": 2000,
+                "data": {
+                    "x": 960,
+                    "y": 400,
+                    "radius": 60,
+                    "angle": 60.0,
+                    "type": 4,
+                    "repeat": 1
+                }
+            },
+            {
+                "type": 19,
+                "time": 5000,
+                "data": {
+                    "background": "background2.png"
                 }
             }
         ]

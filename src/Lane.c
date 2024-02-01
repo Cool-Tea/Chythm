@@ -40,21 +40,21 @@ static int isBeyondHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         >=
-        (NOTE_RADIUS << 1);
+        (NOTE_RADIUS + HIT_POINT_RADIUS);
 }
 
 static int isPerfectHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         <=
-        (NOTE_RADIUS >> 1);
+        ((NOTE_RADIUS + HIT_POINT_RADIUS) >> 2);
 }
 
 static int isGoodHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         <=
-        (NOTE_RADIUS);
+        ((NOTE_RADIUS + HIT_POINT_RADIUS) >> 1);
 }
 
 static void LaneSingleNoteJudge(Lane* lane, Note* note) {
@@ -222,13 +222,13 @@ void LaneHandleKey(Lane* lane, SDL_Event* event) {
     }
 }
 
-static void LaneUpdateMoveEvent(HitPoint* hit_point, const Event* event) {
+static void LaneExecMoveEvent(HitPoint* hit_point, const Event* event) {
     hit_point->speed.x = *((int*)event->data);
     hit_point->speed.y = *((int*)event->data + 1);
     hit_point->speed.move_enable = 1;
 }
 
-static void LaneUpdateMoveToEvent(HitPoint* hit_point, const Event* event) {
+static void LaneExecMoveToEvent(HitPoint* hit_point, const Event* event) {
     hit_point->dest.update_time = event->time;
     hit_point->dest.reach_time = event->time + event->lasting_time;
     /* This will generate momentum*/
@@ -239,7 +239,7 @@ static void LaneUpdateMoveToEvent(HitPoint* hit_point, const Event* event) {
     hit_point->dest.move_enable = 1;
 }
 
-static void LaneUpdateStopEvent(HitPoint* hit_point) {
+static void LaneExecStopEvent(HitPoint* hit_point) {
     hit_point->speed.x = 0;
     hit_point->speed.y = 0;
     hit_point->dest.reach_x = hit_point->cur_x;
@@ -258,16 +258,16 @@ static void LaneUpdateEvents(Lane* lane) {
         else if (app.timer.relative_time < event->time + event->lasting_time) {
             switch (event->type) {
             case MOVE: {
-                LaneUpdateMoveEvent(&lane->hit_point, event);
+                LaneExecMoveEvent(&lane->hit_point, event);
                 ListErase(&lane->event_list, ptr);
                 break;
             }
             case MOVETO: {
-                LaneUpdateMoveToEvent(&lane->hit_point, event);
+                LaneExecMoveToEvent(&lane->hit_point, event);
                 break;
             }
             case STOP: {
-                LaneUpdateStopEvent(&lane->hit_point);
+                LaneExecStopEvent(&lane->hit_point);
                 ListErase(&lane->event_list, ptr);
                 break;
             }
