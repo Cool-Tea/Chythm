@@ -6,10 +6,12 @@
 /* Common */
 #define GAME_TITLE "Chythm"
 
-#define AUTO_RESOLUTION 0
+#define STD_SCREEN_WIDTH 1920
+#define STD_SCREEN_HEIGHT 1080
+extern int SCREEN_WIDTH, SCREEN_HEIGHT;
 
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
+#define ZoomWidth(width) ((width) * SCREEN_WIDTH / STD_SCREEN_WIDTH)
+#define ZoomHeight(height) ((height) * SCREEN_HEIGHT / STD_SCREEN_HEIGHT)
 
 #define LETTER_WIDTH 50
 #define LETTER_HEIGHT 100
@@ -131,14 +133,12 @@ extern const SDL_Color cursor_color;
 
 /* Select Scene */
 #define CHART_LIST_INIT_CAPACITY 1 << 3
-#define CHART_LIST_NAME_MAX_SIZE SCREEN_HEIGHT / LETTER_HEIGHT / 2
+#define CHART_LIST_NAME_MAX_SIZE STD_SCREEN_HEIGHT / LETTER_HEIGHT / 2
 
 #if !USE_DEFAULT_BACKGROUND
 /* if USE_DEFAULT_BACKGROUND is false, this will change the background of the select */
 #define SELECT_SCENE_BACKGROUND DEFAULT_BACKGROUND_PURE // the path to the background
 #endif
-
-extern const SDL_Rect preview_rect;
 
 /* Pause Scene */
 #define PAUSE_SCENE_BUTTON_SIZE 3
@@ -167,5 +167,7 @@ extern const char* end_scene_ratings[];
 #if !USE_DEFAULT_BACKGROUND
 #define LOAD_SCENE_BACKGROUND "../assets/images/loading.png"
 #endif
+
+void InitConstants();
 
 #endif

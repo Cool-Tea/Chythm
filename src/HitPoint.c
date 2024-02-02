@@ -57,21 +57,12 @@ static void HitPointDrawPrompt(HitPoint* hit_point) {
 }
 
 void HitPointDraw(HitPoint* hit_point) {
-    static SDL_Rect rect
-#if !AUTO_RESOLUTION
-        = { .h = HIT_POINT_RADIUS << 1, .w = HIT_POINT_RADIUS << 1 }
-#endif
-    ;
+    static SDL_Rect rect;
 
     EffectDraw(&hit_point->down_effect, hit_point->cur_x, hit_point->cur_y, HIT_POINT_RADIUS + 20, 0.0);
 
-    rect.x = hit_point->cur_x - HIT_POINT_RADIUS, rect.y = hit_point->cur_y - HIT_POINT_RADIUS;
-
-#if AUTO_RESOLUTION
-    rect.h = HIT_POINT_RADIUS << 1, rect.w = HIT_POINT_RADIUS << 1;
-    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
-    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
-#endif
+    rect.x = ZoomWidth(hit_point->cur_x - HIT_POINT_RADIUS), rect.y = ZoomHeight(hit_point->cur_y - HIT_POINT_RADIUS);
+    rect.w = ZoomWidth(HIT_POINT_RADIUS << 1), rect.h = ZoomHeight(HIT_POINT_RADIUS << 1);
 
     SDL_RenderCopy(app.ren, assets.hit_points[hit_point->is_down], NULL, &rect);
 

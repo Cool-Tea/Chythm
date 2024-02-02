@@ -151,7 +151,7 @@ static void GetGameSceneEvents(cJSON* event, cJSON* time, cJSON* type, cJSON* da
         cJSON* text = cJSON_GetObjectItem(data, "text");
         if (x->type == cJSON_NULL) {
             int len = strlen(text->valuestring);
-            cJSON_SetNumberValue(x, ((SCREEN_WIDTH - len * GAME_SCENE_LETTER_WIDTH) >> 1));
+            cJSON_SetNumberValue(x, ((STD_SCREEN_WIDTH - len * GAME_SCENE_LETTER_WIDTH) >> 1));
         }
         if (y->type == cJSON_NULL) {
             cJSON_SetNumberValue(y, 0);
@@ -536,11 +536,11 @@ static void GameSceneDrawHitText() {
 static void GameSceneDrawPrompt() {
     static int len;
     static char* prompt = "Press <Space> to continue";
-    static SDL_Rect rect = { .h = LETTER_HEIGHT, .y = (SCREEN_HEIGHT - LETTER_HEIGHT) >> 1 };
+    static SDL_Rect rect = { .h = LETTER_HEIGHT, .y = (STD_SCREEN_HEIGHT - LETTER_HEIGHT) >> 1 };
 
     len = strlen(prompt);
     rect.w = len * LETTER_WIDTH;
-    rect.x = (SCREEN_WIDTH - rect.w) >> 1;
+    rect.x = (STD_SCREEN_WIDTH - rect.w) >> 1;
 
     DrawText(rect, prompt, default_colors[0]);
 }

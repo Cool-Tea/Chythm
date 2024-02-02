@@ -248,11 +248,10 @@ void SelectSceneHandleKey(SDL_Event* event) {
 void SelectSceneUpdate() {
 }
 
-static void SelectSceneDrawPreview(SDL_Rect rect) {
-#if AUTO_RESOLUTION
-    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
-    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
-#endif
+static void SelectSceneDrawPreview() {
+    static SDL_Rect rect;
+    rect.x = ZoomWidth(STD_SCREEN_WIDTH / 2 - 250), rect.y = ZoomHeight(STD_SCREEN_HEIGHT / 2 - 400);
+    rect.w = ZoomWidth(500), rect.h = ZoomHeight(500);
 
     if (select_scene->preview == NULL) {
         char buffer[1 << 8] = { 0 };
@@ -267,24 +266,24 @@ static void SelectSceneDrawPreview(SDL_Rect rect) {
 }
 
 static void SelectSceneDrawInfo() {
-    static SDL_Rect rect = { .h = LETTER_HEIGHT };
+    static SDL_Rect rect = { .x = STD_SCREEN_WIDTH / 2, .h = LETTER_HEIGHT };
     static int len;
 
     /* Draw preview */
-    SelectSceneDrawPreview(preview_rect);
+    SelectSceneDrawPreview();
 
     /* Draw title */
     len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title);
-    rect.y = preview_rect.y + preview_rect.h + LETTER_HEIGHT;
+    rect.y = STD_SCREEN_HEIGHT / 2 + 100 + LETTER_HEIGHT;
     rect.w = len * LETTER_WIDTH;
-    rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
+    rect.x = STD_SCREEN_WIDTH / 2 - (rect.w >> 1);
     DrawText(rect, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].title, default_colors[0]);
 
     /* Draw artist */
     len = strlen(select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist);
     rect.y += LETTER_HEIGHT;
     rect.w = len * LETTER_WIDTH;
-    rect.x = (preview_rect.x + (preview_rect.w >> 1)) - (rect.w >> 1);
+    rect.x = STD_SCREEN_WIDTH / 2 - (rect.w >> 1);
     DrawText(rect, select_scene->chart_list.charts[select_scene->chart_list.cur_chart].artist, default_colors[0]);
 }
 

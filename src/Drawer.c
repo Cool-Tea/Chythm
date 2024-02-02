@@ -94,10 +94,8 @@ void DrawDefaultBackgroundPure() {
 #endif
 
 void DrawText(SDL_Rect rect, const char* text, SDL_Color color) {
-#if AUTO_RESOLUTION
-    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
-    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
-#endif
+    rect.x = ZoomWidth(rect.x), rect.y = ZoomHeight(rect.y);
+    rect.w = ZoomWidth(rect.w), rect.h = ZoomHeight(rect.h);
 
     SDL_Surface* sur = TTF_RenderText_Blended(app.font, text, color);
     if (app.cur_scene == LOAD) SDL_LockMutex(app.mutex);
@@ -112,32 +110,16 @@ void DrawCursor(SDL_Rect rect) {
     int center_y = rect.y + (rect.h >> 1);
     thickLineRGBA(
         app.ren,
-
-#if AUTO_RESOLUTION
-        (rect.x - CURSOR_LEN) * app.zoom_rate.w, center_y * app.zoom_rate.h,
-        rect.x * app.zoom_rate.w, center_y * app.zoom_rate.h,
-        CURSOR_WIDTH * app.zoom_rate.w,
-#else
-        rect.x - CURSOR_LEN, center_y,
-        rect.x, center_y,
-        CURSOR_WIDTH,
-#endif
-
+        ZoomWidth(rect.x - CURSOR_LEN), ZoomHeight(center_y),
+        ZoomWidth(rect.x), ZoomHeight(center_y),
+        ZoomHeight(CURSOR_WIDTH),
         cursor_color.r, cursor_color.g, cursor_color.b, cursor_color.a
     );
     thickLineRGBA(
         app.ren,
-
-#if AUTO_RESOLUTION
-        (rect.x + rect.w) * app.zoom_rate.w, center_y * app.zoom_rate.w,
-        (rect.x + rect.w + CURSOR_LEN) * app.zoom_rate.w, center_y * app.zoom_rate.h,
-        CURSOR_WIDTH * app.zoom_rate.w,
-#else
-        rect.x + rect.w, center_y,
-        rect.x + rect.w + CURSOR_LEN, center_y,
-        CURSOR_WIDTH,
-#endif
-
+        ZoomWidth(rect.x + rect.w), ZoomHeight(center_y),
+        ZoomWidth(rect.x + rect.w + CURSOR_LEN), ZoomHeight(center_y),
+        ZoomHeight(CURSOR_WIDTH),
         cursor_color.r, cursor_color.g, cursor_color.b, cursor_color.a
     );
 }

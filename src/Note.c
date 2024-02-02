@@ -73,20 +73,9 @@ void NoteUpdate(Note* note, int target_x, int target_y) {
 
 #if !NOTE_ONLY_EFFECT
 static void TypeNoteDraw(Note* note) {
-    static SDL_Rect rect
-#if !AUTO_RESOLUTION
-        = { .h = NOTE_RADIUS << 1, .w NOTE_RADIUS << 1 }
-#endif
-    ;
-
-    rect.x = note->cur_x - NOTE_RADIUS, rect.y = note->cur_y - NOTE_RADIUS;
-
-#if AUTO_RESOLUTION
-    rect.h = NOTE_RADIUS << 1, rect.w = NOTE_RADIUS << 1;
-    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
-    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
-#endif
-
+    static SDL_Rect rect;
+    rect.x = ZoomWidth(note->cur_x - NOTE_RADIUS), rect.y = ZoomHeight(note->cur_y - NOTE_RADIUS);
+    rect.w = ZoomWidth(NOTE_RADIUS << 1), rect.h = ZoomHeight(NOTE_RADIUS << 1);
     double angle =
         SDL_atan2(note->update_x - note->cur_x, note->cur_y - note->update_y)
         * 180.0 / PI;
@@ -98,15 +87,8 @@ static void LongNoteDraw(Note* note) {
     if (note->linked_notes[0])
         lineRGBA(
             app.ren,
-
-#if AUTO_RESOLUTION
-            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
-            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
-#else
-            note->cur_x, note->cur_y,
-            note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
-#endif
-
+            ZoomWidth(note->cur_x), ZoomHeight(note->cur_y),
+            ZoomWidth(note->linked_notes[0]->cur_x), ZoomHeight(note->linked_notes[0]->cur_y),
             default_colors[0].r, default_colors[0].g, default_colors[0].b, default_colors[0].a
         );
 }
@@ -115,30 +97,16 @@ static void MultiNoteDraw(Note* note) {
     if (note->linked_notes[0])
         lineRGBA(
             app.ren,
-
-#if AUTO_RESOLUTION
-            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
-            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
-#else
-            note->cur_x, note->cur_y,
-            note->linked_notes[0]->cur_x, note->linked_notes[0]->cur_y,
-#endif
-
+            ZoomWidth(note->cur_x), ZoomHeight(note->cur_y),
+            ZoomWidth(note->linked_notes[0]->cur_x), ZoomHeight(note->linked_notes[0]->cur_y),
             default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
         );
 
     if (note->linked_notes[1])
         lineRGBA(
             app.ren,
-
-#if AUTO_RESOLUTION
-            note->cur_x * app.zoom_rate.w, note->cur_y * app.zoom_rate.h,
-            note->linked_notes[0]->cur_x * app.zoom_rate.w, note->linked_notes[0]->cur_y * app.zoom_rate.h,
-#else
-            note->cur_x, note->cur_y,
-            note->linked_notes[1]->cur_x, note->linked_notes[1]->cur_y,
-#endif
-
+            ZoomWidth(note->cur_x), ZoomHeight(note->cur_y),
+            ZoomWidth(note->linked_notes[1]->cur_x), ZoomHeight(note->linked_notes[1]->cur_y),
             default_colors[2].r, default_colors[2].g, default_colors[2].b, default_colors[2].a
         );
 }

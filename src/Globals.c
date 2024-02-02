@@ -1,7 +1,6 @@
 #include "Globals.h"
 
 Application app = {
-    .zoom_rate = { 1.0, 1.0 },
     .win = NULL,
     .ren = NULL,
     .font = NULL,

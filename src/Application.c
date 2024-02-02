@@ -6,27 +6,10 @@ void InitApplication() {
     app.font = NULL;
 
     /* SDL related */
-#if AUTO_RESOLUTION
-    SDL_DisplayMode dm;
-    if (SDL_GetCurrentDisplayMode(0, &dm) < 0) {
-        fprintf(stderr, "[Application]Failed to get current resolution: %s\n", SDL_GetError());
-        app.is_error = 1;
-        return;
-    }
-    app.zoom_rate.w = (double)dm.w / SCREEN_WIDTH;
-    app.zoom_rate.h = (double)dm.h / SCREEN_HEIGHT;
-#endif
-
     app.win = SDL_CreateWindow(
         GAME_TITLE,
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-
-#if AUTO_RESOLUTION
-        SCREEN_WIDTH * app.zoom_rate.w, SCREEN_HEIGHT * app.zoom_rate.h,
-#else
         SCREEN_WIDTH, SCREEN_HEIGHT,
-#endif
-
         SDL_WINDOW_OPENGL /* TODO: | SDL_WINDOW_FULLSCREEN_DESKTOP*/
     );
     if (app.win == NULL) {
@@ -176,20 +159,9 @@ void ApplicationUpdate() {
 
 static void ApplicationDrawFPS() {
     static char fps[1 << 4];
-    static SDL_Rect rect
-#if !AUTO_RESOLUTION
-        = { .h = 20, .x = 1800, .y = 0 };
-#endif
-    ;
+    static SDL_Rect rect = { .h = 20, .x = 1800, .y = 0 };
     int len = sprintf(fps, "fps: %u", 1000u / app.timer.delta_time);
     rect.w = 10 * len;
-
-#if AUTO_RESOLUTION
-    rect.h = 20, rect.x = 1800, rect.y = 0;
-    rect.x *= app.zoom_rate.w, rect.y *= app.zoom_rate.h;
-    rect.w *= app.zoom_rate.w, rect.h *= app.zoom_rate.h;
-#endif
-
     DrawText(rect, fps, default_colors[0]);
 }
 

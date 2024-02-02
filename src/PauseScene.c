@@ -19,9 +19,9 @@ PauseScene* CreatePauseScene() {
     }
 #endif
 
-    InitButton(&pause_scene->buttons[0], SCREEN_WIDTH / 2 - 3 * LETTER_WIDTH, 200, "Resume", Resume);
-    InitButton(&pause_scene->buttons[1], SCREEN_WIDTH / 2 - 6 * LETTER_WIDTH, 200 + 2 * LETTER_HEIGHT, "Back To Menu", BackToMenu);
-    InitButton(&pause_scene->buttons[2], SCREEN_WIDTH / 2 - 2 * LETTER_WIDTH, 200 + 4 * LETTER_HEIGHT, "Quit", Quit);
+    InitButton(&pause_scene->buttons[0], STD_SCREEN_WIDTH / 2 - 3 * LETTER_WIDTH, 200, "Resume", Resume);
+    InitButton(&pause_scene->buttons[1], STD_SCREEN_WIDTH / 2 - 6 * LETTER_WIDTH, 200 + 2 * LETTER_HEIGHT, "Back To Menu", BackToMenu);
+    InitButton(&pause_scene->buttons[2], STD_SCREEN_WIDTH / 2 - 2 * LETTER_WIDTH, 200 + 4 * LETTER_HEIGHT, "Quit", Quit);
     pause_scene->cur_button = 0;
     pause_scene->buttons[pause_scene->cur_button].is_on = 1;
 }

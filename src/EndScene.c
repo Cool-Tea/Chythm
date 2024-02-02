@@ -115,7 +115,7 @@ static void EndSceneDrawRating() {
     if (end_scene->rating != NULL) {
         len = strlen(end_scene->rating);
         rect.w = len * LETTER_WIDTH;
-        rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
+        rect.x = STD_SCREEN_WIDTH / 2 - rect.w / 2;
         DrawText(rect, end_scene->rating, default_colors[0]);
     }
 }
@@ -128,13 +128,13 @@ static void EndSceneDrawScore() {
     len = sprintf(buf, "SCORE: %lu", game_scene->score);
     rect.y = 100 + rect.h;
     rect.w = len * LETTER_WIDTH;
-    rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
+    rect.x = STD_SCREEN_WIDTH / 2 - rect.w / 2;
     DrawText(rect, buf, default_colors[0]);
 
     len = sprintf(buf, "HISTORY BEST: %lu", game_scene->history_score);
     rect.y += rect.h;
     rect.w = len * LETTER_WIDTH;
-    rect.x = SCREEN_WIDTH / 2 - rect.w / 2;
+    rect.x = STD_SCREEN_WIDTH / 2 - rect.w / 2;
     DrawText(rect, buf, default_colors[0]);
 }
 

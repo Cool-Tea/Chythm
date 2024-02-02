@@ -51,6 +51,7 @@ void InitGame() {
         app.is_error = 1;
         return;
     }
+    InitConstants();
     InitApplication();
 }
 void QuitGame() {

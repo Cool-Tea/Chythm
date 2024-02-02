@@ -40,21 +40,21 @@ static int isBeyondHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         >=
-        (NOTE_RADIUS + HIT_POINT_RADIUS);
+        (HIT_POINT_RADIUS << 1);
 }
 
 static int isPerfectHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         <=
-        ((NOTE_RADIUS + HIT_POINT_RADIUS) >> 2);
+        (NOTE_RADIUS);
 }
 
 static int isGoodHit(const HitPoint* hit_point, const Note* note) {
     return
         SDL_abs(hit_point->cur_x - note->cur_x) + SDL_abs(hit_point->cur_y - note->cur_y)
         <=
-        ((NOTE_RADIUS + HIT_POINT_RADIUS) >> 1);
+        ((NOTE_RADIUS + HIT_POINT_RADIUS));
 }
 
 static void LaneSingleNoteJudge(Lane* lane, Note* note) {

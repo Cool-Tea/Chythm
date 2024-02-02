@@ -1,6 +1,8 @@
 #include "Constants.h"
 
 /* Common */
+int SCREEN_WIDTH, SCREEN_HEIGHT;
+
 const SDL_Color default_colors[] = {
     {0xff,0xff,0xff,0xff}, // white
     {0x51,0xb1,0x4d,0xff}, // light green
@@ -40,9 +42,6 @@ const SDL_Color cursor_color = {
 };
 
 /* Select Scene */
-const SDL_Rect preview_rect = {
-    SCREEN_WIDTH / 2 - 250, SCREEN_HEIGHT / 2 - 400, 500, 500
-};
 
 /* End Scene */
 const char* end_scene_ratings[] = {
@@ -52,3 +51,9 @@ const char* end_scene_ratings[] = {
     "RATING: C",
     "RATING: D"
 };
+
+void InitConstants() {
+    SDL_DisplayMode dm;
+    SDL_assert(SDL_GetCurrentDisplayMode(0, &dm) == 0);
+    SCREEN_WIDTH = dm.w, SCREEN_HEIGHT = dm.h;
+}
