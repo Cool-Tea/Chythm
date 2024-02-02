@@ -6,7 +6,7 @@ void InitChartList(ChartList* list, const char* saves_path) {
     list->saves_path = malloc(strlen(saves_path) + 1);
     if (list->saves_path == NULL) {
         fprintf(stderr, "[ChartList]Failed to malloc saves path\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return;
     }
     strcpy(list->saves_path, saves_path);
@@ -16,15 +16,12 @@ void InitChartList(ChartList* list, const char* saves_path) {
     list->charts = malloc(list->capacity * sizeof(ChartInfo));
     if (list->charts == NULL) {
         fprintf(stderr, "[ChartList]Failed to malloc charts\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return;
     }
 
     /* Read saves dir and initial the list */
     ChartListRefresh(list);
-    if (app.is_error) {
-        fprintf(stderr, "[ChartList]Failed to init list\n");
-    }
 }
 
 void FreeChartList(ChartList* list) {
@@ -62,7 +59,7 @@ void ChartListPushBack(ChartList* list,
     list->charts[list->size].chart_path = malloc(len + 1);
     if (list->charts[list->size].chart_path == NULL) {
         fprintf(stderr, "[ChartList]Failed to malloc chart path\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
     }
     else strcpy(list->charts[list->size].chart_path, path);
 
@@ -70,7 +67,7 @@ void ChartListPushBack(ChartList* list,
     list->charts[list->size].title = malloc(len + 1);
     if (list->charts[list->size].title == NULL) {
         fprintf(stderr, "[ChartList]Failed to malloc name\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
     }
     else strcpy(list->charts[list->size].title, title);
 
@@ -78,7 +75,7 @@ void ChartListPushBack(ChartList* list,
     list->charts[list->size].artist = malloc(len + 1);
     if (list->charts[list->size].artist == NULL) {
         fprintf(stderr, "[ChartList]Failed to malloc author\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
     }
     else strcpy(list->charts[list->size].artist, artist);
 
@@ -86,18 +83,18 @@ void ChartListPushBack(ChartList* list,
     list->charts[list->size].preview = malloc(len + 1);
     if (list->charts[list->size].preview == NULL) {
         fprintf(stderr, "[ChartList]Failed to malloc preview\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
     }
     else strcpy(list->charts[list->size].preview, preview);
 
-    if (!app.is_error) list->size++;
+    list->size++;
 }
 
 void ChartListRefresh(ChartList* list) {
     DIR* saves = opendir(list->saves_path);
     if (saves == NULL) {
         fprintf(stderr, "[ChartList]Failed to open saves dir\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
     struct dirent* chart;
@@ -152,7 +149,7 @@ SelectScene* CreateSelectScene() {
     select_scene = malloc(sizeof(SelectScene));
     if (select_scene == NULL) {
         fprintf(stderr, "[SelectScene]Failed to malloc select scene\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return select_scene;
     }
 
@@ -163,15 +160,12 @@ SelectScene* CreateSelectScene() {
     select_scene->preview = NULL;
 
     InitChartList(&select_scene->chart_list, SAVES_PATH);
-    if (app.is_error) {
-        fprintf(stderr, "[SelectScene]Failed to init chart list\n");
-    }
 
 #if !USE_DEFAULT_BACKGROUND
     select_scene->background = IMG_LoadTexture(app.ren, SELECT_SCENE_BACKGROUND);
     if (select_scene->background == NULL) {
         fprintf(stderr, "[SelectScene]Failed to load background: %s\n", IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
     }
 #endif
 

@@ -6,7 +6,7 @@ LoadScene* CreateLoadScene() {
     load_scene = malloc(sizeof(LoadScene));
     if (load_scene == NULL) {
         fprintf(stderr, "[LoadScene]Failed to malloc load scene\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return load_scene;
     }
 
@@ -14,7 +14,7 @@ LoadScene* CreateLoadScene() {
     load_scene->background = IMG_LoadTexture(app.ren, LOAD_SCENE_BACKGROUND);
     if (load_scene->background == NULL) {
         fprintf(stderr, "[LoadScene]Failed to load background: %s\n", IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return load_scene;
     }
 #endif

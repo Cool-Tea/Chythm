@@ -1,26 +1,21 @@
 #include "Event.h"
 
 static void InitTextEvent(Event* event, va_list* args) {
-    int x = va_arg(*args, int);
-    int y = va_arg(*args, int);
+    SDL_Rect rect;
+    rect.x = va_arg(*args, int);
+    rect.y = va_arg(*args, int);
     const char* text = va_arg(*args, char*);
     int len = strlen(text);
-    int size = len + 1 + sizeof(SDL_Rect);
-    event->data = malloc(size);
+    rect.w = len * GAME_SCENE_LETTER_WIDTH, rect.h = GAME_SCENE_LETTER_HEIGHT;
+    event->data = malloc(sizeof(SDL_Rect) + len + 1);
     if (event->data == NULL) {
         fprintf(stderr, "[Event]Failed to malloc data\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
-    SDL_Rect rect = {
-        .h = GAME_SCENE_LETTER_HEIGHT,
-        .w = len * GAME_SCENE_LETTER_WIDTH,
-        .x = x,
-        .y = y
-    };
-    memcpy((SDL_Rect*)event->data, &rect, sizeof(SDL_Rect));
-    memcpy((char*)event->data + sizeof(SDL_Rect), text, len);
-    *((char*)event->data + sizeof(SDL_Rect) + len) = '\0';
+    char* text_cp = event->data + sizeof(SDL_Rect);
+    memcpy(event->data, &rect, sizeof(SDL_Rect));
+    memcpy(text_cp, text, len + 1);
 }
 
 static void InitBpmEvent(Event* event, va_list* args) {
@@ -28,36 +23,37 @@ static void InitBpmEvent(Event* event, va_list* args) {
     event->data = malloc(sizeof(int));
     if (event->data == NULL) {
         fprintf(stderr, "[Event]Failed to malloc data\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
     memcpy((int*)event->data, &bpm, sizeof(int));
 }
 
 static void FreeEffectEvent(void* data) {
-    Effect* effect = data + sizeof(int) * 3 + sizeof(double);
+    int size = sizeof(struct { int x, y, r; double angle; });
+    Effect* effect = data + size;
     FreeEffect(effect);
 }
 
 static void InitEffectEvent(Event* event, va_list* args) {
-    int x = va_arg(*args, int);
-    int y = va_arg(*args, int);
-    int radius = va_arg(*args, int);
-    double angle = va_arg(*args, double);
+    struct {
+        int x, y, r;
+        double angle;
+    } data;
+    data.x = va_arg(*args, int);
+    data.y = va_arg(*args, int);
+    data.r = va_arg(*args, int);
+    data.angle = va_arg(*args, double);
     int type = va_arg(*args, int);
     int repeat_enable = va_arg(*args, int);
-    int size = sizeof(int) * 3 + sizeof(double) + sizeof(Effect);
-    event->data = malloc(size);
+    event->data = malloc(sizeof(data) + sizeof(Effect));
     if (event->data == NULL) {
         fprintf(stderr, "[Event]Failed to malloc data\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
-    memcpy((int*)event->data, &x, sizeof(int));
-    memcpy((int*)event->data + 1, &y, sizeof(int));
-    memcpy((int*)event->data + 2, &radius, sizeof(int));
-    memcpy((int*)event->data + 3, &angle, sizeof(double));
-    Effect* effect = event->data + sizeof(int) * 3 + sizeof(double);
+    memcpy(event->data, &data, sizeof(data));
+    Effect* effect = event->data + sizeof(data);
     InitEffect(effect, type, repeat_enable);
     effect->is_active = 1;
     event->free = FreeEffectEvent;
@@ -69,23 +65,25 @@ static void InitBackgroundEvent(Event* event, va_list* args) {
     event->data = malloc(len + 1);
     if (event->data == NULL) {
         fprintf(stderr, "[Event]Failed to malloc data\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
     memcpy(event->data, path, len + 1);
 }
 
 static void InitMoveEvent(Event* event, va_list* args) {
-    int x = va_arg(*args, int);
-    int y = va_arg(*args, int);
-    event->data = malloc(2 * sizeof(int));
+    struct {
+        int x, y;
+    } data;
+    data.x = va_arg(*args, int);
+    data.y = va_arg(*args, int);
+    event->data = malloc(sizeof(data));
     if (event->data == NULL) {
         fprintf(stderr, "[Event]Failed to malloc data\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
-    memcpy((int*)event->data, &x, sizeof(int));
-    memcpy((int*)event->data + 1, &y, sizeof(int));
+    memcpy(event->data, &data, sizeof(data));
 }
 
 static void InitMoveToEvent(Event* event, va_list* args) {
@@ -112,7 +110,7 @@ Event* CreateEventVA(
     Event* event = malloc(sizeof(Event));
     if (event == NULL) {
         fprintf(stderr, "[Event]Failed to malloc event\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return event;
     }
     event->time = time;
@@ -163,7 +161,8 @@ void DestroyEvent(Event* event) {
 }
 
 static void EffectEventUpdate(Event* event) {
-    EffectUpdate((Effect*)(event->data + sizeof(int) * 3 + sizeof(double)));
+    Effect* effect = event->data + sizeof(struct { int x, y, r; double angle; });
+    EffectUpdate(effect);
 }
 
 void EventUpdate(Event* event) {
@@ -179,16 +178,18 @@ void EventUpdate(Event* event) {
 }
 
 static void TextEventDraw(Event* event) {
-    DrawText(*((SDL_Rect*)event->data), ((char*)event->data + sizeof(SDL_Rect)), default_colors[0]);
+    SDL_Rect* rect = event->data;
+    char* text = event->data + sizeof(SDL_Rect);
+    DrawText(*rect, text, default_colors[0]);
 }
 
 static void EffectEventDraw(Event* event) {
-    int x = *(int*)event->data;
-    int y = *((int*)event->data + 1);
-    int radius = *((int*)event->data + 2);
-    double angle = *(double*)(event->data + sizeof(int) * 3);
-    Effect* effect = event->data + sizeof(int) * 3 + sizeof(double);
-    EffectDraw(effect, x, y, radius, angle);
+    struct Data {
+        int x, y, r;
+        double angle;
+    }*data = event->data;
+    Effect* effect = event->data + sizeof(struct Data);
+    EffectDraw(effect, data->x, data->y, data->r, data->angle);
 }
 
 void EventDraw(Event* event) {

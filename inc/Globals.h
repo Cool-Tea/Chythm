@@ -26,7 +26,7 @@ struct Application {
 
     /* app status */
     bool is_running;
-    bool is_error;
+    Uint8 error_level; //0: none 1: minor(keep running) 2: servere(halt app)
     bool is_loaded;
     SceneType cur_scene;
 

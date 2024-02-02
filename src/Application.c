@@ -14,21 +14,21 @@ void InitApplication() {
     );
     if (app.win == NULL) {
         fprintf(stderr, "[Application]Failed to create window: %s\n", SDL_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return;
     }
 
     app.ren = SDL_CreateRenderer(app.win, -1, SDL_RENDERER_ACCELERATED);
     if (app.ren == NULL) {
         fprintf(stderr, "[Application]Failed to create renderer: %s\n", SDL_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return;
     }
 
     app.font = TTF_OpenFont(FONT_PATH, FONT_SIZE);
     if (app.font == NULL) {
         fprintf(stderr, "[Application]Failed to open font: %s\n", TTF_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return;
     }
 
@@ -54,7 +54,7 @@ void InitApplication() {
     app.mutex = SDL_CreateMutex();
     if (app.mutex == NULL) {
         fprintf(stderr, "[Application]Failed to create mutex: %s\n", SDL_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return;
     }
 }

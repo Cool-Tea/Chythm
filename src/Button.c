@@ -8,7 +8,7 @@ void InitButton(Button* button, int x, int y, const char* text, OnHit func) {
     button->text = malloc(len + 1);
     if (button->text == NULL) {
         fprintf(stderr, "[Button]Failed to malloc button\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
     }
     strcpy(button->text, text);
     button->func = func;

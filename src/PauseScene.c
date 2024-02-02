@@ -6,7 +6,7 @@ PauseScene* CreatePauseScene() {
     pause_scene = malloc(sizeof(PauseScene));
     if (pause_scene == NULL) {
         fprintf(stderr, "[PauseScene]Failed to malloc pause scene\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return pause_scene;
     }
 
@@ -14,7 +14,7 @@ PauseScene* CreatePauseScene() {
     pause_scene->background = IMG_LoadTexture(app.ren, PAUSE_SCENE_BACKGROUND);
     if (pause_scene->background == NULL) {
         fprintf(stderr, "[PauseScene]Failed to load background: %s\n", IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return pause_scene;
     }
 #endif

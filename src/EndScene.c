@@ -6,7 +6,7 @@ EndScene* CreateEndScene() {
     end_scene = malloc(sizeof(EndScene));
     if (end_scene == NULL) {
         fprintf(stderr, "[EndScene]Failed to malloc end scene\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return end_scene;
     }
     end_scene->rating = NULL;
@@ -15,7 +15,7 @@ EndScene* CreateEndScene() {
     end_scene->background = IMG_LoadTexture(app.ren, END_SCENE_BACKGROUND);
     if (end_scene->background == NULL) {
         fprintf(stderr, "[EndScene]Failed to load background: %s\n", IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return end_scene;
     }
 #endif

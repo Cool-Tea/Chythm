@@ -8,7 +8,7 @@ Note* CreateNote(
     Note* note = malloc(sizeof(Note));
     if (note == NULL) {
         fprintf(stderr, "[Note]Failed to malloc note\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return note;
     }
     note->type = type;

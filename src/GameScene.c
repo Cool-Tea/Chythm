@@ -13,14 +13,14 @@ static cJSON* OpenJson() {
     char* buffer = malloc(1 << 8);
     if (buffer == NULL) {
         fprintf(stderr, "[GameScene]Failed to malloc buffer\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return NULL;
     }
     CompletePath(buffer, game_scene->chart_path, "chart.json");
     FILE* fp = fopen(buffer, "r");
     if (fp == NULL) {
         fprintf(stderr, "[GameScene]Failed to open chart: %s\n", buffer);
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         free(buffer);
         return NULL;
     }
@@ -30,7 +30,7 @@ static cJSON* OpenJson() {
     buffer = realloc(buffer, len + 1);
     if (buffer == NULL) {
         fprintf(stderr, "[GameScene]Failed to malloc buffer\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         fclose(fp);
         return NULL;
     }
@@ -53,7 +53,7 @@ static int GetAudio() {
     game_scene->audio = Mix_LoadMUS(buffer);
     if (game_scene->audio == NULL) {
         fprintf(stderr, "[GameScene]Failed to load audio: %s - %s\n", buffer, Mix_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return -1;
     }
     return 0;
@@ -70,7 +70,7 @@ static int GetBackground() {
     SDL_UnlockMutex(app.mutex);
     if (game_scene->background == NULL) {
         fprintf(stderr, "[GameScene]Failed to load background: %s\n", IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return -1;
     }
     return 0;
@@ -90,7 +90,7 @@ static int GetLanes() {
     game_scene->lanes = malloc(game_scene->lane_size * sizeof(Lane));
     if (game_scene->lanes == NULL) {
         fprintf(stderr, "[GameScene]Failed to malloc lanes\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         cJSON_Delete(lanes);
         return -1;
     }
@@ -241,7 +241,7 @@ static int GetScore(const char* chart_path) {
     FILE* fp = fopen(buffer, "r");
     if (fp == NULL) {
         fprintf(stderr, "[GameScene]Failed to read histroy score: %s\n", buffer);
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return -1;
     }
     int len = fscanf(fp, "HistoryBestScore = %lu", &game_scene->history_score);
@@ -260,7 +260,7 @@ GameScene* CreateGameScene(const char* chart_path) {
     game_scene = malloc(sizeof(GameScene));
     if (game_scene == NULL) {
         fprintf(stderr, "[GameScene]Failed to malloc game scene\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return game_scene;
     }
     game_scene->status = 0;
@@ -439,7 +439,7 @@ static void GameSceneExecBackgroundEvent(Event* event) {
     SDL_Texture* background = IMG_LoadTexture(app.ren, path);
     if (background == NULL) {
         fprintf(stderr, "[GameScene]Failed to change background (%s): %s\n", path, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
     SDL_DestroyTexture(game_scene->background);

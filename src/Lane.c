@@ -6,7 +6,6 @@ void InitLane(Lane* lane, int x, int y, SDL_Scancode key) {
     ListSetFreeMethod(&lane->note_list, (FreeFunc)DestroyNote);
     InitList(&lane->event_list);
     ListSetFreeMethod(&lane->event_list, (FreeFunc)DestroyEvent);
-    if (app.is_error) fprintf(stderr, "[Lane]Failed to init lane\n");
 }
 
 void FreeLane(Lane* lane) {

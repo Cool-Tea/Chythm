@@ -8,7 +8,7 @@ static void InitNameParticle(Particle* particle, const char* name, size_t i) {
     if (app.cur_scene == LOAD) SDL_UnlockMutex(app.mutex);
     if (particle->par_img == NULL) {
         fprintf(stderr, "[Particle]Failed to load particle image (%s): %s\n", buf, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
     }
 }
 
@@ -94,7 +94,7 @@ static void InitTypeEffect(Effect* effect, EffectType type) {
     effect->particles = malloc(effect->par_size * sizeof(Particle));
     if (effect->particles == NULL) {
         fprintf(stderr, "[Effect]Failed to malloc particle\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
         return;
     }
     for (size_t i = 0; i < effect->par_size; i++) {

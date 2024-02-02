@@ -7,12 +7,12 @@ static void GetBackgroundImg() {
     assets.backgrounds[0] = IMG_LoadTexture(app.ren, DEFAULT_BACKGROUND);
     if (assets.backgrounds[0] == NULL) {
         fprintf(stderr, "Failed to load background image (%s): %s\n", DEFAULT_BACKGROUND, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
     }
     assets.backgrounds[1] = IMG_LoadTexture(app.ren, DEFAULT_BACKGROUND_PURE);
     if (assets.backgrounds[0] == NULL) {
         fprintf(stderr, "Failed to load background image (%s): %s\n", DEFAULT_BACKGROUND_PURE, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
     }
 }
 #endif
@@ -21,12 +21,12 @@ static void GetHitPointImg() {
     assets.hit_points[0] = IMG_LoadTexture(app.ren, HIT_POINT_DEFAULT_IMG);
     if (assets.hit_points[0] == NULL) {
         fprintf(stderr, "Failed to load hit point image (%s): %s\n", HIT_POINT_DEFAULT_IMG, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
     }
     assets.hit_points[1] = IMG_LoadTexture(app.ren, HIT_POINT_DOWN_IMG);
     if (assets.hit_points[1] == NULL) {
         fprintf(stderr, "Failed to load hit point image (%s): %s\n", HIT_POINT_DOWN_IMG, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
     }
 }
 
@@ -40,13 +40,13 @@ static void GetNoteImg() {
     assets.notes[SINGLE] = IMG_LoadTexture(app.ren, SINGLE_NOTE_IMG);
     if (assets.hit_points[1] == NULL) {
         fprintf(stderr, "Failed to load single note image (%s): %s\n", SINGLE_NOTE_IMG, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
     }
 
     assets.notes[LONG] = IMG_LoadTexture(app.ren, LONG_NOTE_IMG);
     if (assets.hit_points[1] == NULL) {
         fprintf(stderr, "Failed to load single note image (%s): %s\n", SINGLE_NOTE_IMG, IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 1 ? app.error_level : 1;
     }
 }
 #endif
@@ -81,7 +81,7 @@ void FreeAssets() {
     }
 #endif
 
-}
+    }
 
 #if USE_DEFAULT_BACKGROUND
 void DrawDefaultBackground() {

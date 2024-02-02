@@ -6,7 +6,7 @@ MenuScene* CreateMenuScene() {
     menu_scene = malloc(sizeof(MenuScene));
     if (menu_scene == NULL) {
         fprintf(stderr, "[MenuScene]Failed to malloc menu scene\n");
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return menu_scene;
     }
 
@@ -14,7 +14,7 @@ MenuScene* CreateMenuScene() {
     menu_scene->background = IMG_LoadTexture(app.ren, MENU_SCENE_BACKGROUND);
     if (menu_scene->background == NULL) {
         fprintf(stderr, "[MenuScene]Failed to load background: %s\n", IMG_GetError());
-        app.is_error = 1;
+        app.error_level = app.error_level > 2 ? app.error_level : 2;
         return menu_scene;
     }
 #endif
