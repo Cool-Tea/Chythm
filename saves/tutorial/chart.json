@@ -2167,6 +2167,23 @@
                 ]
             },
             {
+                "type": 1,
+                "move": [
+                    {
+                        "lane": 0,
+                        "x": 640,
+                        "y": -40,
+                        "reach_time": 79104
+                    },
+                    {
+                        "lane": 0,
+                        "x": 640,
+                        "y": -40,
+                        "reach_time": 81578
+                    }
+                ]
+            },
+            {
                 "type": 0,
                 "move": [
                     {
@@ -2269,16 +2286,16 @@
                 "type": 1,
                 "move": [
                     {
-                        "lane": 0,
-                        "x": 640,
-                        "y": -40,
-                        "reach_time": 79104
-                    },
-                    {
-                        "lane": 0,
-                        "x": 640,
+                        "lane": 1,
+                        "x": 1280,
                         "y": -40,
                         "reach_time": 81578
+                    },
+                    {
+                        "lane": 1,
+                        "x": 1280,
+                        "y": -40,
+                        "reach_time": 83968
                     }
                 ]
             },
@@ -2371,23 +2388,6 @@
                 ]
             },
             {
-                "type": 1,
-                "move": [
-                    {
-                        "lane": 1,
-                        "x": 1280,
-                        "y": -40,
-                        "reach_time": 81578
-                    },
-                    {
-                        "lane": 1,
-                        "x": 1280,
-                        "y": -40,
-                        "reach_time": 83968
-                    }
-                ]
-            },
-            {
                 "type": 0,
                 "move": [
                     {
@@ -2399,11 +2399,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 1,
-                        "x": 1280,
+                        "lane": 0,
+                        "x": 640,
                         "y": -40,
                         "reach_time": 84224
                     },
@@ -2416,11 +2416,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 0,
-                        "x": 640,
+                        "lane": 1,
+                        "x": 1280,
                         "y": -40,
                         "reach_time": 86869
                     },
@@ -2433,11 +2433,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 1,
-                        "x": 1280,
+                        "lane": 0,
+                        "x": 640,
                         "y": -40,
                         "reach_time": 88149
                     },
@@ -2450,11 +2450,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 0,
-                        "x": 640,
+                        "lane": 1,
+                        "x": 1280,
                         "y": -40,
                         "reach_time": 89514
                     },
@@ -2467,11 +2467,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 1,
-                        "x": 1280,
+                        "lane": 0,
+                        "x": 640,
                         "y": -40,
                         "reach_time": 90794
                     },
@@ -2484,11 +2484,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 0,
-                        "x": 640,
+                        "lane": 1,
+                        "x": 1280,
                         "y": -40,
                         "reach_time": 92074
                     },
@@ -2501,11 +2501,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 1,
-                        "x": 1280,
+                        "lane": 0,
+                        "x": 640,
                         "y": -40,
                         "reach_time": 93269
                     },
@@ -2518,11 +2518,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 0,
-                        "x": 640,
+                        "lane": 1,
+                        "x": 1280,
                         "y": -40,
                         "reach_time": 94720
                     },
@@ -2535,11 +2535,11 @@
                 ]
             },
             {
-                "type": 1,
+                "type": 2,
                 "move": [
                     {
-                        "lane": 1,
-                        "x": 1280,
+                        "lane": 0,
+                        "x": 640,
                         "y": -40,
                         "reach_time": 95232
                     },
@@ -3151,13 +3151,6 @@
                 }
             },
             {
-                "type": 17,
-                "time": 16500,
-                "data": {
-                    "bpm": 60
-                }
-            },
-            {
                 "type": 16,
                 "time": 18500,
                 "lasting_time": 2000,
@@ -3175,6 +3168,13 @@
                     "x": null,
                     "y": null,
                     "text": "Try and enjoy"
+                }
+            },
+            {
+                "type": 17,
+                "time": 20500,
+                "data": {
+                    "bpm": 60
                 }
             },
             {
@@ -3467,6 +3467,43 @@
                     "angle": 0.0,
                     "type": 4,
                     "repeat": 1
+                }
+            },
+            {
+                "type": 17,
+                "time": 84500,
+                "data": {
+                    "bpm": 30
+                }
+            },
+            {
+                "type": 16,
+                "time": 84500,
+                "lasting_time": 4000,
+                "data": {
+                    "x": null,
+                    "y": null,
+                    "text": "This is Multiple note"
+                }
+            },
+            {
+                "type": 16,
+                "time": 88500,
+                "lasting_time": 4000,
+                "data": {
+                    "x": null,
+                    "y": null,
+                    "text": "Each needs to be hold till others come down"
+                }
+            },
+            {
+                "type": 16,
+                "time": 92500,
+                "lasting_time": 4000,
+                "data": {
+                    "x": null,
+                    "y": null,
+                    "text": "Now try with this"
                 }
             }
         ]

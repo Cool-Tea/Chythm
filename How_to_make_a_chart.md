@@ -158,7 +158,7 @@ chart \
     "time": 2000, // event开始时间
     "lasting_time": 4000, // text持续时间
     "data": {
-        "x": 840, // 显示位置
+        "x": 840, // 显示位置，为null默认居中置顶
         "y": 0,
         "text": "Hello Chythm" // 显示文本
     }

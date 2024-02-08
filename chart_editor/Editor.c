@@ -113,14 +113,16 @@ void InitApplication(size_t lane_size, char* audio_path) {
     app.notes_size = calloc(app.lane_size, sizeof(size_t));
     app.down_states = calloc(app.lane_size, sizeof(Uint8));
     app.times = calloc(app.lane_size, sizeof(Uint32));
-    if (!app.notes_size || !app.down_states || !app.times) {
-        fprintf(stderr, "[Editor]Failed to calloc notes/downs/times\n");
+    app.insert_poses = calloc(app.lane_size, sizeof(cJSON*));
+    if (!app.notes_size || !app.down_states || !app.times || !app.insert_poses) {
+        fprintf(stderr, "[Editor]Failed to calloc notes/downs/times/insert_poses\n");
         app.is_error = 1;
         return;
     }
 }
 
 void FreeApplication() {
+    if (app.insert_poses) free(app.insert_poses);
     if (app.times) free(app.times);
     if (app.down_states) free(app.down_states);
     if (app.notes_size) free(app.notes_size);
@@ -153,34 +155,36 @@ static inline int PosX(int index) {
     return 1920u * (index + 1) / (app.lane_size + 1);
 }
 
-static void AddSingle(cJSON* notes, Uint32 reach_time, int lane) {
+static inline int PosY(int index) {
+    return -40;
+}
+
+static void AddSingle(Uint32 reach_time, int lane) {
     app.notes_size[lane]++;
-    cJSON* note = cJSON_CreateObject();
+    cJSON* note = app.insert_poses[lane];
     cJSON_AddNumberToObject(note, "type", SINGLE);
     cJSON* moves = cJSON_AddArrayToObject(note, "move");
     cJSON* move = cJSON_CreateObject();
     cJSON_AddNumberToObject(move, "lane", lane);
     cJSON_AddNumberToObject(move, "x", PosX(lane));
-    cJSON_AddNumberToObject(move, "y", -40);
+    cJSON_AddNumberToObject(move, "y", PosY(lane));
     cJSON_AddNumberToObject(move, "reach_time", reach_time);
     cJSON_AddItemToArray(moves, move);
-    cJSON_AddItemToArray(notes, note);
 }
 
-static void AddLong(cJSON* notes, Uint32 reach_time, Uint32 lasting_time, int lane) {
+static void AddLong(Uint32 reach_time, Uint32 lasting_time, int lane) {
     app.notes_size[lane] += 2;
-    cJSON* note = cJSON_CreateObject();
+    cJSON* note = app.insert_poses[lane];
     cJSON_AddNumberToObject(note, "type", LONG);
     cJSON* moves = cJSON_AddArrayToObject(note, "move");
     for (int i = 0; i < 2; i++, reach_time += lasting_time) {
         cJSON* move = cJSON_CreateObject();
         cJSON_AddNumberToObject(move, "lane", lane);
         cJSON_AddNumberToObject(move, "x", PosX(lane));
-        cJSON_AddNumberToObject(move, "y", -40);
+        cJSON_AddNumberToObject(move, "y", PosY(lane));
         cJSON_AddNumberToObject(move, "reach_time", reach_time);
         cJSON_AddItemToArray(moves, move);
     }
-    cJSON_AddItemToArray(notes, note);
 }
 
 static int KeyToLane(SDL_Scancode key) {
@@ -235,6 +239,8 @@ void JsonHandleKey(SDL_Event* event) {
                 !app.down_states[lane]) {
                 //printf("key: %s down\n", SDL_GetKeyName(event->key.keysym.sym));
                 app.times[lane] = Mix_GetMusicPosition(app.audio) * 1000.0;
+                app.insert_poses[lane] = cJSON_CreateObject();
+                cJSON_AddItemToArray(app.notes, app.insert_poses[lane]);
                 app.down_states[lane] = 1;
             }
             break;
@@ -259,10 +265,10 @@ void JsonHandleKey(SDL_Event* event) {
                 Uint32 time = Mix_GetMusicPosition(app.audio) * 1000.0;
                 time -= app.times[lane];
                 if (time >= 300) {
-                    AddLong(app.notes, app.times[lane], time, lane);
+                    AddLong(app.times[lane], time, lane);
                 }
                 else {
-                    AddSingle(app.notes, app.times[lane], lane);
+                    AddSingle(app.times[lane], lane);
                 }
                 app.down_states[lane] = 0;
             }
@@ -299,7 +305,7 @@ void ApplicationHandleKey(SDL_Event* event) {
             Mix_ResumeMusic();
             break;
         }
-        case SDL_SCANCODE_C: {
+        case SDL_SCANCODE_R: {
             Mix_HaltMusic();
             Mix_PlayMusic(app.audio, 0);
             break;

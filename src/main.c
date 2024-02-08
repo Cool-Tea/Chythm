@@ -26,7 +26,7 @@ int main() {
 }
 
 void InitGame() {
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_EVENTS | SDL_INIT_VIDEO) < 0) {
         fprintf(stderr, "[Chythm]Failed to init SDL: %s\n", SDL_GetError());
         app.error_level = app.error_level > 2 ? app.error_level : 2;
         return;

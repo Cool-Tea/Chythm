@@ -36,6 +36,7 @@ typedef struct Application {
     size_t* notes_size;
     Uint8* down_states;
     Uint32* times;
+    cJSON** insert_poses;
 } Application;
 
 Application app;

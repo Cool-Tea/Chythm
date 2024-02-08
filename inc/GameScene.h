@@ -31,6 +31,7 @@ struct GameScene {
 
     /* scores */
     int combo;
+    int note_size;
     Uint64 score;
     Uint64 history_score; // the best score in history
 };

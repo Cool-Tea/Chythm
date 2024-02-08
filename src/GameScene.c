@@ -162,10 +162,9 @@ static void GetGameSceneEvents(cJSON* event, cJSON* time, cJSON* type, cJSON* da
         break;
     }
     case BPM: {
+        cJSON* cur_bpm = cJSON_GetObjectItem(game_scene->chart, "bpm");
         cJSON* bpm = cJSON_GetObjectItem(data, "bpm");
-        Event* new_event = CreateEvent(time->valueint, time->valueint + 1000,
-            BPM, bpm->valueint);
-        ListEmplaceTail(&game_scene->event_list, new_event);
+        cJSON_SetNumberValue(cur_bpm, bpm->valueint);
         break;
     }
     case EFFECT: {
@@ -211,11 +210,12 @@ static void GetLaneEvents(cJSON* event, cJSON* time, cJSON* type, cJSON* data) {
 
 static void GetEvents() {
     cJSON* events = cJSON_GetObjectItem(game_scene->chart, "events");
+    cJSON* cur_bpm = cJSON_GetObjectItem(game_scene->chart, "bpm");
     for (cJSON* event = events ? events->child : NULL, * next; event != NULL; event = next) {
         next = event->next;
         cJSON* time = cJSON_GetObjectItem(event, "time");
         // check if the event is within preload time
-        if (app.timer.relative_time + GAME_SCENE_PRELOAD_OFFSET < time->valueint) return;
+        if (app.timer.relative_time + 60000 / cur_bpm->valueint + GAME_SCENE_PRELOAD_OFFSET < time->valueint) return;
         cJSON* type = cJSON_GetObjectItem(event, "type");
         cJSON* data = cJSON_GetObjectItem(event, "data");
         /* TODO: More Type*/
@@ -248,6 +248,10 @@ static int GetScore(const char* chart_path) {
     if (len == 0) game_scene->history_score = 0;
     game_scene->score = 0;
     fclose(fp);
+
+    cJSON* notes = cJSON_GetObjectItem(game_scene->chart, "notes");
+    game_scene->note_size = cJSON_GetArraySize(notes);
+
     return 0;
 }
 
@@ -288,7 +292,9 @@ GameScene* CreateGameScene(const char* chart_path) {
         return game_scene;
     }
 #endif
-
+    if (GetScore(game_scene->chart_path) < 0) {
+        return game_scene;
+    }
     if (GetLanes() < 0) {
         return game_scene;
     }
@@ -296,7 +302,6 @@ GameScene* CreateGameScene(const char* chart_path) {
     InitList(&game_scene->event_list);
     ListSetFreeMethod(&game_scene->event_list, (FreeFunc)DestroyEvent);
     GetEvents();
-    GetScore(game_scene->chart_path);
     InitUpdateData();
     return game_scene;
 }
@@ -428,11 +433,6 @@ void GameSceneHandleKey(SDL_Event* event) {
     }
 }
 
-static void GameSceneExecBpmEvent(Event* event) {
-    cJSON* bpm = cJSON_GetObjectItem(game_scene->chart, "bpm");
-    cJSON_SetNumberValue(bpm, (*(int*)event->data));
-}
-
 static void GameSceneExecBackgroundEvent(Event* event) {
     char path[1 << 8];
     CompletePath(path, game_scene->chart_path, event->data);
@@ -453,11 +453,6 @@ static void GameSceneUpdateEvents() {
         if (app.timer.relative_time < event->time) break;
         else if (app.timer.relative_time < event->time + event->lasting_time) {
             switch (event->type) {
-            case BPM: {
-                GameSceneExecBpmEvent(event);
-                ListErase(&game_scene->event_list, ptr);
-                break;
-            }
             case BACKGROUND: {
                 GameSceneExecBackgroundEvent(event);
                 ListErase(&game_scene->event_list, ptr);
